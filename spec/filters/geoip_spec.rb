@@ -94,11 +94,12 @@ describe LogStash::Filters::GeoIP do
   end
 
   describe "correct encodings with ASN db" do
+    asndb = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoIPASNum*.dat").first
     config <<-CONFIG
       filter {
         geoip {
           source => "ip"
-          database => "vendor/geoip/GeoIPASNum.dat"
+          database => "#{asndb}"
         }
       }
     CONFIG
