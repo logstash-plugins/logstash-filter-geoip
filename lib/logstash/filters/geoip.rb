@@ -26,8 +26,6 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   config_name "geoip"
   milestone 3
 
-  VERSION='0.1.0'
-
   # The path to the GeoIP database file which Logstash should use. Country, City, ASN, ISP
   # and organization databases are supported.
   #
@@ -66,7 +64,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   def register
     require "geoip"
     if @database.nil?
-      @database = ::Dir.glob(::File.expand_path("../../../vendor/", ::File.dirname(__FILE__))+"/GeoLiteCity*.dat").first
+      @database = ::Dir.glob(::File.join(::File.expand_path("../../../vendor/", ::File.dirname(__FILE__)),"GeoLiteCity*.dat")).first
       if !File.exists?(@database)
         raise "You must specify 'database => ...' in your geoip filter (I looked for '#{@database}'"
       end
