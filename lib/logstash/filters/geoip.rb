@@ -10,9 +10,8 @@ require "tempfile"
 # the GeoIP lookup returns a latitude and longitude. The field is stored in
 # http://geojson.org/geojson-spec.html[GeoJSON] format. Additionally,
 # the default Elasticsearch template provided with the
-# http://www.elasticsearch.org/guide/en/logstash/current/output/elasticsearch.html[elasticsearch output]
-# maps the `[geoip][location]` field to a
-# http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/mapping-geo-point-type.html[geo_point].
+# <<plugins-outputs-elasticsearch,`elasticsearch` output>> maps 
+# the `[geoip][location]` field to a <<mapping-geo-point-type,`geo_point`>>.
 #
 # As this field is a `geo_point` _and_ it is still valid GeoJSON, you get
 # the awesomeness of Elasticsearch's geospatial query, facet and filter functions
