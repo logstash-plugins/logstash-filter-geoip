@@ -16,7 +16,7 @@ require "tempfile"
 # As this field is a `geo_point` _and_ it is still valid GeoJSON, you get
 # the awesomeness of Elasticsearch's geospatial query, facet and filter functions
 # and the flexibility of having GeoJSON for all other applications (like Kibana's
-# http://www.elasticsearch.org/guide/en/kibana/current/_bettermap.html[bettermap panel]).
+# map visualization).
 #
 # Logstash releases ship with the GeoLiteCity database made available from
 # Maxmind with a CCA-ShareAlike 3.0 license. For more details on GeoLite, see
