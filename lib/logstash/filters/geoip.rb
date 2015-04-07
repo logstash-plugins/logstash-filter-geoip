@@ -119,6 +119,10 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     geo_data_hash = geo_data.to_hash
     geo_data_hash.delete(:request)
     event[@target] = {} if event[@target].nil?
+    if geo_data_hash.key?(:latitude) && geo_data_hash.key?(:longitude)
+      # If we have latitude and longitude values, add the location field as GeoJSON array
+      geo_data_hash[:location] = [ geo_data_hash[:longitude].to_f, geo_data_hash[:latitude].to_f ]
+    end
     geo_data_hash.each do |key, value|
       next if value.nil? || (value.is_a?(String) && value.empty?)
       if @fields.nil? || @fields.empty? || @fields.include?(key.to_s)
@@ -136,10 +140,6 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
         event[@target][key.to_s] = value
       end
     end # geo_data_hash.each
-    if event[@target].key?('latitude') && event[@target].key?('longitude')
-      # If we have latitude and longitude values, add the location field as GeoJSON array
-      event[@target]['location'] = [ event[@target]["longitude"].to_f, event[@target]["latitude"].to_f ]
-    end
     filter_matched(event)
   end # def filter
 end # class LogStash::Filters::GeoIP
