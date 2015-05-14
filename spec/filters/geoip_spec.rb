@@ -118,4 +118,35 @@ describe LogStash::Filters::GeoIP do
       insist { subject["geoip"]["asn"].encoding } == Encoding::UTF_8
     end
   end
+
+  describe "location field" do
+    shared_examples_for "an event with a [geoip][location] field" do
+      subject(:event) { LogStash::Event.new("message" => "8.8.8.8") }
+      let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message", "fields" => ["country_name", "location", "longitude"]) }
+
+      before do
+        plugin.register
+        plugin.filter(event)
+      end
+
+      it "should have a location field" do
+        expect(event["[geoip][location]"]).not_to(be_nil)
+      end
+    end
+
+    context "when latitude field is excluded" do
+      let(:fields) { ["country_name", "location", "longitude"] }
+      it_behaves_like "an event with a [geoip][location] field"
+    end
+
+    context "when longitude field is excluded" do
+      let(:fields) { ["country_name", "location", "latitude"] }
+      it_behaves_like "an event with a [geoip][location] field"
+    end
+
+    context "when both latitude and longitude field are excluded" do
+      let(:fields) { ["country_name", "location"] }
+      it_behaves_like "an event with a [geoip][location] field"
+    end
+  end
 end
