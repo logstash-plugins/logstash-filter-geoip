@@ -10,7 +10,7 @@ require "tempfile"
 # the GeoIP lookup returns a latitude and longitude. The field is stored in
 # http://geojson.org/geojson-spec.html[GeoJSON] format. Additionally,
 # the default Elasticsearch template provided with the
-# <<plugins-outputs-elasticsearch,`elasticsearch` output>> maps 
+# <<plugins-outputs-elasticsearch,`elasticsearch` output>> maps
 # the `[geoip][location]` field to an http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/mapping-geo-point-type.html#_mapping_options[Elasticsearch geo_point].
 #
 # As this field is a `geo_point` _and_ it is still valid GeoJSON, you get
@@ -114,7 +114,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       @logger.error("Unknown error while looking up GeoIP data", :exception => e, :field => @field, :event => event)
     end
 
-    return if geo_data.nil?
+    return if geo_data.nil? || !geo_data.respond_to?(:to_hash)
 
     geo_data_hash = geo_data.to_hash
     geo_data_hash.delete(:request)

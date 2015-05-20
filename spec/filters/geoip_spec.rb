@@ -1,12 +1,35 @@
 require "logstash/devutils/rspec/spec_helper"
 require "logstash/filters/geoip"
 
+ASNDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoIPASNum*.dat").first
+
 describe LogStash::Filters::GeoIP do
+
+  describe "ASN db" do
+    config <<-CONFIG
+      filter {
+        geoip {
+          source => "ip"
+          database => "#{ASNDB}"
+        }
+      }
+    CONFIG
+
+    sample("ip" => "1.1.1.1") do
+      insist { subject["geoip"]["asn"] } == "Google Inc."
+    end
+
+    # avoid crashing on unsupported IPv6 addresses
+    # see https://github.com/logstash-plugins/logstash-filter-geoip/issues/21
+    sample("ip" => "2a02:8071:aa1:c700:7984:22fc:c8e6:f6ff") do
+      reject { subject }.include?("geoip")
+    end
+  end
 
   describe "defaults" do
     config <<-CONFIG
       filter {
-        geoip { 
+        geoip {
           source => "ip"
           #database => "vendor/geoip/GeoLiteCity.dat"
         }
@@ -34,7 +57,7 @@ describe LogStash::Filters::GeoIP do
   describe "Specify the target" do
     config <<-CONFIG
       filter {
-        geoip { 
+        geoip {
           source => "ip"
           #database => "vendor/geoip/GeoLiteCity.dat"
           target => src_ip
@@ -94,12 +117,11 @@ describe LogStash::Filters::GeoIP do
   end
 
   describe "correct encodings with ASN db" do
-    asndb = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoIPASNum*.dat").first
     config <<-CONFIG
       filter {
         geoip {
           source => "ip"
-          database => "#{asndb}"
+          database => "#{ASNDB}"
         }
       }
     CONFIG
