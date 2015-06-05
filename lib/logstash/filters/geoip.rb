@@ -109,9 +109,9 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       ip = ip.first if ip.is_a? Array
       geo_data = Thread.current[@threadkey].send(@geoip_type, ip)
     rescue SocketError => e
-      @logger.error("IP Field contained invalid IP address or hostname", :field => @field, :event => event)
+      @logger.error("IP Field contained invalid IP address or hostname", :field => @source, :event => event)
     rescue Exception => e
-      @logger.error("Unknown error while looking up GeoIP data", :exception => e, :field => @field, :event => event)
+      @logger.error("Unknown error while looking up GeoIP data", :exception => e, :field => @source, :event => event)
     end
 
     return if geo_data.nil? || !geo_data.respond_to?(:to_hash)
