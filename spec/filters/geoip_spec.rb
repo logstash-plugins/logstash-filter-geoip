@@ -171,4 +171,56 @@ describe LogStash::Filters::GeoIP do
       it_behaves_like "an event with a [geoip][location] field"
     end
   end
+
+  describe "an invalid IP" do
+    config <<-CONFIG
+          filter {
+            geoip {
+              source => "ip"
+              database => "#{ASNDB}"
+            }
+          }
+        CONFIG
+
+    context "should not raise an error" do
+      sample("ip" => "-") do
+        expect{
+          subject
+          }.to_not raise_error
+      end
+
+      sample("ip" => "~") do
+        expect{
+          subject
+          }.to_not raise_error
+      end
+    end
+
+    context "should return the correct source field in the logging message" do
+      sample("ip" => "-") do
+        expect(LogStash::Filters::GeoIP.logger).to receive(:error).with(anything, include(:field => "ip"))
+        subject
+      end
+    end
+
+  end
+
+  describe "an invalid database" do
+    config <<-CONFIG
+          filter {
+            geoip {
+              source => "ip"
+              database => "./Gemfile"
+            }
+          }
+        CONFIG
+
+    context "should return the correct sourcefield in the logging message" do
+      sample("ip" => "8.8.8.8") do
+        expect(LogStash::Filters::GeoIP.logger).to receive(:error).with(anything, include(:field => "ip"))
+        subject
+      end
+    end
+
+  end
 end
