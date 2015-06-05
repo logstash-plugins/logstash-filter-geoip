@@ -37,6 +37,12 @@ bundle install
 bundle install
 ```
 
+- Pull down GeoIP database files
+
+```sh
+bundle exec rake vendor
+```
+
 - Run tests
 
 ```sh
