@@ -46,15 +46,15 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   config :fields, :validate => :array
 
   # Specify the field into which Logstash should store the geoip data.
-  # This can be useful, for example, if you have `src\_ip` and `dst\_ip` fields and
+  # This can be useful, for example, if you have `src_ip` and `dst_ip` fields and
   # would like the GeoIP information of both IPs.
   #
   # If you save the data to a target field other than `geoip` and want to use the
-  # `geo\_point` related functions in Elasticsearch, you need to alter the template
+  # `geo_point` related functions in Elasticsearch, you need to alter the template
   # provided with the Elasticsearch output and configure the output to use the
   # new template.
   #
-  # Even if you don't use the `geo\_point` mapping, the `[target][location]` field
+  # Even if you don't use the `geo_point` mapping, the `[target][location]` field
   # is still valid GeoJSON.
   config :target, :validate => :string, :default => 'geoip'
 
