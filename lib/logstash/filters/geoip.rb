@@ -84,7 +84,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     when GeoIP::GEOIP_ISP_EDITION, GeoIP::GEOIP_ORG_EDITION
       :isp
     else
-      raise RuntimeException.new "This GeoIP database is not currently supported"
+      raise StandardError.new "This GeoIP database is not currently supported"
     end
 
     @threadkey = "geoip-#{self.object_id}"
