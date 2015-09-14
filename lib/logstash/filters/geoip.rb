@@ -2,6 +2,8 @@
 require "logstash/filters/base"
 require "logstash/namespace"
 require "tempfile"
+require "lru_redux"
+require "geoip"
 
 # The GeoIP filter adds information about the geographical location of IP addresses,
 # based on data from the Maxmind database.
@@ -22,6 +24,10 @@ require "tempfile"
 # Maxmind with a CCA-ShareAlike 3.0 license. For more details on GeoLite, see
 # <http://www.maxmind.com/en/geolite>.
 class LogStash::Filters::GeoIP < LogStash::Filters::Base
+  LOOKUP_CACHE_INIT_MUTEX = Mutex.new
+  # Map of lookup caches, keyed by geoip_type
+  LOOKUP_CACHES = {}
+
   config_name "geoip"
 
   # The path to the GeoIP database file which Logstash should use. Country, City, ASN, ISP
@@ -58,9 +64,24 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # is still valid GeoJSON.
   config :target, :validate => :string, :default => 'geoip'
 
+  # GeoIP lookup is surprisingly expensive. This filter uses an LRU cache to take advantage of the fact that
+  # IPs agents are often found adjacent to one another in log files and rarely have a random distribution.
+  # The higher you set this the more likely an item is to be in the cache and the faster this filter will run.
+  # However, if you set this too high you can use more memory than desired.
+  #
+  # Experiment with different values for this option to find the best performance for your dataset.
+  #
+  # This MUST be set to a value > 0. There is really no reason to not want this behavior, the overhead is minimal
+  # and the speed gains are large.
+  #
+  # It is important to note that this config value is global to the geoip_type. That is to say all instances of the geoip filter
+  # of the same geoip_type share the same cache. The last declared cache size will 'win'. The reason for this is that there would be no benefit
+  # to having multiple caches for different instances at different points in the pipeline, that would just increase the
+  # number of cache misses and waste memory.
+  config :lru_cache_size, :validate => :number, :default => 1000
+
   public
   def register
-    require "geoip"
     if @database.nil?
       @database = ::Dir.glob(::File.join(::File.expand_path("../../../vendor/", ::File.dirname(__FILE__)),"GeoLiteCity*.dat")).first
       if !File.exists?(@database)
@@ -88,6 +109,11 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     end
 
     @threadkey = "geoip-#{self.object_id}"
+
+    # This is wrapped in a mutex to make sure the initialization behavior of LOOKUP_CACHES (see def above) doesn't create a dupe
+    LOOKUP_CACHE_INIT_MUTEX.synchronize do
+      @lookup_cache = LOOKUP_CACHES[@geoip_type] ||= LruRedux::ThreadSafeCache.new(1000)
+    end
   end # def register
 
   public
@@ -104,18 +130,16 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       Thread.current[@threadkey] = ::GeoIP.new(@database)
     end
 
-    begin
-      ip = event[@source]
-      ip = ip.first if ip.is_a? Array
-      geo_data = Thread.current[@threadkey].send(@geoip_type, ip)
-    rescue SocketError => e
-      @logger.error("IP Field contained invalid IP address or hostname", :field => @source, :event => event)
-    rescue Exception => e
-      @logger.error("Unknown error while looking up GeoIP data", :exception => e, :field => @source, :event => event)
-    end
+    geo_data = get_geo_data(event)
 
     return if geo_data.nil? || !geo_data.respond_to?(:to_hash)
 
+    apply_geodata(geo_data, event)
+
+    filter_matched(event)
+  end # def filter
+
+  def apply_geodata(geo_data,event)
     geo_data_hash = geo_data.to_hash
     geo_data_hash.delete(:request)
     event[@target] = {} if event[@target].nil?
@@ -130,16 +154,36 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
         if value.is_a?(String)
           # Some strings from GeoIP don't have the correct encoding...
           value = case value.encoding
-            # I have found strings coming from GeoIP that are ASCII-8BIT are actually
-            # ISO-8859-1...
-            when Encoding::ASCII_8BIT; value.force_encoding(Encoding::ISO_8859_1).encode(Encoding::UTF_8)
-            when Encoding::ISO_8859_1, Encoding::US_ASCII;  value.encode(Encoding::UTF_8)
-            else; value
-          end
+                    # I have found strings coming from GeoIP that are ASCII-8BIT are actually
+                    # ISO-8859-1...
+                    when Encoding::ASCII_8BIT; value.force_encoding(Encoding::ISO_8859_1).encode(Encoding::UTF_8)
+                    when Encoding::ISO_8859_1, Encoding::US_ASCII;  value.encode(Encoding::UTF_8)
+                    else; value.dup
+                  end
         end
         event[@target][key.to_s] = value
       end
     end # geo_data_hash.each
-    filter_matched(event)
-  end # def filter
+  end
+
+  def get_geo_data(event)
+    ip = event[@source]
+    ip = ip.first if ip.is_a? Array
+
+    get_geo_data_for_ip(ip)
+  rescue SocketError => e
+    @logger.error("IP Field contained invalid IP address or hostname", :field => @source, :event => event)
+  rescue StandardError => e
+    @logger.error("Unknown error while looking up GeoIP data", :exception => e, :field => @source, :event => event)
+  end
+
+  def get_geo_data_for_ip(ip)
+    if (cached = @lookup_cache[ip])
+      cached
+    else
+      geo_data = Thread.current[@threadkey].send(@geoip_type, ip)
+      @lookup_cache[ip] = geo_data
+      geo_data
+    end
+  end
 end # class LogStash::Filters::GeoIP

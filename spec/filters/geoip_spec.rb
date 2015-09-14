@@ -221,6 +221,23 @@ describe LogStash::Filters::GeoIP do
         subject
       end
     end
+  end
 
+  describe "returned object identities" do
+    let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message") }
+    let(:geo_data) { plugin.get_geo_data_for_ip("8.8.8.8") }
+
+    before do
+      plugin.register
+    end
+
+    it "should dup the objects" do
+      event = {}
+      alt_event = {}
+      plugin.apply_geodata(geo_data, event)
+      plugin.apply_geodata(geo_data, alt_event)
+
+      event["geoip"].each {|k,v| expect(v).not_to eql(alt_event[k]) }
+    end
   end
 end
