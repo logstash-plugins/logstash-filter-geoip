@@ -3,7 +3,6 @@ require "logstash/filters/base"
 require "logstash/namespace"
 require "tempfile"
 require "lru_redux"
-require "geoip"
 
 # The GeoIP filter adds information about the geographical location of IP addresses,
 # based on data from the Maxmind database.
@@ -84,6 +83,8 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   public
   def register
+    require "geoip"
+
     if @database.nil?
       @database = ::Dir.glob(::File.join(::File.expand_path("../../../vendor/", ::File.dirname(__FILE__)),"GeoLiteCity*.dat")).first
       if !File.exists?(@database)
