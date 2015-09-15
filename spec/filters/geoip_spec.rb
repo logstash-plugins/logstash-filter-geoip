@@ -221,6 +221,29 @@ describe LogStash::Filters::GeoIP do
         subject
       end
     end
+  end
 
+  describe "returned object identities" do
+    let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message") }
+    let(:geo_data) { plugin.get_geo_data_for_ip("8.8.8.8") }
+
+    before do
+      plugin.register
+    end
+
+    it "should dup the objects" do
+      event = {}
+      alt_event = {}
+      plugin.apply_geodata(geo_data, event)
+      plugin.apply_geodata(geo_data, alt_event)
+
+      event["geoip"].each do |k,v|
+        alt_v = alt_event["geoip"][k]
+        expect(v).to eql(alt_v)
+        unless v.is_a?(Numeric) # Numeric values can't be mutated, so this isn't an issue, its really for strings
+          expect(v.object_id).not_to eql(alt_v.object_id), "Object Ids for key #{k} and v #{v}"
+        end
+      end
+    end
   end
 end
