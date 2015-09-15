@@ -28,6 +28,8 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # Map of lookup caches, keyed by geoip_type
   LOOKUP_CACHES = {}
 
+  attr_accessor :lookup_cache
+
   config_name "geoip"
 
   # The path to the GeoIP database file which Logstash should use. Country, City, ASN, ISP
@@ -112,7 +114,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
     # This is wrapped in a mutex to make sure the initialization behavior of LOOKUP_CACHES (see def above) doesn't create a dupe
     LOOKUP_CACHE_INIT_MUTEX.synchronize do
-      @lookup_cache = LOOKUP_CACHES[@geoip_type] ||= LruRedux::ThreadSafeCache.new(1000)
+      self.lookup_cache = LOOKUP_CACHES[@geoip_type] ||= LruRedux::ThreadSafeCache.new(1000)
     end
   end # def register
 
@@ -178,11 +180,11 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def get_geo_data_for_ip(ip)
-    if (cached = @lookup_cache[ip])
+    if (cached = lookup_cache[ip])
       cached
     else
       geo_data = Thread.current[@threadkey].send(@geoip_type, ip)
-      @lookup_cache[ip] = geo_data
+      lookup_cache[ip] = geo_data
       geo_data
     end
   end
