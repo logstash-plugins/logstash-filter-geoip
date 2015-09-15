@@ -237,7 +237,13 @@ describe LogStash::Filters::GeoIP do
       plugin.apply_geodata(geo_data, event)
       plugin.apply_geodata(geo_data, alt_event)
 
-      event["geoip"].each {|k,v| expect(v).not_to eql(alt_event[k]) }
+      event["geoip"].each do |k,v|
+        alt_v = alt_event["geoip"][k]
+        expect(v).to eql(alt_v)
+        unless v.is_a?(Numeric) # Numeric values can't be mutated, so this isn't an issue, its really for strings
+          expect(v.object_id).not_to eql(alt_v.object_id), "Object Ids for key #{k} and v #{v}"
+        end
+      end
     end
   end
 end
