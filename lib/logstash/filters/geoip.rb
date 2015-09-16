@@ -189,8 +189,6 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     # Unfortunately, :pread requires the io-extra gem, with C extensions that
     # aren't supported on JRuby. If / when :pread becomes available, we can stop
     # needing thread-local access.
-    if !Thread.current.key?(threadkey)
-      Thread.current[threadkey] = ::GeoIP.new(@database)
-    end
+    Thread.current[threadkey] ||= ::GeoIP.new(@database)
   end
 end # class LogStash::Filters::GeoIP
