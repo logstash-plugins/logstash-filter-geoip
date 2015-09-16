@@ -28,6 +28,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   LOOKUP_CACHES = {}
 
   attr_accessor :lookup_cache
+  attr_reader :threadkey
 
   config_name "geoip"
 
@@ -176,7 +177,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     if (cached = lookup_cache[ip])
       cached
     else
-      geo_data = Thread.current[@threadkey].send(@geoip_type, ip)
+      geo_data = Thread.current[threadkey].send(@geoip_type, ip)
       lookup_cache[ip] = geo_data
       geo_data
     end
@@ -188,8 +189,8 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     # Unfortunately, :pread requires the io-extra gem, with C extensions that
     # aren't supported on JRuby. If / when :pread becomes available, we can stop
     # needing thread-local access.
-    if !Thread.current.key?(@threadkey)
-      Thread.current[@threadkey] = ::GeoIP.new(@database)
+    if !Thread.current.key?(threadkey)
+      Thread.current[threadkey] = ::GeoIP.new(@database)
     end
   end
 end # class LogStash::Filters::GeoIP
