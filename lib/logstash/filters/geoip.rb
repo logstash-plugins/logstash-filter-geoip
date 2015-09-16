@@ -124,15 +124,6 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     return unless filter?(event)
     geo_data = nil
 
-    # Use thread-local access to GeoIP. The Ruby GeoIP module forces a mutex
-    # around access to the database, which can be overcome with :pread.
-    # Unfortunately, :pread requires the io-extra gem, with C extensions that
-    # aren't supported on JRuby. If / when :pread becomes available, we can stop
-    # needing thread-local access.
-    if !Thread.current.key?(@threadkey)
-      Thread.current[@threadkey] = ::GeoIP.new(@database)
-    end
-
     geo_data = get_geo_data(event)
 
     return if geo_data.nil? || !geo_data.respond_to?(:to_hash)
@@ -181,12 +172,24 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def get_geo_data_for_ip(ip)
+    ensure_database!
     if (cached = lookup_cache[ip])
       cached
     else
       geo_data = Thread.current[@threadkey].send(@geoip_type, ip)
       lookup_cache[ip] = geo_data
       geo_data
+    end
+  end
+
+  def ensure_database!
+    # Use thread-local access to GeoIP. The Ruby GeoIP module forces a mutex
+    # around access to the database, which can be overcome with :pread.
+    # Unfortunately, :pread requires the io-extra gem, with C extensions that
+    # aren't supported on JRuby. If / when :pread becomes available, we can stop
+    # needing thread-local access.
+    if !Thread.current.key?(@threadkey)
+      Thread.current[@threadkey] = ::GeoIP.new(@database)
     end
   end
 end # class LogStash::Filters::GeoIP
