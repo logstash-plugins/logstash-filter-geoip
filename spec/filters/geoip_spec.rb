@@ -255,7 +255,7 @@ describe LogStash::Filters::GeoIP do
     end
 
     it "should initialize the DB on lookup, regardless of thread state" do
-      Thread.current.thread_variables.delete plugin.threadkey
+      Thread.current[plugin.threadkey] = nil
       expect {
         plugin.get_geo_data_for_ip("8.8.8.8")
       }.not_to raise_error
