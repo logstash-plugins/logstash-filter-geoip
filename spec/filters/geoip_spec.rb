@@ -246,4 +246,19 @@ describe LogStash::Filters::GeoIP do
       end
     end
   end
+
+  describe "re-initializing thread current DB" do
+    let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message") }
+
+    before do
+      plugin.register
+    end
+
+    it "should initialize the DB on lookup, regardless of thread state" do
+      Thread.current.thread_variables.delete plugin.threadkey
+      expect {
+        plugin.get_geo_data_for_ip("8.8.8.8")
+      }.not_to raise_error
+    end
+  end
 end
