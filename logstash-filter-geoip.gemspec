@@ -24,6 +24,8 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'geoip', ['>= 1.3.2']
   s.add_runtime_dependency 'lru_redux', "~> 1.1.0"
+  s.add_runtime_dependency 'ipaddr'
+  s.add_runtime_dependency 'json'
 
   s.add_development_dependency 'logstash-devutils'
 end

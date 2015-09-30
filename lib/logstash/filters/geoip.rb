@@ -3,6 +3,8 @@ require "logstash/filters/base"
 require "logstash/namespace"
 require "tempfile"
 require "lru_redux"
+require "json"
+require "ipaddr"
 
 # The GeoIP filter adds information about the geographical location of IP addresses,
 # based on data from the Maxmind database.
@@ -40,6 +42,10 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # Up-to-date databases can be downloaded from here: <https://dev.maxmind.com/geoip/legacy/geolite/>
   # Please be sure to download a legacy format database.
   config :database, :validate => :path
+  
+  # The path to a private JSON format database with IP-to-geolocation maps that should be
+  # used in addition to the GeoIP database.
+  config :private_database, :validate => :path
 
   # The field containing the IP address or hostname to map via geoip. If
   # this field is an array, only the first value will be used.
@@ -95,6 +101,9 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       end
     end
     @logger.info("Using geoip database", :path => @database)
+
+    @logger.info("Using private GeoIP database", :path => @private_database)
+    
     # For the purpose of initializing this filter, geoip is initialized here but
     # not set as a global. The geoip module imposes a mutex, so the filter needs
     # to re-initialize this later in the filter() thread, and save that access
@@ -121,6 +130,26 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       self.lookup_cache = LOOKUP_CACHES[@geoip_type] ||= LruRedux::ThreadSafeCache.new(1000)
     end
   end # def register
+
+  # lookup from private lookup table
+  def private_lookup (needle)
+    file = File.read(@private_database)
+    ips = JSON.parse(file)
+  
+    ip = IPAddr.new(needle)
+
+    ips.each do |name,entry|
+      entry["ip"].each do |range|
+        low = IPAddr.new( range.split('-').first )
+        high = IPAddr.new( range.split('-').last )
+
+        if (low.to_i <= ip.to_i) and (ip.to_i <= high.to_i)
+          return entry
+        end # matched IP!
+      end # each ip range
+    end # each entry
+    return nil
+  end # def private_lookup
 
   public
   def filter(event)
@@ -179,8 +208,11 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     if (cached = lookup_cache[ip])
       cached
     else
-      geo_data = Thread.current[threadkey].send(@geoip_type, ip)
-      lookup_cache[ip] = geo_data
+      geo_data = private_lookup (ip)
+      if geo_data.nil?
+        geo_data = Thread.current[threadkey].send(@geoip_type, ip)
+        lookup_cache[ip] = geo_data
+      end
       geo_data
     end
   end
