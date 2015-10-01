@@ -20,11 +20,11 @@ Gem::Specification.new do |s|
   s.metadata = { "logstash_plugin" => "true", "logstash_group" => "filter" }
 
   # Gem dependencies
-  s.add_runtime_dependency "logstash-core", "~> 2.0.0.snapshot"
+  s.add_runtime_dependency "logstash-core", "~> 1.5.0"
 
   s.add_runtime_dependency 'geoip', ['>= 1.3.2']
   s.add_runtime_dependency 'lru_redux', "~> 1.1.0"
-  s.add_runtime_dependency 'ipaddr'
+  s.add_runtime_dependency 'ipaddress'
   s.add_runtime_dependency 'json'
 
   s.add_development_dependency 'logstash-devutils'

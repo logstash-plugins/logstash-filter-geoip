@@ -1,0 +1,17 @@
+{
+  "US-NYC": {
+    "geoip": {
+      "location": [
+        40.689563, -74.044533
+      ],
+      "country_name": "United States",
+      "continent_code": "NA",
+      "city_name": "New York",
+      "region_name": "NY",
+      "real_region_name": "NewYork"
+    },
+    "ip": [
+      "192.168.0.0-192.168.2.255"
+    ]
+  }
+}

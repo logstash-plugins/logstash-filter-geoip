@@ -102,6 +102,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     end
     @logger.info("Using geoip database", :path => @database)
 
+    @private_ips = JSON.parse(File.read(@private_database))
     @logger.info("Using private GeoIP database", :path => @private_database)
     
     # For the purpose of initializing this filter, geoip is initialized here but
@@ -133,18 +134,18 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   # lookup from private lookup table
   def private_lookup (needle)
-    file = File.read(@private_database)
-    ips = JSON.parse(file)
-  
     ip = IPAddr.new(needle)
 
-    ips.each do |name,entry|
+    @private_ips.each do |name,entry|
       entry["ip"].each do |range|
-        low = IPAddr.new( range.split('-').first )
-        high = IPAddr.new( range.split('-').last )
+        low  = IPAddr.new(range.split('-').first)
+        high = IPAddr.new(range.split('-').last)
 
         if (low.to_i <= ip.to_i) and (ip.to_i <= high.to_i)
-          return entry
+          geo_data = entry["geoip"]
+          geo_data["latitude"]  = entry["geoip"]["location"][0]
+          geo_data["longitude"] = entry["geoip"]["location"][1]
+          return geo_data
         end # matched IP!
       end # each ip range
     end # each entry
