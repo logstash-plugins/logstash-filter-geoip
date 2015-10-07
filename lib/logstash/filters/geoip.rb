@@ -124,7 +124,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   public
   def filter(event)
-    return unless filter?(event)
+    
     geo_data = nil
 
     geo_data = get_geo_data(event)
