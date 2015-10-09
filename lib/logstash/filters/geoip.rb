@@ -175,10 +175,10 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def get_geo_data_for_ip(ip)
-    ensure_database!
     if (cached = lookup_cache[ip])
       cached
     else
+      ensure_database!
       geo_data = Thread.current[threadkey].send(@geoip_type, ip)
       lookup_cache[ip] = geo_data
       geo_data
