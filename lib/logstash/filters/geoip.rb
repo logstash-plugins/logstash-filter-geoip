@@ -12,7 +12,7 @@ require "lru_redux"
 # http://geojson.org/geojson-spec.html[GeoJSON] format. Additionally,
 # the default Elasticsearch template provided with the
 # <<plugins-outputs-elasticsearch,`elasticsearch` output>> maps
-# the `[geoip][location]` field to an https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-geo-point-type.html#_mapping_options[Elasticsearch geo_point].
+# the `[geoip][location]` field to an https://www.elastic.co/guide/en/elasticsearch/reference/1.7/mapping-geo-point-type.html#_mapping_options[Elasticsearch geo_point].
 #
 # As this field is a `geo_point` _and_ it is still valid GeoJSON, you get
 # the awesomeness of Elasticsearch's geospatial query, facet and filter functions
