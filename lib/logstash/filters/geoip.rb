@@ -124,22 +124,25 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   public
   def filter(event)
-    
+
     geo_data = nil
 
     geo_data = get_geo_data(event)
 
-    return if geo_data.nil? || !geo_data.respond_to?(:to_hash)
+    # defense against GeoIP code returning something that can't be made a hash
+    return unless geo_data.respond_to?(:to_hash)
 
-    apply_geodata(geo_data, event)
-
-    filter_matched(event)
+    event[@target] = {} if event[@target].nil?
+    geo_data_hash = geo_data.to_hash
+    # don't do anything more if the lookup result is empty
+    if !geo_data_hash.empty?
+      apply_geodata(geo_data_hash, event)
+      filter_matched(event)
+    end
   end # def filter
 
-  def apply_geodata(geo_data,event)
-    geo_data_hash = geo_data.to_hash
+  def apply_geodata(geo_data_hash, event)
     geo_data_hash.delete(:request)
-    event[@target] = {} if event[@target].nil?
     if geo_data_hash.key?(:latitude) && geo_data_hash.key?(:longitude)
       # If we have latitude and longitude values, add the location field as GeoJSON array
       geo_data_hash[:location] = [ geo_data_hash[:longitude].to_f, geo_data_hash[:latitude].to_f ]
@@ -164,14 +167,18 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def get_geo_data(event)
+    # pure function, must control return value
+    result = {}
     ip = event[@source]
     ip = ip.first if ip.is_a? Array
-
-    get_geo_data_for_ip(ip)
-  rescue SocketError => e
-    @logger.error("IP Field contained invalid IP address or hostname", :field => @source, :event => event)
-  rescue StandardError => e
-    @logger.error("Unknown error while looking up GeoIP data", :exception => e, :field => @source, :event => event)
+    begin
+      result = get_geo_data_for_ip(ip)
+    rescue SocketError => e
+      @logger.error("IP Field contained invalid IP address or hostname", :field => @source, :event => event)
+    rescue StandardError => e
+      @logger.error("Unknown error while looking up GeoIP data", :exception => e, :field => @source, :event => event)
+    end
+    result
   end
 
   def get_geo_data_for_ip(ip)

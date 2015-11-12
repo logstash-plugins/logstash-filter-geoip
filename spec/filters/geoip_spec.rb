@@ -2,6 +2,7 @@ require "logstash/devutils/rspec/spec_helper"
 require "logstash/filters/geoip"
 
 ASNDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoIPASNum*.dat").first
+CITYDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoLiteCity*.dat").first
 
 describe LogStash::Filters::GeoIP do
 
@@ -31,7 +32,7 @@ describe LogStash::Filters::GeoIP do
       filter {
         geoip {
           source => "ip"
-          #database => "vendor/geoip/GeoLiteCity.dat"
+          #database => "#{CITYDB}"
         }
       }
     CONFIG
@@ -54,32 +55,42 @@ describe LogStash::Filters::GeoIP do
     end
   end
 
-  describe "Specify the target" do
+  describe "normal operations" do
     config <<-CONFIG
       filter {
         geoip {
           source => "ip"
-          #database => "vendor/geoip/GeoLiteCity.dat"
+          #database => "#{CITYDB}"
           target => src_ip
+          add_tag => "done"
         }
       }
     CONFIG
 
-    sample("ip" => "8.8.8.8") do
-      insist { subject }.include?("src_ip")
+    context "when specifying the target" do
 
-      expected_fields = %w(ip country_code2 country_code3 country_name
-                           continent_code region_name city_name postal_code
-                           latitude longitude dma_code area_code timezone
-                           location )
-      expected_fields.each do |f|
-        insist { subject["src_ip"] }.include?(f)
+      sample("ip" => "8.8.8.8") do
+        expect(subject).to include("src_ip")
+
+        expected_fields = %w(ip country_code2 country_code3 country_name
+                             continent_code region_name city_name postal_code
+                             latitude longitude dma_code area_code timezone
+                             location )
+        expected_fields.each do |f|
+          expect(subject["src_ip"]).to include(f)
+        end
+      end
+
+      sample("ip" => "127.0.0.1") do
+        # assume geoip fails on localhost lookups
+        expect(subject).not_to include("src_ip")
       end
     end
 
-    sample("ip" => "127.0.0.1") do
-      # assume geoip fails on localhost lookups
-      reject { subject }.include?("src_ip")
+    context "when specifying add_tag" do
+      sample("ip" => "8.8.8.8") do
+        expect(subject["tags"]).to include("done")
+      end
     end
   end
 
@@ -104,6 +115,7 @@ describe LogStash::Filters::GeoIP do
       end
       insist { checked } > 0
     end
+
     sample("ip" => "189.2.0.0") do
       checked = 0
       expected_fields.each do |f|
@@ -181,18 +193,45 @@ describe LogStash::Filters::GeoIP do
             }
           }
         CONFIG
-
-    context "should not raise an error" do
+    describe "should not raise an error" do
       sample("ip" => "-") do
-        expect{
-          subject
-          }.to_not raise_error
+        expect{ subject }.to_not raise_error
       end
 
       sample("ip" => "~") do
-        expect{
-          subject
-          }.to_not raise_error
+        expect{ subject }.to_not raise_error
+      end
+    end
+
+    describe "filter method outcomes" do
+      let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message", "add_tag" => "done", "database" => ASNDB) }
+      let(:event) { LogStash::Event.new("message" => ipstring) }
+
+      before do
+        plugin.register
+        plugin.filter(event)
+      end
+
+      context "when the bad IP is N/A" do
+        # regression test for issue https://github.com/logstash-plugins/logstash-filter-geoip/issues/50
+        let(:ipstring) { "N/A" }
+
+        it "should set the target field to an empty hash" do
+          expect(event["geoip"]).to eq({})
+        end
+
+        it "should not have added any tags" do
+          expect(event["tags"]).to be_nil
+        end
+      end
+
+      context "when the bad IP is two ip comma separated" do
+        # regression test for issue https://github.com/logstash-plugins/logstash-filter-geoip/issues/51
+        let(:ipstring) { "123.45.67.89,61.160.232.222" }
+
+        it "should set the target field to an empty hash" do
+          expect(event["geoip"]).to eq({})
+        end
       end
     end
 
@@ -232,10 +271,10 @@ describe LogStash::Filters::GeoIP do
     end
 
     it "should dup the objects" do
-      event = {}
-      alt_event = {}
-      plugin.apply_geodata(geo_data, event)
-      plugin.apply_geodata(geo_data, alt_event)
+      event = { "geoip" => {} }
+      alt_event = { "geoip" => {} }
+      plugin.apply_geodata(geo_data.to_hash, event)
+      plugin.apply_geodata(geo_data.to_hash, alt_event)
 
       event["geoip"].each do |k,v|
         alt_v = alt_event["geoip"][k]
