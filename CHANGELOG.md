@@ -1,3 +1,6 @@
+## 2.0.4
+ - Refactor GeoIP Struct to hash conversion to minimise repeated manipulation
+
 ## 2.0.3
  - Fix Issue 50, incorrect data returned when geo lookup fails
 
