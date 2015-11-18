@@ -120,50 +120,32 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     LOOKUP_CACHE_INIT_MUTEX.synchronize do
       self.lookup_cache = LOOKUP_CACHES[@geoip_type] ||= LruRedux::ThreadSafeCache.new(1000)
     end
+
+    @no_fields = @fields.nil? || @fields.empty?
   end # def register
 
   public
   def filter(event)
-
-    geo_data = nil
-
-    geo_data = get_geo_data(event)
-
-    # defense against GeoIP code returning something that can't be made a hash
-    return unless geo_data.respond_to?(:to_hash)
-
-    event[@target] = {} if event[@target].nil?
-    geo_data_hash = geo_data.to_hash
-    # don't do anything more if the lookup result is empty
-    if !geo_data_hash.empty?
-      apply_geodata(geo_data_hash, event)
+    geo_data_hash = get_geo_data(event)
+    if apply_geodata(geo_data_hash, event)
       filter_matched(event)
     end
   end # def filter
 
   def apply_geodata(geo_data_hash, event)
-    geo_data_hash.delete(:request)
-    if geo_data_hash.key?(:latitude) && geo_data_hash.key?(:longitude)
-      # If we have latitude and longitude values, add the location field as GeoJSON array
-      geo_data_hash[:location] = [ geo_data_hash[:longitude].to_f, geo_data_hash[:latitude].to_f ]
-    end
+    # don't do anything more if the lookup result is nil?
+    return false if geo_data_hash.nil?
+    # only set the event[@target] if the lookup result is not nil: BWC
+    event[@target] = {} if event[@target].nil?
+    # don't do anything more if the lookup result is empty?
+    return false if geo_data_hash.empty?
     geo_data_hash.each do |key, value|
-      next if value.nil? || (value.is_a?(String) && value.empty?)
-      if @fields.nil? || @fields.empty? || @fields.include?(key.to_s)
-        # convert key to string (normally a Symbol)
-        if value.is_a?(String)
-          # Some strings from GeoIP don't have the correct encoding...
-          value = case value.encoding
-                    # I have found strings coming from GeoIP that are ASCII-8BIT are actually
-                    # ISO-8859-1...
-                    when Encoding::ASCII_8BIT; value.force_encoding(Encoding::ISO_8859_1).encode(Encoding::UTF_8)
-                    when Encoding::ISO_8859_1, Encoding::US_ASCII;  value.encode(Encoding::UTF_8)
-                    else; value.dup
-                  end
-        end
-        event[@target][key.to_s] = value
+      if @no_fields || @fields.include?(key)
+        # can't dup numerics
+        event[@target][key] = value.is_a?(Numeric) ? value : value.dup
       end
     end # geo_data_hash.each
+    true
   end
 
   def get_geo_data(event)
@@ -171,6 +153,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     result = {}
     ip = event[@source]
     ip = ip.first if ip.is_a? Array
+    return nil if ip.nil?
     begin
       result = get_geo_data_for_ip(ip)
     rescue SocketError => e
@@ -187,9 +170,43 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       cached
     else
       geo_data = Thread.current[threadkey].send(@geoip_type, ip)
-      lookup_cache[ip] = geo_data
-      geo_data
+      converted = prepare_geodata_for_cache(geo_data)
+      lookup_cache[ip] = converted
+      converted
     end
+  end
+
+  def prepare_geodata_for_cache(geo_data)
+    # GeoIP returns a nil or a Struct subclass
+    return nil if !geo_data.respond_to?(:each_pair)
+    #lets just do this once before caching
+    result = {}
+    geo_data.each_pair do |k, v|
+      next if v.nil? || k == :request
+      if v.is_a?(String)
+        next if v.empty?
+        # Some strings from GeoIP don't have the correct encoding...
+        result[k.to_s] = case v.encoding
+          # I have found strings coming from GeoIP that are ASCII-8BIT are actually
+          # ISO-8859-1...
+        when Encoding::ASCII_8BIT
+          v.force_encoding(Encoding::ISO_8859_1).encode(Encoding::UTF_8)
+        when Encoding::ISO_8859_1, Encoding::US_ASCII
+          v.encode(Encoding::UTF_8)
+        else
+          v
+        end
+      else
+        result[k.to_s] = v
+      end
+    end
+
+    lat, lng = result.values_at("latitude", "longitude")
+    if lat && lng
+      result["location"] = [ lng.to_f, lat.to_f ]
+    end
+
+    result
   end
 
   def ensure_database!

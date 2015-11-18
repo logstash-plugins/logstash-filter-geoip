@@ -264,17 +264,16 @@ describe LogStash::Filters::GeoIP do
 
   describe "returned object identities" do
     let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message") }
-    let(:geo_data) { plugin.get_geo_data_for_ip("8.8.8.8") }
+    let(:event) { LogStash::Event.new("message" => "8.8.8.8") }
+    let(:alt_event) { LogStash::Event.new("message" => "8.8.8.8") }
 
     before do
       plugin.register
     end
 
     it "should dup the objects" do
-      event = { "geoip" => {} }
-      alt_event = { "geoip" => {} }
-      plugin.apply_geodata(geo_data.to_hash, event)
-      plugin.apply_geodata(geo_data.to_hash, alt_event)
+      plugin.apply_geodata(plugin.get_geo_data(event), event)
+      plugin.apply_geodata(plugin.get_geo_data(alt_event), alt_event)
 
       event["geoip"].each do |k,v|
         alt_v = alt_event["geoip"][k]
