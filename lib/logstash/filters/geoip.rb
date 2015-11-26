@@ -142,7 +142,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     geo_data_hash.each do |key, value|
       if @no_fields || @fields.include?(key)
         # can't dup numerics
-        event[@target][key] = value.is_a?(Numeric) ? value : value.dup
+        event["[#{@target}][#{key}]"] = value.is_a?(Numeric) ? value : value.dup
       end
     end # geo_data_hash.each
     true
