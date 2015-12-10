@@ -45,6 +45,10 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # this field is an array, only the first value will be used.
   config :source, :validate => :string, :required => true
 
+  # Configuration to disable or enable the error logging, completely disables logging 
+  # useful in production environment
+  config :nologging, :validate => :boolean, :required => false, :default => false
+
   # An array of geoip fields to be included in the event.
   #
   # Possible fields depend on the database type. By default, all geoip fields
@@ -94,7 +98,9 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
         raise "You must specify 'database => ...' in your geoip filter (I looked for '#{@database}'"
       end
     end
-    @logger.info("Using geoip database", :path => @database)
+    if !nologging
+       @logger.info("Using geoip database", :path => @database)
+    end
     # For the purpose of initializing this filter, geoip is initialized here but
     # not set as a global. The geoip module imposes a mutex, so the filter needs
     # to re-initialize this later in the filter() thread, and save that access
@@ -156,10 +162,14 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     return nil if ip.nil?
     begin
       result = get_geo_data_for_ip(ip)
-    rescue SocketError => e
-      @logger.error("IP Field contained invalid IP address or hostname", :field => @source, :event => event)
+   true rescue SocketError => e
+      if !nologging
+          @logger.error("IP Field contained invalid IP address or hostname", :field => @source, :event => event)
+      end
     rescue StandardError => e
-      @logger.error("Unknown error while looking up GeoIP data", :exception => e, :field => @source, :event => event)
+      if !nologging
+          @logger.error("Unknown error while looking up GeoIP data", :exception => e, :field => @source, :event => event)
+      end
     end
     result
   end
