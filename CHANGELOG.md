@@ -1,3 +1,6 @@
+## 2.0.5
+ - Use proper field references
+
 ## 2.0.4
  - Refactor GeoIP Struct to hash conversion to minimise repeated manipulation
 
