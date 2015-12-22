@@ -84,6 +84,16 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # number of cache misses and waste memory.
   config :lru_cache_size, :validate => :number, :default => 1000
 
+  # If the ip field is an array: check which one is not a private ip. The first non private ip will be used.
+  config :filter_private_ips, :validate => :boolean, :required => false, :default => true
+
+  # String by which the ip field should be tokenized
+  config :ip_split_symbol, :validate => :string, :required => false, :default => ","
+
+  # list of ip patterns that private ips start with. TODO benchmark if regex would be faster here.
+  config :private_ip_prefixes, :validate => :array, :required => false, :default => ["10.", "192.168." ,"172.16.", "172.17.", "172.18.", "172.19.",
+   "172.20.", "172.21.", "172.22.", "172.23.", "172.24.", "172.25.", "172.26.", "172.27.", "172.28.", "172.29.", "172.30.", "172.31."]
+
   public
   def register
     require "geoip"
@@ -95,6 +105,9 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       end
     end
     @logger.info("Using geoip database", :path => @database)
+
+    @logger.debug("Private ip filter settings: filter_private_ips " + (filter_private_ips ? "true" : "false"))
+   
     # For the purpose of initializing this filter, geoip is initialized here but
     # not set as a global. The geoip module imposes a mutex, so the filter needs
     # to re-initialize this later in the filter() thread, and save that access
@@ -148,11 +161,47 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     true
   end
 
+  def select_ip(ip)
+    @logger.debug("incoming: " + ip.to_s) # TODO remove
+    ip = ip.split(@ip_split_symbol)
+    if ip.is_a? Array
+      @logger.debug(" is array.") # TODO remove
+      if @filter_private_ips 
+        ip = get_public_ip(ip) 
+      else 
+        ip = ip.first
+      end
+    end
+    return ip
+  end
+
+  def get_public_ip(ip_array)
+    ip_array.each do | ip |
+      ip = ip.strip
+      @logger.debug("testing ip " + ip.to_s) # TODO remove
+      if !is_private(ip)
+        @logger.debug("returning ip " + ip.to_s) # TODO remove
+        return ip
+      end
+    end
+  end
+
+  def is_private(ip)
+    @private_ip_prefixes.each do | prefix |
+       @logger.debug("testing private with prefix " + prefix + ": " + ip.to_s) # TODO remove
+      if ip.start_with? prefix
+        @logger.debug("is private with prefix " + prefix + ": " + ip.to_s) # TODO remove
+        return true
+      end
+    end
+    @logger.debug("is not private: " + ip.to_s) # TODO remove
+    return false
+  end
+
   def get_geo_data(event)
     # pure function, must control return value
     result = {}
-    ip = event[@source]
-    ip = ip.first if ip.is_a? Array
+    ip = select_ip(event[@source])
     return nil if ip.nil?
     begin
       result = get_geo_data_for_ip(ip)
@@ -163,6 +212,8 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     end
     result
   end
+
+
 
   def get_geo_data_for_ip(ip)
     ensure_database!
