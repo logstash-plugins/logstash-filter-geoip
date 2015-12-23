@@ -92,7 +92,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   # list of ip patterns that private ips start with. TODO benchmark if regex would be faster here.
   config :private_ip_prefixes, :validate => :array, :required => false, :default => ["10.", "192.168." ,"172.16.", "172.17.", "172.18.", "172.19.",
-   "172.20.", "172.21.", "172.22.", "172.23.", "172.24.", "172.25.", "172.26.", "172.27.", "172.28.", "172.29.", "172.30.", "172.31."]
+   "172.20.", "172.21.", "172.22.", "172.23.", "172.24.", "172.25.", "172.26.", "172.27.", "172.28.", "172.29.", "172.30.", "172.31.", "127.0.0"]
 
   public
   def register
@@ -105,9 +105,6 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       end
     end
     @logger.info("Using geoip database", :path => @database)
-
-    @logger.debug("Private ip filter settings: filter_private_ips " + (filter_private_ips ? "true" : "false"))
-   
     # For the purpose of initializing this filter, geoip is initialized here but
     # not set as a global. The geoip module imposes a mutex, so the filter needs
     # to re-initialize this later in the filter() thread, and save that access
@@ -171,6 +168,8 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       else 
         ip = ip.first
       end
+    else
+      @logger.debug("Is string")# TODO remove
     end
     return ip
   end
@@ -184,6 +183,8 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
         return ip
       end
     end
+    @logger.debug("no public ip found in string " + ip_array.to_s+ ", returning nil") # TODO remove
+    return nil
   end
 
   def is_private(ip)
