@@ -105,6 +105,9 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       end
     end
     @logger.info("Using geoip database", :path => @database)
+    if @filter_private_ips
+      @logger.info("Filtering private ips with delimiter " + @ip_split_symbol + " for prefixes " + @private_ip_prefixes.to_s)
+    end
     # For the purpose of initializing this filter, geoip is initialized here but
     # not set as a global. The geoip module imposes a mutex, so the filter needs
     # to re-initialize this later in the filter() thread, and save that access
