@@ -163,9 +163,11 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   def select_ip(ip)
     @logger.debug("incoming: " + ip.to_s) # TODO remove
-    ip = ip.split(@ip_split_symbol)
+    if ip.nil?
+      return nil
+    end
     if ip.is_a? Array
-      @logger.debug(" is array.") # TODO remove
+      @logger.debug("is array.") # TODO remove
       if @filter_private_ips 
         ip = get_public_ip(ip) 
       else 
@@ -173,6 +175,10 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       end
     else
       @logger.debug("Is string")# TODO remove
+      if @filter_private_ips
+        ip = get_public_ip(ip.split(@ip_split_symbol))
+      # else: return original string
+      end
     end
     return ip
   end
