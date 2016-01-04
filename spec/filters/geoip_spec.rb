@@ -269,8 +269,9 @@ describe LogStash::Filters::GeoIP do
         # regression test for issue https://github.com/logstash-plugins/logstash-filter-geoip/issues/51
         let(:ipstring) { "123.45.67.89,61.160.232.222" }
 
-        it "should take the first public ip" do
-          expect(event["geoip"]).to eq("123.45.67.89")
+        it "should take the first public ip" do # {"number"=>"AS6619", "asn"=>"SamsungSDS Inc."}
+          expect(event["geoip"]["number"]).not_to be_nil
+          expect(event["geoip"]["asn"]).not_to be_nil
         end
       end
     end
