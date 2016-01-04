@@ -205,7 +205,7 @@ describe LogStash::Filters::GeoIP do
     end
 
     describe "filter method outcomes" do
-      let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message", "add_tag" => "done", "database" => ASNDB) }
+      let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message", "add_tag" => "done", "database" => ASNDB, "filter_private_ips" => false) }
       let(:event) { LogStash::Event.new("message" => ipstring) }
 
       before do
