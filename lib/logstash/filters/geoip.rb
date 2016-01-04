@@ -90,7 +90,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # String by which the ip field should be tokenized
   config :ip_split_symbol, :validate => :string, :required => false, :default => ","
 
-  # list of ip patterns that private ips start with. TODO benchmark if regex would be faster here.
+  # list of ip patterns that private ips start with. 
   config :private_ip_prefixes, :validate => :array, :required => false, :default => ["10.", "192.168." ,"172.16.", "172.17.", "172.18.", "172.19.",
    "172.20.", "172.21.", "172.22.", "172.23.", "172.24.", "172.25.", "172.26.", "172.27.", "172.28.", "172.29.", "172.30.", "172.31.", "127.0.0"]
 
@@ -162,19 +162,16 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def select_ip(ip)
-    @logger.debug("incoming: " + ip.to_s) # TODO remove
     if ip.nil?
       return nil
     end
     if ip.is_a? Array
-      @logger.debug("is array.") # TODO remove
       if @filter_private_ips 
         ip = get_public_ip(ip) 
       else 
         ip = ip.first
       end
     else
-      @logger.debug("Is string")# TODO remove
       if @filter_private_ips
         ip = get_public_ip(ip.split(@ip_split_symbol))
       # else: return original string
@@ -186,25 +183,19 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   def get_public_ip(ip_array)
     ip_array.each do | ip |
       ip = ip.strip
-      @logger.debug("testing ip " + ip.to_s) # TODO remove
       if !is_private(ip)
-        @logger.debug("returning ip " + ip.to_s) # TODO remove
         return ip
       end
     end
-    @logger.debug("no public ip found in string " + ip_array.to_s+ ", returning nil") # TODO remove
     return nil
   end
 
   def is_private(ip)
     @private_ip_prefixes.each do | prefix |
-       @logger.debug("testing private with prefix " + prefix + ": " + ip.to_s) # TODO remove
       if ip.start_with? prefix
-        @logger.debug("is private with prefix " + prefix + ": " + ip.to_s) # TODO remove
         return true
       end
     end
-    @logger.debug("is not private: " + ip.to_s) # TODO remove
     return false
   end
 
