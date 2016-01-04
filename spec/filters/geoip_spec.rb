@@ -190,6 +190,7 @@ describe LogStash::Filters::GeoIP do
             geoip {
               source => "ip"
               database => "#{ASNDB}"
+              filter_private_ips => false
             }
           }
         CONFIG
@@ -228,7 +229,7 @@ describe LogStash::Filters::GeoIP do
       context "when the bad IP is two ip comma separated" do
         # regression test for issue https://github.com/logstash-plugins/logstash-filter-geoip/issues/51
         let(:ipstring) { "123.45.67.89,61.160.232.222" }
-
+        
         it "should set the target field to an empty hash" do
           expect(event["geoip"]).to eq({})
         end
@@ -243,6 +244,38 @@ describe LogStash::Filters::GeoIP do
     end
 
   end
+
+  describe "multiple ips" do
+    config <<-CONFIG
+          filter {
+            geoip {
+              source => "ip"
+              database => "#{ASNDB}"
+              filter_private_ips => true
+            }
+          }
+        CONFIG
+
+    describe "filter method outcomes" do
+      let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message", "add_tag" => "done", "database" => ASNDB) }
+      let(:event) { LogStash::Event.new("message" => ipstring) }
+
+      before do
+        plugin.register
+        plugin.filter(event)
+      end
+
+      context "when multiple ips are found" do
+        # regression test for issue https://github.com/logstash-plugins/logstash-filter-geoip/issues/51
+        let(:ipstring) { "123.45.67.89,61.160.232.222" }
+
+        it "should take the first public ip" do
+          expect(event["geoip"]).to eq("123.45.67.89")
+        end
+      end
+    end
+
+  end 
 
   describe "an invalid database" do
     config <<-CONFIG
