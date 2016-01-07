@@ -3,6 +3,7 @@ require "logstash/filters/base"
 require "logstash/namespace"
 require "tempfile"
 require "lru_redux"
+require "ipaddr"
 
 # The GeoIP filter adds information about the geographical location of IP addresses,
 # based on data from the Maxmind database.
@@ -91,8 +92,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   config :ip_split_symbol, :validate => :string, :required => false, :default => ","
 
   # list of ip patterns that private ips start with. 
-  config :private_ip_prefixes, :validate => :array, :required => false, :default => ["10.", "192.168." ,"172.16.", "172.17.", "172.18.", "172.19.",
-   "172.20.", "172.21.", "172.22.", "172.23.", "172.24.", "172.25.", "172.26.", "172.27.", "172.28.", "172.29.", "172.30.", "172.31.", "127.0.0"]
+  config :private_ip_prefixes, :validate => :array, :required => false, :default => ["10/8", "192.168/16" ,"172.16.0.0/12"]
 
   public
   def register
@@ -135,6 +135,17 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     end
 
     @no_fields = @fields.nil? || @fields.empty?
+
+    @private_ips = @private_ip_prefixes.collect do | adress |
+      begin
+        IPAddr.new(adress)
+      rescue ArgumentError => e
+        @logger.warn("Invalid IP network, skipping", :adress => adress)
+        nil
+       end
+    end
+    @private_ips.compact!
+
   end # def register
 
   public
@@ -177,7 +188,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       # else: return original string
       end
     end
-    return ip
+    ip
   end
 
   def get_public_ip(ip_array)
@@ -187,16 +198,18 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
         return ip
       end
     end
-    return nil
+    nil
   end
 
   def is_private(ip)
-    @private_ip_prefixes.each do | prefix |
-      if ip.start_with? prefix
+    ipo = IPAddr.new(ip)
+    @private_ips.each do | private_ip |
+      @logger.debug("Checking IP inclusion", :private_ip => private_ip, :network => ipo) # TODO remove
+      if private_ip.include?(ipo)
         return true
       end
     end
-    return false
+    false
   end
 
   def get_geo_data(event)
