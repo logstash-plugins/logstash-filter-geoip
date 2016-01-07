@@ -278,6 +278,52 @@ describe LogStash::Filters::GeoIP do
 
   end 
 
+  describe "private ips" do
+    let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message", "add_tag" => "done", "database" => ASNDB) }
+    before do
+      plugin.register
+    end
+    
+    context "when ip is in a private network" do
+
+      let(:event) { LogStash::Event.new("message" => "10.1.2.3" ) }
+      before do
+        plugin.filter(event)
+      end
+
+      it "should return nil" do
+        expect(event["geoip"]).to be_nil
+        end
+      end
+    end
+
+        
+      
+     
+=begin
+      let(:ipstring) { "172.16.0.8" }
+      it "should return nil" do
+        expect(event["geoip"]["number"]).to be_nil
+        expect(event["geoip"]["asn"]).to be_nil
+      end
+
+      let(:ipstring) { "192.168.8.15" }
+      it "should return nil" do
+        expect(event["geoip"]["number"]).to be_nil
+        expect(event["geoip"]["asn"]).to be_nil
+      end
+    end
+
+    context "when ip is not in a private network" do
+      let(:ipstring) { "172.15.0.8" }
+      it "should not return nil" do
+        expect(event["geoip"]["number"]).not_to be_nil
+        expect(event["geoip"]["asn"]).not_to be_nil
+      end
+=end
+
+
+
   describe "an invalid database" do
     config <<-CONFIG
           filter {
