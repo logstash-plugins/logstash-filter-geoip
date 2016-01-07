@@ -284,7 +284,7 @@ describe LogStash::Filters::GeoIP do
       plugin.register
     end
     
-    context "when ip is in a private network" do
+    context "when ip is in a private 10/8 network" do
 
       let(:event) { LogStash::Event.new("message" => "10.1.2.3" ) }
       before do
@@ -293,9 +293,22 @@ describe LogStash::Filters::GeoIP do
 
       it "should return nil" do
         expect(event["geoip"]).to be_nil
-        end
+        end # it
+      end # context
+
+     context "when ip is in a private 172.16/12 network" do
+
+      let(:event) { LogStash::Event.new("message" => "172.16.0.8" ) }
+      before do
+        plugin.filter(event)
       end
-    end
+
+      it "should return nil" do
+        expect(event["geoip"]).to be_nil
+        end # it
+      end # context
+       
+    end # describe
 
         
       
