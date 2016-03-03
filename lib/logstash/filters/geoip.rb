@@ -99,7 +99,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     # not set as a global. The geoip module imposes a mutex, so the filter needs
     # to re-initialize this later in the filter() thread, and save that access
     # as a thread-local variable.
-    geoip_initialize = ::GeoIP.new(@database)
+    geoip_initialize = ::GeoIP.new(@database, { :preload => true })
 
     @geoip_type = case geoip_initialize.database_type
     when GeoIP::GEOIP_CITY_EDITION_REV0, GeoIP::GEOIP_CITY_EDITION_REV1
@@ -215,6 +215,6 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     # Unfortunately, :pread requires the io-extra gem, with C extensions that
     # aren't supported on JRuby. If / when :pread becomes available, we can stop
     # needing thread-local access.
-    Thread.current[threadkey] ||= ::GeoIP.new(@database)
+    Thread.current[threadkey] ||= ::GeoIP.new(@database, { :preload => true })
   end
 end # class LogStash::Filters::GeoIP
