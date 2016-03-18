@@ -1,0 +1,36 @@
+FROM jruby:1.7
+
+RUN apt-get update
+
+RUN apt-get install -y git curl
+
+RUN git clone   --branch 2.2 \
+				--single-branch \
+				--depth 1 \
+				https://github.com/elastic/logstash.git \
+				/opt/logstash
+
+RUN cd /opt/logstash && \
+	rake bootstrap
+
+ENV PATH        /opt/logstash/bin:/opt/logstash/vendor/jruby/bin:$PATH
+ENV PLUGIN_NAME logstash-filter-geoip
+ENV WORKDIR     /opt/$PLUGIN_NAME
+
+RUN plugin uninstall $PLUGIN_NAME
+
+RUN mkdir /opt/$PLUGIN_NAME
+
+WORKDIR $WORKDIR
+
+#ADD Gemfile logstash-filter-geoip.gemspec ./
+
+#RUN bundle install
+
+RUN gem install --no-user-install logstash-devutils
+
+ADD dev/entrypoint.sh /opt/entrypoint.sh
+
+RUN rm -rf /opt/logstash-filter-geoip
+
+ENTRYPOINT ["/opt/entrypoint.sh"]
