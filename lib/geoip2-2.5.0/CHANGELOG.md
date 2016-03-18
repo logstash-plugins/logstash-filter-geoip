@@ -1,6 +1,46 @@
 CHANGELOG
 =========
 
+2.5.0 (2016-01-04)
+------------------
+
+* The database reader now supports pluggable caching of the decoded data. By
+  default, no caching is performed. Please see the `README.md` file or the API
+  docs for information on how to enable caching. Pull requests by Viktor
+  Szathmáry. GitHub #55.
+
+2.4.0 (2015-12-21)
+------------------
+
+* Jackson now uses the constructors on model classes when mapping JSON and
+  database records to them rather than overriding the access modifiers on
+  them. Pull request by Martijn van Groningen. GitHub #51 & #52.
+* The format of the output of the `toString()` methods in the models has
+  changed to better represent the values returned by the databases and web
+  services. `toString()` should be only used for debugging and diagnostics.
+  Do not try to parse it. If you want the contents of the model as a machine-
+  readable string, use `toJson()`.
+* This release depends on version 1.0.1 of the MaxMind DB reader, which
+  includes several performance enhancements from by Viktor Szathmáry.
+
+
+2.3.1 (2015-07-07)
+------------------
+
+* No code changes in this release
+* Fix for version number in pom.xml example in README.md
+* Slight documentation improvement referring to MaxMind-DB-Reader-java
+
+2.3.0 (2015-06-29)
+------------------
+
+* Add support for the `average_income` and `population_density` fields.
+* The `isAnonymousProxy()` and `isSatelliteProvider()` methods on
+  `com.maxmind.geoip2.record.Traits` have been deprecated. Please use our
+  [GeoIP2 Anonymous IP database](https://www.maxmind.com/en/geoip2-anonymous-
+  ip-database) to determine whether an IP address is used by an anonymizing
+  service.
+
 2.2.0 (2015-04-24)
 ------------------
 

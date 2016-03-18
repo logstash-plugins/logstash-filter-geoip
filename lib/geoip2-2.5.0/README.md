@@ -11,7 +11,7 @@ the free [GeoLite2 databases](http://dev.maxmind.com/geoip/geoip2/geolite2/).
 
 ## Installation ##
 
-### Define Your Dependencies ###
+### Maven ###
 
 We recommend installing this package with [Maven](http://maven.apache.org/).
 To do this, add the dependency to your pom.xml:
@@ -20,9 +20,28 @@ To do this, add the dependency to your pom.xml:
     <dependency>
         <groupId>com.maxmind.geoip2</groupId>
         <artifactId>geoip2</artifactId>
-        <version>2.1.0</version>
+        <version>2.5.0</version>
     </dependency>
 ```
+
+### Gradle ###
+
+Add the following to your `build.gradle` file:
+
+```
+repositories {
+    mavenCentral()
+}
+dependencies {
+    compile 'com.maxmind.geoip2:geoip2:2.5.0'
+}
+```
+
+### JAR Files ###
+
+If you are unable to use Maven or Gradle, you may include the `geoip2.jar`
+file and its dependencies in your classpath. Download the JAR files from the
+[GitHub Releases page](https://github.com/maxmind/GeoIP2-java/releases).
 
 ## Web Service Usage ##
 
@@ -151,6 +170,19 @@ one for each lookup. The creation of this object is relatively expensive as it
 must read in metadata for the file.
 
 See the API documentation for more details.
+
+### Caching ###
+
+The database API supports pluggable caching (by default, no caching is
+performed). A simple implementation is provided by `com.maxmind.db.CHMCache`.
+Using this cache, lookup performance is significantly improved at the cost of
+a small (~2MB) memory overhead.
+
+Usage:
+
+```
+new DatabaseReader.Builder(file).withCache(new CHMCache()).build();
+```
 
 
 ## Database Example ##

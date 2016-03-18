@@ -6,26 +6,26 @@ CITYDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__)
 
 describe LogStash::Filters::GeoIP do
 
-  describe "ASN db" do
-    config <<-CONFIG
-      filter {
-        geoip {
-          source => "ip"
-          database => "#{ASNDB}"
-        }
-      }
-    CONFIG
-
-    sample("ip" => "1.1.1.1") do
-      insist { subject["geoip"]["asn"] } == "Google Inc."
-    end
-
-    # avoid crashing on unsupported IPv6 addresses
-    # see https://github.com/logstash-plugins/logstash-filter-geoip/issues/21
-    sample("ip" => "2a02:8071:aa1:c700:7984:22fc:c8e6:f6ff") do
-      reject { subject }.include?("geoip")
-    end
-  end
+  # describe "ASN db" do
+  #   config <<-CONFIG
+  #     filter {
+  #       geoip {
+  #         source => "ip"
+  #         database => "#{ASNDB}"
+  #       }
+  #     }
+  #   CONFIG
+  #
+  #   sample("ip" => "1.1.1.1") do
+  #     insist { subject["geoip"]["asn"] } == "Google Inc."
+  #   end
+  #
+  #   # avoid crashing on unsupported IPv6 addresses
+  #   # see https://github.com/logstash-plugins/logstash-filter-geoip/issues/21
+  #   sample("ip" => "2a02:8071:aa1:c700:7984:22fc:c8e6:f6ff") do
+  #     reject { subject }.include?("geoip")
+  #   end
+  # end
 
   describe "defaults" do
     config <<-CONFIG
@@ -42,7 +42,7 @@ describe LogStash::Filters::GeoIP do
 
       expected_fields = %w(ip country_code2 country_code3 country_name
                            continent_code region_name city_name postal_code
-                           latitude longitude dma_code area_code timezone
+                           latitude longitude dma_code timezone
                            location )
       expected_fields.each do |f|
         insist { subject["geoip"] }.include?(f)
@@ -74,7 +74,7 @@ describe LogStash::Filters::GeoIP do
 
         expected_fields = %w(ip country_code2 country_code3 country_name
                              continent_code region_name city_name postal_code
-                             latitude longitude dma_code area_code timezone
+                             latitude longitude dma_code timezone
                              location )
         expected_fields.each do |f|
           expect(subject["src_ip"]).to include(f)
@@ -104,7 +104,7 @@ describe LogStash::Filters::GeoIP do
     CONFIG
     expected_fields = %w(ip country_code2 country_code3 country_name
                            continent_code region_name city_name postal_code
-                           dma_code area_code timezone)
+                           dma_code timezone)
 
     sample("ip" => "1.1.1.1") do
       checked = 0
@@ -285,18 +285,18 @@ describe LogStash::Filters::GeoIP do
     end
   end
 
-  describe "re-initializing thread current DB" do
-    let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message") }
-
-    before do
-      plugin.register
-    end
-
-    it "should initialize the DB on lookup, regardless of thread state" do
-      Thread.current[plugin.threadkey] = nil
-      expect {
-        plugin.get_geo_data_for_ip("8.8.8.8")
-      }.not_to raise_error
-    end
-  end
+  # describe "re-initializing thread current DB" do
+  #   let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message") }
+  #
+  #   before do
+  #     plugin.register
+  #   end
+  #
+  #   it "should initialize the DB on lookup, regardless of thread state" do
+  #     Thread.current[plugin.threadkey] = nil
+  #     expect {
+  #       plugin.get_geo_data_for_ip("8.8.8.8")
+  #     }.not_to raise_error
+  #   end
+  # end
 end

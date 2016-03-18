@@ -1,19 +1,14 @@
 # encoding: utf-8
 require "logstash/filters/base"
 require "logstash/namespace"
-require "tempfile"
 
-# The GeoIP filter adds information about the geographical location of IP addresses,
-
-# java jar files reside in ../../geoip2-*/lib/
 require "java"
 
-require_relative "../../geoip2-2.2.0/lib/geoip2-2.2.0.jar"
-require_relative "../../geoip2-2.2.0/lib/jackson-databind-2.5.3.jar"
-require_relative "../../geoip2-2.2.0/lib/jackson-core-2.5.3.jar"
-require_relative "../../geoip2-2.2.0/lib/maxmind-db-1.0.0.jar"
-require_relative "../../geoip2-2.2.0/lib/jackson-annotations-2.5.0.jar"
-
+require_relative "../../geoip2-2.5.0/lib/geoip2-2.5.0.jar"
+require_relative "../../geoip2-2.5.0/lib/jackson-databind-2.6.4.jar"
+require_relative "../../geoip2-2.5.0/lib/jackson-core-2.6.4.jar"
+require_relative "../../geoip2-2.5.0/lib/maxmind-db-1.1.0.jar"
+require_relative "../../geoip2-2.5.0/lib/jackson-annotations-2.6.0.jar"
 
 java_import "java.net.InetAddress"
 java_import "com.maxmind.geoip2.DatabaseReader"
@@ -23,10 +18,11 @@ java_import "com.maxmind.geoip2.record.Subdivision"
 java_import "com.maxmind.geoip2.record.City"
 java_import "com.maxmind.geoip2.record.Postal"
 java_import "com.maxmind.geoip2.record.Location"
+java_import "com.maxmind.db.CHMCache"
 
 # create a new instance of the Java class File without shadowing the Ruby version of the File class
 module JavaIO
-    include_package "java.io"
+  include_package "java.io"
 end
 
 # The GeoIP2 filter adds information about the geographical location of IP addresses,
@@ -44,16 +40,14 @@ end
 # and the flexibility of having GeoJSON for all other applications (like Kibana's
 # map visualization).
 #
-# Logstash releases ship with the GeoLiteCity database made available from
-# Maxmind with a CCA-ShareAlike 3.0 license. For more details on GeoLite, see
-# <http://www.maxmind.com/en/geolite>.
-class LogStash::Filters::GeoIP2 < LogStash::Filters::Base
-  config_name "geoip2"
+# This product includes GeoLite2 data created by MaxMind, available from
+# <http://dev.maxmind.com/geoip/geoip2/geolite2/>.
+class LogStash::Filters::GeoIP < LogStash::Filters::Base
+  config_name "geoip"
 
-  # The path to the GeoIP database file which Logstash should use. Country, City, ASN, ISP
-  # and organization databases are supported.
+  # The path to the GeoIP2 database file which Logstash should use. Only City database is supported by now.
   #
-  # If not specified, this will default to the GeoLiteCity database that ships
+  # If not specified, this will default to the world_city_geoip2 database that ships
   # with Logstash.
   config :database, :validate => :path
 
@@ -67,8 +61,8 @@ class LogStash::Filters::GeoIP2 < LogStash::Filters::Base
   # are included in the event.
   #
   # For the built-in GeoLiteCity database, the following are available:
-  # `city_name`, `continent_code`, `country_code2`, `country_code3`, `country_name`,
-  # `dma_code`, `ip`, `latitude`, `longitude`, `postal_code`, `region_name` and `timezone`.
+  # `city\_name`, `continent\_code`, `country\_code2`, `country\_code3`, `country\_name`,
+  # `dma\_code`, `ip`, `latitude`, `longitude`, `postal\_code`, `region\_name` and `timezone`.
   config :fields, :validate => :array
 
   # Specify the field into which Logstash should store the geoip data.
@@ -89,32 +83,26 @@ class LogStash::Filters::GeoIP2 < LogStash::Filters::Base
     if @database.nil?
       @database = ::Dir.glob(::File.join(::File.expand_path("../../../vendor/", ::File.dirname(__FILE__)),"GeoLite2-City.mmdb")).first
 
-      if !File.exists?(@database)
-        raise "You must specify 'database => ...' in your geoip filter (I looked for '#{@database}'"
+      if @database.nil? || !File.exists?(@database)
+        raise "You must specify 'database => ...' in your geoip filter (I looked for '#{@database}')"
       end
     end
+
     @logger.info("Using geoip database", :path => @database)
 
     db_file = JavaIO::File.new(@database)
-    geoip2_initialize = DatabaseReader::Builder.new(db_file).build();
-
-    @threadkey = "geoip2-#{self.object_id}"
+    @parser = DatabaseReader::Builder.new(db_file).withCache(CHMCache.new()).build();
   end # def register
 
   public
   def filter(event)
     return unless filter?(event)
 
-    if !Thread.current.key?(@threadkey)
-      db_file = JavaIO::File.new(@database)
-      Thread.current[@threadkey] = DatabaseReader::Builder.new(db_file).build();
-    end
-
     begin
       ip = event[@source]
       ip = ip.first if ip.is_a? Array
-      ipAddress = InetAddress.getByName(ip)
-      response = Thread.current[@threadkey].city(ipAddress)
+      ip_address = InetAddress.getByName(ip)
+      response = @parser.city(ip_address)
       country = response.getCountry()
       subdivision = response.getMostSpecificSubdivision()
       city = response.getCity()
@@ -122,10 +110,69 @@ class LogStash::Filters::GeoIP2 < LogStash::Filters::Base
       location = response.getLocation()
 
       geo_data_hash = Hash.new()
-      geo_data_hash = { "country" => country.getName(), "region" => subdivision.getName(), "city" => city.getName(), "postal" => postal.getCode(), "latitude" => location.getLatitude(), "longitude" => location.getLongitude()}
+
+      if @fields.nil? || @fields.empty? || @fields.include?(:city_name)
+        geo_data_hash["city_name"] = city.getName()
+      end
+
+      if @fields.nil? || @fields.empty? || @fields.include?(:country_name)
+        geo_data_hash["country_name"] = country.getName()
+      end
+
+      if @fields.nil? || @fields.empty? || @fields.include?(:continent_code)
+        geo_data_hash["continent_code"] = response.getContinent().getCode()
+      end
+
+      if @fields.nil? || @fields.empty? || @fields.include?(:continent_name)
+        geo_data_hash["continent_name"] = response.getContinent().getName()
+      end
+
+      if @fields.nil? || @fields.empty? || @fields.include?(:country_code2)
+        geo_data_hash["country_code2"] = country.getIsoCode()
+      end
+
+      if @fields.nil? || @fields.empty? || @fields.include?(:country_code3)
+        geo_data_hash["country_code3"] = country.getIsoCode()
+      end
+
+      if @fields.nil? || @fields.empty? || @fields.include?(:ip)
+        geo_data_hash["ip"] = ip_address.getHostAddress()
+      end
+
+      if @fields.nil? || @fields.empty? || @fields.include?(:postal_code)
+        geo_data_hash["postal_code"] = postal.getCode()
+      end
+
+      if @fields.nil? || @fields.empty? || @fields.include?(:dma_code)
+        geo_data_hash["dma_code"] = location.getMetroCode()
+      end
+
+      if @fields.nil? || @fields.empty? || @fields.include?(:region_name)
+        geo_data_hash["region_name"] = subdivision.getName()
+      end
+
+      if @fields.nil? || @fields.empty? || @fields.include?(:region_code)
+        geo_data_hash["region_code"] = subdivision.getIsoCode()
+      end
+
+      if @fields.nil? || @fields.empty? || @fields.include?(:timezone)
+        geo_data_hash["timezone"] = location.getTimeZone()
+      end
+
+      if @fields.nil? || @fields.empty? || @fields.include?(:location)
+        geo_data_hash["location"] = [ location.getLongitude(), location.getLatitude() ]
+      end
+
+      if @fields.nil? || @fields.empty? || @fields.include?(:latitude)
+        geo_data_hash["latitude"] = location.getLatitude()
+      end
+
+      if @fields.nil? || @fields.empty? || @fields.include?(:longitude)
+        geo_data_hash["longitude"] = location.getLongitude()
+      end
 
     rescue com.maxmind.geoip2.exception.AddressNotFoundException => e
-      # Address Not Found
+      @logger.debug("IP not found!", :field => @field, :event => event)
       return
     rescue java.net.UnknownHostException => e
       @logger.error("IP Field contained invalid IP address or hostname", :field => @field, :event => event)
@@ -135,28 +182,8 @@ class LogStash::Filters::GeoIP2 < LogStash::Filters::Base
       return
     end
 
-    event[@target] = {} if event[@target].nil?
-    geo_data_hash.each do |key, value|
-      next if value.nil? || (value.is_a?(String) && value.empty?)
-      if @fields.nil? || @fields.empty? || @fields.include?(key.to_s)
-        # convert key to string (normally a Symbol)
-        if value.is_a?(String)
-          # Some strings from GeoIP don't have the correct encoding...
-          value = case value.encoding
-            # I have found strings coming from GeoIP that are ASCII-8BIT are actually
-            # ISO-8859-1...
-            when Encoding::ASCII_8BIT; value.force_encoding(Encoding::ISO_8859_1).encode(Encoding::UTF_8)
-            when Encoding::ISO_8859_1, Encoding::US_ASCII;  value.encode(Encoding::UTF_8)
-            else; value
-          end
-        end
-        event[@target][key.to_s] = value
-      end
-    end # geo_data_hash.each
-    if event[@target].key?('latitude') && event[@target].key?('longitude')
-      # If we have latitude and longitude values, add the location field as GeoJSON array
-      event[@target]['location'] = [ event[@target]["longitude"].to_f, event[@target]["latitude"].to_f ]
-    end
+    event[@target] = geo_data_hash
+
     filter_matched(event)
   end # def filter
 end # class LogStash::Filters::GeoIP
