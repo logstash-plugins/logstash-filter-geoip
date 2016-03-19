@@ -29,7 +29,7 @@ describe LogStash::Filters::GeoIP do
 
     sample("ip" => "127.0.0.1") do
       # assume geoip fails on localhost lookups
-      reject { subject }.include?("geoip")
+      expect(subject["geoip"]).to eq({})
     end
   end
 
@@ -61,7 +61,7 @@ describe LogStash::Filters::GeoIP do
 
       sample("ip" => "127.0.0.1") do
         # assume geoip fails on localhost lookups
-        expect(subject).not_to include("src_ip")
+        expect(subject["src_ip"]).to eq({})
       end
     end
 
@@ -211,29 +211,6 @@ describe LogStash::Filters::GeoIP do
       sample("ip" => "8.8.8.8") do
         expect(LogStash::Filters::GeoIP.logger).to receive(:error).with(anything, include(:field => "ip"))
         subject
-      end
-    end
-  end
-
-  describe "returned object identities" do
-    let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message") }
-    let(:event) { LogStash::Event.new("message" => "8.8.8.8") }
-    let(:alt_event) { LogStash::Event.new("message" => "8.8.8.8") }
-
-    before do
-      plugin.register
-    end
-
-    it "should dup the objects" do
-      plugin.apply_geodata(plugin.get_geo_data(event), event)
-      plugin.apply_geodata(plugin.get_geo_data(alt_event), alt_event)
-
-      event["geoip"].each do |k,v|
-        alt_v = alt_event["geoip"][k]
-        expect(v).to eql(alt_v)
-        unless v.is_a?(Numeric) # Numeric values can't be mutated, so this isn't an issue, its really for strings
-          expect(v.object_id).not_to eql(alt_v.object_id), "Object Ids for key #{k} and v #{v}"
-        end
       end
     end
   end

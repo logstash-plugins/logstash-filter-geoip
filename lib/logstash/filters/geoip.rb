@@ -107,7 +107,11 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     @logger.info("Using geoip database", :path => @database)
 
     db_file = JavaIO::File.new(@database)
-    @parser = DatabaseReader::Builder.new(db_file).withCache(CHMCache.new(@cache_size)).build();
+    begin
+      @parser = DatabaseReader::Builder.new(db_file).withCache(CHMCache.new(@cache_size)).build();
+    rescue Java::ComMaxmindDb::InvalidDatabaseException => e
+      # do nothing
+    end
   end # def register
 
   public
@@ -127,74 +131,77 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
       geo_data_hash = Hash.new()
 
-      if @fields.nil? || @fields.empty? || @fields.include?(:city_name)
+      if @fields.nil? || @fields.empty? || @fields.include?("city_name")
         geo_data_hash["city_name"] = city.getName()
       end
 
-      if @fields.nil? || @fields.empty? || @fields.include?(:country_name)
+      if @fields.nil? || @fields.empty? || @fields.include?("country_name")
         geo_data_hash["country_name"] = country.getName()
       end
 
-      if @fields.nil? || @fields.empty? || @fields.include?(:continent_code)
+      if @fields.nil? || @fields.empty? || @fields.include?("continent_code")
         geo_data_hash["continent_code"] = response.getContinent().getCode()
       end
 
-      if @fields.nil? || @fields.empty? || @fields.include?(:continent_name)
+      if @fields.nil? || @fields.empty? || @fields.include?("continent_name")
         geo_data_hash["continent_name"] = response.getContinent().getName()
       end
 
-      if @fields.nil? || @fields.empty? || @fields.include?(:country_code2)
+      if @fields.nil? || @fields.empty? || @fields.include?("country_code2")
         geo_data_hash["country_code2"] = country.getIsoCode()
       end
 
-      if @fields.nil? || @fields.empty? || @fields.include?(:country_code3)
+      if @fields.nil? || @fields.empty? || @fields.include?("country_code3")
         geo_data_hash["country_code3"] = country.getIsoCode()
       end
 
-      if @fields.nil? || @fields.empty? || @fields.include?(:ip)
+      if @fields.nil? || @fields.empty? || @fields.include?("ip")
         geo_data_hash["ip"] = ip_address.getHostAddress()
       end
 
-      if @fields.nil? || @fields.empty? || @fields.include?(:postal_code)
+      if @fields.nil? || @fields.empty? || @fields.include?("postal_code")
         geo_data_hash["postal_code"] = postal.getCode()
       end
 
-      if @fields.nil? || @fields.empty? || @fields.include?(:dma_code)
+      if @fields.nil? || @fields.empty? || @fields.include?("dma_code")
         geo_data_hash["dma_code"] = location.getMetroCode()
       end
 
-      if @fields.nil? || @fields.empty? || @fields.include?(:region_name)
+      if @fields.nil? || @fields.empty? || @fields.include?("region_name")
         geo_data_hash["region_name"] = subdivision.getName()
       end
 
-      if @fields.nil? || @fields.empty? || @fields.include?(:region_code)
+      if @fields.nil? || @fields.empty? || @fields.include?("region_code")
         geo_data_hash["region_code"] = subdivision.getIsoCode()
       end
 
-      if @fields.nil? || @fields.empty? || @fields.include?(:timezone)
+      if @fields.nil? || @fields.empty? || @fields.include?("timezone")
         geo_data_hash["timezone"] = location.getTimeZone()
       end
 
-      if @fields.nil? || @fields.empty? || @fields.include?(:location)
+      if @fields.nil? || @fields.empty? || @fields.include?("location")
         geo_data_hash["location"] = [ location.getLongitude(), location.getLatitude() ]
       end
 
-      if @fields.nil? || @fields.empty? || @fields.include?(:latitude)
+      if @fields.nil? || @fields.empty? || @fields.include?("latitude")
         geo_data_hash["latitude"] = location.getLatitude()
       end
 
-      if @fields.nil? || @fields.empty? || @fields.include?(:longitude)
+      if @fields.nil? || @fields.empty? || @fields.include?("longitude")
         geo_data_hash["longitude"] = location.getLongitude()
       end
 
     rescue com.maxmind.geoip2.exception.AddressNotFoundException => e
-      @logger.debug("IP not found!", :field => @field, :event => event)
+      @logger.debug("IP not found!", :field => @source, :event => event)
+      event[@target] = {}
       return
     rescue java.net.UnknownHostException => e
-      @logger.error("IP Field contained invalid IP address or hostname", :field => @field, :event => event)
+      @logger.error("IP Field contained invalid IP address or hostname", :field => @source, :event => event)
+      event[@target] = {}
       return
     rescue Exception => e
-      @logger.error("Unknown error while looking up GeoIP data", :exception => e, :field => @field, :event => event)
+      @logger.error("Unknown error while looking up GeoIP data", :exception => e, :field => @source, :event => event)
+      event[@target] = {}
       return
     end
 
