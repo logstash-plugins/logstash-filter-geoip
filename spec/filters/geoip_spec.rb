@@ -1,31 +1,9 @@
 require "logstash/devutils/rspec/spec_helper"
 require "logstash/filters/geoip"
 
-ASNDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoIPASNum*.dat").first
-CITYDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoLiteCity*.dat").first
+CITYDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoLite2-City.mmdb").first
 
 describe LogStash::Filters::GeoIP do
-
-  # describe "ASN db" do
-  #   config <<-CONFIG
-  #     filter {
-  #       geoip {
-  #         source => "ip"
-  #         database => "#{ASNDB}"
-  #       }
-  #     }
-  #   CONFIG
-  #
-  #   sample("ip" => "1.1.1.1") do
-  #     insist { subject["geoip"]["asn"] } == "Google Inc."
-  #   end
-  #
-  #   # avoid crashing on unsupported IPv6 addresses
-  #   # see https://github.com/logstash-plugins/logstash-filter-geoip/issues/21
-  #   sample("ip" => "2a02:8071:aa1:c700:7984:22fc:c8e6:f6ff") do
-  #     reject { subject }.include?("geoip")
-  #   end
-  # end
 
   describe "defaults" do
     config <<-CONFIG
@@ -128,31 +106,6 @@ describe LogStash::Filters::GeoIP do
 
   end
 
-  describe "correct encodings with ASN db" do
-    config <<-CONFIG
-      filter {
-        geoip {
-          source => "ip"
-          database => "#{ASNDB}"
-        }
-      }
-    CONFIG
-
-
-    sample("ip" => "1.1.1.1") do
-      insist { subject["geoip"]["asn"].encoding } == Encoding::UTF_8
-    end
-    sample("ip" => "187.2.0.0") do
-      insist { subject["geoip"]["asn"].encoding } == Encoding::UTF_8
-    end
-    sample("ip" => "189.2.0.0") do
-      insist { subject["geoip"]["asn"].encoding } == Encoding::UTF_8
-    end
-    sample("ip" => "161.24.0.0") do
-      insist { subject["geoip"]["asn"].encoding } == Encoding::UTF_8
-    end
-  end
-
   describe "location field" do
     shared_examples_for "an event with a [geoip][location] field" do
       subject(:event) { LogStash::Event.new("message" => "8.8.8.8") }
@@ -189,7 +142,7 @@ describe LogStash::Filters::GeoIP do
           filter {
             geoip {
               source => "ip"
-              database => "#{ASNDB}"
+              database => "#{CITYDB}"
             }
           }
         CONFIG
@@ -204,7 +157,7 @@ describe LogStash::Filters::GeoIP do
     end
 
     describe "filter method outcomes" do
-      let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message", "add_tag" => "done", "database" => ASNDB) }
+      let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message", "add_tag" => "done", "database" => CITYDB) }
       let(:event) { LogStash::Event.new("message" => ipstring) }
 
       before do
@@ -285,18 +238,4 @@ describe LogStash::Filters::GeoIP do
     end
   end
 
-  # describe "re-initializing thread current DB" do
-  #   let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message") }
-  #
-  #   before do
-  #     plugin.register
-  #   end
-  #
-  #   it "should initialize the DB on lookup, regardless of thread state" do
-  #     Thread.current[plugin.threadkey] = nil
-  #     expect {
-  #       plugin.get_geo_data_for_ip("8.8.8.8")
-  #     }.not_to raise_error
-  #   end
-  # end
 end
