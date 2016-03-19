@@ -47,7 +47,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   # The path to the GeoIP2 database file which Logstash should use. Only City database is supported by now.
   #
-  # If not specified, this will default to the world_city_geoip2 database that ships
+  # If not specified, this will default to the GeoLiteCity database that ships
   # with Logstash.
   config :database, :validate => :path
 
@@ -78,6 +78,22 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # is still valid GeoJSON.
   config :target, :validate => :string, :default => 'geoip'
 
+  # GeoIP lookup is surprisingly expensive. This filter uses an cache to take advantage of the fact that
+  # IPs agents are often found adjacent to one another in log files and rarely have a random distribution.
+  # The higher you set this the more likely an item is to be in the cache and the faster this filter will run.
+  # However, if you set this too high you can use more memory than desired.
+  # Since the Geoip API upgraded to v2, there is not any eviction policy so far, if cache is full, no more record can be added.
+  # Experiment with different values for this option to find the best performance for your dataset.
+  #
+  # This MUST be set to a value > 0. There is really no reason to not want this behavior, the overhead is minimal
+  # and the speed gains are large.
+  #
+  # It is important to note that this config value is global to the geoip_type. That is to say all instances of the geoip filter
+  # of the same geoip_type share the same cache. The last declared cache size will 'win'. The reason for this is that there would be no benefit
+  # to having multiple caches for different instances at different points in the pipeline, that would just increase the
+  # number of cache misses and waste memory.
+  config :cache_size, :validate => :number, :default => 1000
+
   public
   def register
     if @database.nil?
@@ -91,7 +107,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     @logger.info("Using geoip database", :path => @database)
 
     db_file = JavaIO::File.new(@database)
-    @parser = DatabaseReader::Builder.new(db_file).withCache(CHMCache.new()).build();
+    @parser = DatabaseReader::Builder.new(db_file).withCache(CHMCache.new(@cache_size)).build();
   end # def register
 
   public
