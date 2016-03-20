@@ -3,3 +3,5 @@ Gemfile.lock
 .bundle
 vendor
 .idea
+lib/com
+lib/logstash-filter-geoip_jars.rb

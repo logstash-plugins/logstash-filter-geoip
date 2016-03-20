@@ -2,13 +2,7 @@
 require "logstash/filters/base"
 require "logstash/namespace"
 
-require "java"
-
-require_relative "../../geoip2-2.5.0/lib/geoip2-2.5.0.jar"
-require_relative "../../geoip2-2.5.0/lib/jackson-databind-2.6.4.jar"
-require_relative "../../geoip2-2.5.0/lib/jackson-core-2.6.4.jar"
-require_relative "../../geoip2-2.5.0/lib/maxmind-db-1.1.0.jar"
-require_relative "../../geoip2-2.5.0/lib/jackson-annotations-2.6.0.jar"
+require "logstash-filter-geoip_jars"
 
 java_import "java.net.InetAddress"
 java_import "com.maxmind.geoip2.DatabaseReader"
