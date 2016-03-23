@@ -7,4 +7,9 @@ task :default do
   system("rake -T")
 end
 
+require 'jars/installer'
+task :install_jars do
+  Jars::Installer.vendor_jars!
+end
+
 require "logstash/devutils/rake"
