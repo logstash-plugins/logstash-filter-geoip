@@ -57,7 +57,11 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # For the built-in GeoLiteCity database, the following are available:
   # `city\_name`, `continent\_code`, `country\_code2`, `country\_code3`, `country\_name`,
   # `dma\_code`, `ip`, `latitude`, `longitude`, `postal\_code`, `region\_name` and `timezone`.
-  config :fields, :validate => :array
+  config :fields, :validate => :array, :default => ['city_name', 'continent_code',
+                                                    'country_code2', 'country_code3', 'country_name',
+                                                    'dma_code', 'ip', 'latitude',
+                                                    'longitude', 'postal_code', 'region_name',
+                                                    'region_code', 'timezone', 'location']
 
   # Specify the field into which Logstash should store the geoip data.
   # This can be useful, for example, if you have `src\_ip` and `dst\_ip` fields and
@@ -125,64 +129,41 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
       geo_data_hash = Hash.new()
 
-      if @fields.nil? || @fields.empty? || @fields.include?("city_name")
-        geo_data_hash["city_name"] = city.getName()
-      end
-
-      if @fields.nil? || @fields.empty? || @fields.include?("country_name")
-        geo_data_hash["country_name"] = country.getName()
-      end
-
-      if @fields.nil? || @fields.empty? || @fields.include?("continent_code")
-        geo_data_hash["continent_code"] = response.getContinent().getCode()
-      end
-
-      if @fields.nil? || @fields.empty? || @fields.include?("continent_name")
-        geo_data_hash["continent_name"] = response.getContinent().getName()
-      end
-
-      if @fields.nil? || @fields.empty? || @fields.include?("country_code2")
-        geo_data_hash["country_code2"] = country.getIsoCode()
-      end
-
-      if @fields.nil? || @fields.empty? || @fields.include?("country_code3")
-        geo_data_hash["country_code3"] = country.getIsoCode()
-      end
-
-      if @fields.nil? || @fields.empty? || @fields.include?("ip")
-        geo_data_hash["ip"] = ip_address.getHostAddress()
-      end
-
-      if @fields.nil? || @fields.empty? || @fields.include?("postal_code")
-        geo_data_hash["postal_code"] = postal.getCode()
-      end
-
-      if @fields.nil? || @fields.empty? || @fields.include?("dma_code")
-        geo_data_hash["dma_code"] = location.getMetroCode()
-      end
-
-      if @fields.nil? || @fields.empty? || @fields.include?("region_name")
-        geo_data_hash["region_name"] = subdivision.getName()
-      end
-
-      if @fields.nil? || @fields.empty? || @fields.include?("region_code")
-        geo_data_hash["region_code"] = subdivision.getIsoCode()
-      end
-
-      if @fields.nil? || @fields.empty? || @fields.include?("timezone")
-        geo_data_hash["timezone"] = location.getTimeZone()
-      end
-
-      if @fields.nil? || @fields.empty? || @fields.include?("location")
-        geo_data_hash["location"] = [ location.getLongitude(), location.getLatitude() ]
-      end
-
-      if @fields.nil? || @fields.empty? || @fields.include?("latitude")
-        geo_data_hash["latitude"] = location.getLatitude()
-      end
-
-      if @fields.nil? || @fields.empty? || @fields.include?("longitude")
-        geo_data_hash["longitude"] = location.getLongitude()
+      @fields.each do |field|
+        case field
+        when "city_name"
+          geo_data_hash["city_name"] = city.getName()
+        when "country_name"
+          geo_data_hash["country_name"] = country.getName()
+        when "continent_code"
+          geo_data_hash["continent_code"] = response.getContinent().getCode()
+        when "continent_name"
+          geo_data_hash["continent_name"] = response.getContinent().getName()
+        when "country_code2"
+          geo_data_hash["country_code2"] = country.getIsoCode()
+        when "country_code3"
+          geo_data_hash["country_code3"] = country.getIsoCode()
+        when "ip"
+          geo_data_hash["ip"] = ip_address.getHostAddress()
+        when "postal_code"
+          geo_data_hash["postal_code"] = postal.getCode()
+        when "dma_code"
+          geo_data_hash["dma_code"] = location.getMetroCode()
+        when "region_name"
+          geo_data_hash["region_name"] = subdivision.getName()
+        when "region_code"
+          geo_data_hash["region_code"] = subdivision.getIsoCode()
+        when "timezone"
+          geo_data_hash["timezone"] = location.getTimeZone()
+        when "location"
+          geo_data_hash["location"] = [ location.getLongitude(), location.getLatitude() ]
+        when "latitude"
+          geo_data_hash["latitude"] = location.getLatitude()
+        when "longitude"
+          geo_data_hash["longitude"] = location.getLongitude()
+        else
+          raise Exception.new("[#{field}] is not a supported field option.")
+        end
       end
 
     rescue com.maxmind.geoip2.exception.AddressNotFoundException => e
