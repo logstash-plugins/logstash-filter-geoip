@@ -186,11 +186,11 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       end
 
     rescue com.maxmind.geoip2.exception.AddressNotFoundException => e
-      @logger.debug("IP not found!", :field => @source, :event => event)
+      @logger.debug("IP not found!", :exception => e, :field => @source, :event => event)
       event[@target] = {}
       return
     rescue java.net.UnknownHostException => e
-      @logger.error("IP Field contained invalid IP address or hostname", :field => @source, :event => event)
+      @logger.error("IP Field contained invalid IP address or hostname", :exception => e, :field => @source, :event => event)
       event[@target] = {}
       return
     rescue Exception => e
