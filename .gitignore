@@ -3,4 +3,4 @@ Gemfile.lock
 .bundle
 vendor
 .idea
-lib/**/*.jar
+lib/com
