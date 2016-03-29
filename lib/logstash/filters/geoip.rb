@@ -124,7 +124,8 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     begin
       @parser = DatabaseReader::Builder.new(db_file).withCache(CHMCache.new(@cache_size)).build();
     rescue Java::ComMaxmindDb::InvalidDatabaseException => e
-      # do nothing
+      @logger.error("The Geoip2 MMDB database provided is invalid or corrupted.", :exception => e, :field => @source)
+      raise e
     end
   end # def register
 

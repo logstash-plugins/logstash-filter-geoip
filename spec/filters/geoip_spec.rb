@@ -210,7 +210,7 @@ describe LogStash::Filters::GeoIP do
     context "should return the correct sourcefield in the logging message" do
       sample("ip" => "8.8.8.8") do
         expect(LogStash::Filters::GeoIP.logger).to receive(:error).with(anything, include(:field => "ip"))
-        subject
+        expect { subject }.to raise_error
       end
     end
   end
