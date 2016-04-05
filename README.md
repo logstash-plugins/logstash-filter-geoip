@@ -46,6 +46,12 @@ bundle install
 bundle exec rake vendor
 ```
 
+- Install jar dependencies
+
+```
+bundle exec rake install_jars
+```
+
 - Run tests
 
 ```sh

@@ -25,7 +25,7 @@ Gem::Specification.new do |s|
 
   s.requirements << "jar com.maxmind.geoip2:geoip2, 2.5.0, :exclusions=> [com.google.http-client:google-http-client]"
 
-  s.add_runtime_dependency "jar-dependencies"
+  s.add_development_dependency "jar-dependencies"
 
   s.add_development_dependency 'logstash-devutils'
 end
