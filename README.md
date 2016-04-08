@@ -1,7 +1,6 @@
 # Logstash Plugin
 
-[![Build
-Status](http://build-eu-00.elastic.co/view/LS%20Plugins/view/LS%20Filters/job/logstash-plugin-filter-geoip-unit/badge/icon)](http://build-eu-00.elastic.co/view/LS%20Plugins/view/LS%20Filters/job/logstash-plugin-filter-geoip-unit/)
+[![Travis Build Status](https://travis-ci.org/logstash-plugins/logstash-filter-geoip.svg)](https://travis-ci.org/logstash-plugins/logstash-filter-geoip)
 
 This is a plugin for [Logstash](https://github.com/elastic/logstash).
 
