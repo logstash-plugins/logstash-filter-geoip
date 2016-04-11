@@ -14,10 +14,22 @@ java_import "com.maxmind.geoip2.record.Postal"
 java_import "com.maxmind.geoip2.record.Location"
 java_import "com.maxmind.db.CHMCache"
 
+def suppress_all_warnings
+  old_verbose = $VERBOSE
+  begin
+    $VERBOSE = nil
+    yield if block_given?
+  ensure
+    # always re-set to old value, even if block raises an exception
+    $VERBOSE = old_verbose
+  end
+end
+
 # create a new instance of the Java class File without shadowing the Ruby version of the File class
 module JavaIO
   include_package "java.io"
 end
+
 
 # The GeoIP2 filter adds information about the geographical location of IP addresses,
 # based on data from the Maxmind database.
@@ -110,22 +122,24 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   public
   def register
-    if @database.nil?
-      @database = ::Dir.glob(::File.join(::File.expand_path("../../../vendor/", ::File.dirname(__FILE__)),"GeoLite2-City.mmdb")).first
+    suppress_all_warnings do
+      if @database.nil?
+        @database = ::Dir.glob(::File.join(::File.expand_path("../../../vendor/", ::File.dirname(__FILE__)),"GeoLite2-City.mmdb")).first
 
-      if @database.nil? || !File.exists?(@database)
-        raise "You must specify 'database => ...' in your geoip filter (I looked for '#{@database}')"
+        if @database.nil? || !File.exists?(@database)
+          raise "You must specify 'database => ...' in your geoip filter (I looked for '#{@database}')"
+        end
       end
-    end
 
-    @logger.info("Using geoip database", :path => @database)
+      @logger.info("Using geoip database", :path => @database)
 
-    db_file = JavaIO::File.new(@database)
-    begin
-      @parser = DatabaseReader::Builder.new(db_file).withCache(CHMCache.new(@cache_size)).build();
-    rescue Java::ComMaxmindDb::InvalidDatabaseException => e
-      @logger.error("The Geoip2 MMDB database provided is invalid or corrupted.", :exception => e, :field => @source)
-      raise e
+      db_file = JavaIO::File.new(@database)
+      begin
+        @parser = DatabaseReader::Builder.new(db_file).withCache(CHMCache.new(@cache_size)).build();
+      rescue Java::ComMaxmindDb::InvalidDatabaseException => e
+        @logger.error("The Geoip2 MMDB database provided is invalid or corrupted.", :exception => e, :field => @source)
+        raise e
+      end
     end
   end # def register
 
