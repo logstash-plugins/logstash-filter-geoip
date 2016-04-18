@@ -2,3 +2,5 @@
 Gemfile.lock
 .bundle
 vendor
+.idea
+lib/com

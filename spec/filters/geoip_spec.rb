@@ -1,31 +1,9 @@
 require "logstash/devutils/rspec/spec_helper"
 require "logstash/filters/geoip"
 
-ASNDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoIPASNum*.dat").first
-CITYDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoLiteCity*.dat").first
+CITYDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoLite2-City.mmdb").first
 
 describe LogStash::Filters::GeoIP do
-
-  describe "ASN db" do
-    config <<-CONFIG
-      filter {
-        geoip {
-          source => "ip"
-          database => "#{ASNDB}"
-        }
-      }
-    CONFIG
-
-    sample("ip" => "1.1.1.1") do
-      insist { subject["geoip"]["asn"] } == "Google Inc."
-    end
-
-    # avoid crashing on unsupported IPv6 addresses
-    # see https://github.com/logstash-plugins/logstash-filter-geoip/issues/21
-    sample("ip" => "2a02:8071:aa1:c700:7984:22fc:c8e6:f6ff") do
-      reject { subject }.include?("geoip")
-    end
-  end
 
   describe "defaults" do
     config <<-CONFIG
@@ -42,7 +20,7 @@ describe LogStash::Filters::GeoIP do
 
       expected_fields = %w(ip country_code2 country_code3 country_name
                            continent_code region_name city_name postal_code
-                           latitude longitude dma_code area_code timezone
+                           latitude longitude dma_code timezone
                            location )
       expected_fields.each do |f|
         insist { subject["geoip"] }.include?(f)
@@ -51,7 +29,7 @@ describe LogStash::Filters::GeoIP do
 
     sample("ip" => "127.0.0.1") do
       # assume geoip fails on localhost lookups
-      reject { subject }.include?("geoip")
+      expect(subject["geoip"]).to eq({})
     end
   end
 
@@ -74,7 +52,7 @@ describe LogStash::Filters::GeoIP do
 
         expected_fields = %w(ip country_code2 country_code3 country_name
                              continent_code region_name city_name postal_code
-                             latitude longitude dma_code area_code timezone
+                             latitude longitude dma_code timezone
                              location )
         expected_fields.each do |f|
           expect(subject["src_ip"]).to include(f)
@@ -83,7 +61,7 @@ describe LogStash::Filters::GeoIP do
 
       sample("ip" => "127.0.0.1") do
         # assume geoip fails on localhost lookups
-        expect(subject).not_to include("src_ip")
+        expect(subject["src_ip"]).to eq({})
       end
     end
 
@@ -104,7 +82,7 @@ describe LogStash::Filters::GeoIP do
     CONFIG
     expected_fields = %w(ip country_code2 country_code3 country_name
                            continent_code region_name city_name postal_code
-                           dma_code area_code timezone)
+                           dma_code timezone)
 
     sample("ip" => "1.1.1.1") do
       checked = 0
@@ -126,31 +104,6 @@ describe LogStash::Filters::GeoIP do
       insist { checked } > 0
     end
 
-  end
-
-  describe "correct encodings with ASN db" do
-    config <<-CONFIG
-      filter {
-        geoip {
-          source => "ip"
-          database => "#{ASNDB}"
-        }
-      }
-    CONFIG
-
-
-    sample("ip" => "1.1.1.1") do
-      insist { subject["geoip"]["asn"].encoding } == Encoding::UTF_8
-    end
-    sample("ip" => "187.2.0.0") do
-      insist { subject["geoip"]["asn"].encoding } == Encoding::UTF_8
-    end
-    sample("ip" => "189.2.0.0") do
-      insist { subject["geoip"]["asn"].encoding } == Encoding::UTF_8
-    end
-    sample("ip" => "161.24.0.0") do
-      insist { subject["geoip"]["asn"].encoding } == Encoding::UTF_8
-    end
   end
 
   describe "location field" do
@@ -189,7 +142,7 @@ describe LogStash::Filters::GeoIP do
           filter {
             geoip {
               source => "ip"
-              database => "#{ASNDB}"
+              database => "#{CITYDB}"
             }
           }
         CONFIG
@@ -204,7 +157,7 @@ describe LogStash::Filters::GeoIP do
     end
 
     describe "filter method outcomes" do
-      let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message", "add_tag" => "done", "database" => ASNDB) }
+      let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message", "add_tag" => "done", "database" => CITYDB) }
       let(:event) { LogStash::Event.new("message" => ipstring) }
 
       before do
@@ -257,46 +210,9 @@ describe LogStash::Filters::GeoIP do
     context "should return the correct sourcefield in the logging message" do
       sample("ip" => "8.8.8.8") do
         expect(LogStash::Filters::GeoIP.logger).to receive(:error).with(anything, include(:field => "ip"))
-        subject
+        expect { subject }.to raise_error
       end
     end
   end
 
-  describe "returned object identities" do
-    let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message") }
-    let(:event) { LogStash::Event.new("message" => "8.8.8.8") }
-    let(:alt_event) { LogStash::Event.new("message" => "8.8.8.8") }
-
-    before do
-      plugin.register
-    end
-
-    it "should dup the objects" do
-      plugin.apply_geodata(plugin.get_geo_data(event), event)
-      plugin.apply_geodata(plugin.get_geo_data(alt_event), alt_event)
-
-      event["geoip"].each do |k,v|
-        alt_v = alt_event["geoip"][k]
-        expect(v).to eql(alt_v)
-        unless v.is_a?(Numeric) # Numeric values can't be mutated, so this isn't an issue, its really for strings
-          expect(v.object_id).not_to eql(alt_v.object_id), "Object Ids for key #{k} and v #{v}"
-        end
-      end
-    end
-  end
-
-  describe "re-initializing thread current DB" do
-    let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message") }
-
-    before do
-      plugin.register
-    end
-
-    it "should initialize the DB on lookup, regardless of thread state" do
-      Thread.current[plugin.threadkey] = nil
-      expect {
-        plugin.get_geo_data_for_ip("8.8.8.8")
-      }.not_to raise_error
-    end
-  end
 end
