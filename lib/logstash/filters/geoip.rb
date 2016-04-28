@@ -163,7 +163,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       else  
         geo_data_hash = populate_data(event, response, ip_address)
       end
-      
+
     rescue com.maxmind.geoip2.exception.AddressNotFoundException => e
       @logger.debug("IP not found!", :exception => e, :field => @source, :event => event)
       set_data(event)
@@ -177,7 +177,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       # Dont' swallow this, bubble up for unknown issue
       raise e
     end
-    
+
     event[@target] = geo_data_hash
 
     filter_matched(event)
@@ -237,16 +237,15 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     end
     
     return geo_data_hash
-    
   end
-  
+
   def tag_unsuccessful_lookup(event)
     @logger.debug? && @logger.debug("IP #{event[@source]} was not found in the database", :event => event)
     @tag_on_failure.each{|tag| event.tag(tag)}
   end
-  
+
   def set_data(event, geo_data = {}) 
     event[@target] = geo_data
   end
-    
+
 end # class LogStash::Filters::GeoIP
