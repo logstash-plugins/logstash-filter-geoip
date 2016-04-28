@@ -186,6 +186,36 @@ describe LogStash::Filters::GeoIP do
           expect(event["geoip"]).to eq({})
         end
       end
+      
+      context "when a IP is not found in the DB" do
+        # regression test for issue https://github.com/logstash-plugins/logstash-filter-geoip/issues/51
+        let(:ipstring) { "113.208.89.21" }
+
+        it "should set the target field to an empty hash" do
+          expect(event["geoip"]).to eq({})
+          expect(event["tags"]).to include("_geoip_lookup_failure")
+        end
+      end
+      
+      context "when IP is IPv6 format for localhost" do
+        # regression test for issue https://github.com/logstash-plugins/logstash-filter-geoip/issues/51
+        let(:ipstring) { "::1" }
+
+        it "should set the target field to an empty hash" do
+          expect(event["geoip"]).to eq({})
+        end
+      end
+      
+      context "when IP is IPv6 format" do
+        # regression test for issue https://github.com/logstash-plugins/logstash-filter-geoip/issues/51
+        let(:ipstring) { "2607:f0d0:1002:51::4" }
+
+        it "should set the target field to an empty hash" do
+          expect(event["geoip"]).not_to be_empty
+          expect(event["geoip"]["city_name"]).not_to be_nil
+        end
+      end
+      
     end
 
     context "should return the correct source field in the logging message" do
@@ -214,5 +244,5 @@ describe LogStash::Filters::GeoIP do
       end
     end
   end
-
+  
 end
