@@ -1,4 +1,7 @@
-# 3.0.0-beta1
+# 3.0.0-beta2
+ - Internal: Actually include the vendored jars
+
+# 3.0.0-beta1 
  - Changed plugin to use GeoIP2 database. See http://dev.maxmind.com/geoip/geoip2/whats-new-in-geoip2/
 
 # 2.0.7
