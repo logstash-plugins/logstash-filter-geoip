@@ -1,0 +1,14 @@
+sudo: false
+language: ruby
+cache:
+- bundler
+- directories:
+  - $HOME/.m2
+rvm:
+  - jruby-1.7.23
+before_install:
+- bundle install
+- bundle exec rake vendor
+- bundle exec rake install_jars
+script: 
+  - bundle exec rspec spec
