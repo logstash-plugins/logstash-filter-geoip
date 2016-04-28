@@ -157,7 +157,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       response = @parser.city(ip_address)
       
       if response.nil?
-        tag_unsuccesful_lookup(event)
+        tag_unsuccessful_lookup(event)
         set_data(event)
         return
       else  
@@ -195,7 +195,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     # if location is empty, there is no point populating geo data
     # and most likely all other fields are empty as well
     if location.getLatitude().nil? && location.getLongitude().nil?
-      tag_unsuccesful_lookup(event)
+      tag_unsuccessful_lookup(event)
       return geo_data_hash
     end
     
@@ -240,7 +240,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     
   end
   
-  def tag_unsuccesful_lookup(event)
+  def tag_unsuccessful_lookup(event)
     @logger.debug? && @logger.debug("IP #{event[@source]} was not found in the database", :event => event)
     @tag_on_failure.each{|tag| event.tag(tag)}
   end
