@@ -61,6 +61,10 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # this field is an array, only the first value will be used.
   config :source, :validate => :string, :required => true
 
+  # Configuration to disable or enable the error logging, completely disables logging 
+  # useful in production environment
+  config :nologging, :validate => :boolean, :required => false, :default => false
+
   # An array of geoip fields to be included in the event.
   #
   # Possible fields depend on the database type. By default, all geoip fields
@@ -131,7 +135,9 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
         end
       end
 
-      @logger.info("Using geoip database", :path => @database)
+      if !nologging
+         @logger.info("Using geoip database", :path => @database)
+      end
 
       db_file = JavaIO::File.new(@database)
       begin
@@ -198,15 +204,21 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       end
 
     rescue com.maxmind.geoip2.exception.AddressNotFoundException => e
-      @logger.debug("IP not found!", :exception => e, :field => @source, :event => event)
+      if !nologging
+          @logger.debug("IP not found!", :exception => e, :field => @source, :event => event)
+      end
       event[@target] = {}
       return
     rescue java.net.UnknownHostException => e
-      @logger.error("IP Field contained invalid IP address or hostname", :exception => e, :field => @source, :event => event)
+      if !nologging
+          @logger.error("IP Field contained invalid IP address or hostname", :exception => e, :field => @source, :event => event)
+      end
       event[@target] = {}
       return
     rescue Exception => e
-      @logger.error("Unknown error while looking up GeoIP data", :exception => e, :field => @source, :event => event)
+      if !nologging
+          @logger.error("Unknown error while looking up GeoIP data", :exception => e, :field => @source, :event => event)
+      end
       event[@target] = {}
       return
     end
