@@ -119,6 +119,9 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # to having multiple caches for different instances at different points in the pipeline, that would just increase the
   # number of cache misses and waste memory.
   config :lru_cache_size, :validate => :number, :default => 1000
+  
+  # Tags the event on failure to look up geo information. This can be used in later analysis.
+  config :tag_on_failure, :validate => :array, :default => ["_geoip_lookup_failure"]
 
   public
   def register
@@ -150,69 +153,84 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     begin
       ip = event[@source]
       ip = ip.first if ip.is_a? Array
+      geo_data_hash = Hash.new
       ip_address = InetAddress.getByName(ip)
       response = @parser.city(ip_address)
-      country = response.getCountry()
-      subdivision = response.getMostSpecificSubdivision()
-      city = response.getCity()
-      postal = response.getPostal()
-      location = response.getLocation()
-
-      geo_data_hash = Hash.new()
-
-      @fields.each do |field|
-        case field
-        when "city_name"
-          geo_data_hash["city_name"] = city.getName()
-        when "country_name"
-          geo_data_hash["country_name"] = country.getName()
-        when "continent_code"
-          geo_data_hash["continent_code"] = response.getContinent().getCode()
-        when "continent_name"
-          geo_data_hash["continent_name"] = response.getContinent().getName()
-        when "country_code2"
-          geo_data_hash["country_code2"] = country.getIsoCode()
-        when "country_code3"
-          geo_data_hash["country_code3"] = country.getIsoCode()
-        when "ip"
-          geo_data_hash["ip"] = ip_address.getHostAddress()
-        when "postal_code"
-          geo_data_hash["postal_code"] = postal.getCode()
-        when "dma_code"
-          geo_data_hash["dma_code"] = location.getMetroCode()
-        when "region_name"
-          geo_data_hash["region_name"] = subdivision.getName()
-        when "region_code"
-          geo_data_hash["region_code"] = subdivision.getIsoCode()
-        when "timezone"
-          geo_data_hash["timezone"] = location.getTimeZone()
-        when "location"
-          geo_data_hash["location"] = [ location.getLongitude(), location.getLatitude() ]
-        when "latitude"
-          geo_data_hash["latitude"] = location.getLatitude()
-        when "longitude"
-          geo_data_hash["longitude"] = location.getLongitude()
-        else
-          raise Exception.new("[#{field}] is not a supported field option.")
-        end
-      end
-
+      populate_geo_data(response, ip_address, geo_data_hash)
     rescue com.maxmind.geoip2.exception.AddressNotFoundException => e
       @logger.debug("IP not found!", :exception => e, :field => @source, :event => event)
-      event[@target] = {}
-      return
     rescue java.net.UnknownHostException => e
       @logger.error("IP Field contained invalid IP address or hostname", :exception => e, :field => @source, :event => event)
-      event[@target] = {}
-      return
     rescue Exception => e
       @logger.error("Unknown error while looking up GeoIP data", :exception => e, :field => @source, :event => event)
-      event[@target] = {}
-      return
+      # Dont' swallow this, bubble up for unknown issue
+      raise e
     end
 
     event[@target] = geo_data_hash
 
+    if geo_data_hash.empty?
+      tag_unsuccessful_lookup(event)
+      return
+    end
+
     filter_matched(event)
   end # def filter
+  
+  def populate_geo_data(response, ip_address, geo_data_hash)
+    country = response.getCountry()
+    subdivision = response.getMostSpecificSubdivision()
+    city = response.getCity()
+    postal = response.getPostal()
+    location = response.getLocation()
+
+    # if location is empty, there is no point populating geo data
+    # and most likely all other fields are empty as well
+    if location.getLatitude().nil? && location.getLongitude().nil?
+      return
+    end
+
+    @fields.each do |field|
+      case field
+      when "city_name"
+        geo_data_hash["city_name"] = city.getName()
+      when "country_name"
+        geo_data_hash["country_name"] = country.getName()
+      when "continent_code"
+        geo_data_hash["continent_code"] = response.getContinent().getCode()
+      when "continent_name"
+        geo_data_hash["continent_name"] = response.getContinent().getName()
+      when "country_code2"
+        geo_data_hash["country_code2"] = country.getIsoCode()
+      when "country_code3"
+        geo_data_hash["country_code3"] = country.getIsoCode()
+      when "ip"
+        geo_data_hash["ip"] = ip_address.getHostAddress()
+      when "postal_code"
+        geo_data_hash["postal_code"] = postal.getCode()
+      when "dma_code"
+        geo_data_hash["dma_code"] = location.getMetroCode()
+      when "region_name"
+        geo_data_hash["region_name"] = subdivision.getName()
+      when "region_code"
+        geo_data_hash["region_code"] = subdivision.getIsoCode()
+      when "timezone"
+        geo_data_hash["timezone"] = location.getTimeZone()
+      when "location"
+        geo_data_hash["location"] = [ location.getLongitude(), location.getLatitude() ]
+      when "latitude"
+        geo_data_hash["latitude"] = location.getLatitude()
+      when "longitude"
+        geo_data_hash["longitude"] = location.getLongitude()
+      else
+        raise Exception.new("[#{field}] is not a supported field option.")
+      end
+    end
+  end
+
+  def tag_unsuccessful_lookup(event)
+    @logger.debug? && @logger.debug("IP #{event[@source]} was not found in the database", :event => event)
+    @tag_on_failure.each{|tag| event.tag(tag)}
+  end
+
 end # class LogStash::Filters::GeoIP
