@@ -174,7 +174,7 @@ describe LogStash::Filters::GeoIP do
         end
 
         it "should not have added any tags" do
-          expect(event["tags"]).to be_nil
+          expect(event["tags"]).to include("_geoip_lookup_failure")
         end
       end
 

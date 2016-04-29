@@ -153,25 +153,14 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     begin
       ip = event[@source]
       ip = ip.first if ip.is_a? Array
+      geo_data_hash = Hash.new
       ip_address = InetAddress.getByName(ip)
       response = @parser.city(ip_address)
-      
-      if response.nil?
-        tag_unsuccessful_lookup(event)
-        set_data(event)
-        return
-      else  
-        geo_data_hash = populate_data(event, response, ip_address)
-      end
-
+      populate_geo_data(response, ip_address, geo_data_hash)
     rescue com.maxmind.geoip2.exception.AddressNotFoundException => e
       @logger.debug("IP not found!", :exception => e, :field => @source, :event => event)
-      set_data(event)
-      return
     rescue java.net.UnknownHostException => e
       @logger.error("IP Field contained invalid IP address or hostname", :exception => e, :field => @source, :event => event)
-      set_data(event)
-      return
     rescue Exception => e
       @logger.error("Unknown error while looking up GeoIP data", :exception => e, :field => @source, :event => event)
       # Dont' swallow this, bubble up for unknown issue
@@ -180,25 +169,27 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
     event[@target] = geo_data_hash
 
+    if geo_data_hash.empty?
+      tag_unsuccessful_lookup(event)
+      return
+    end
+
     filter_matched(event)
   end # def filter
   
-  def populate_data(event, response, ip_address)
+  def populate_geo_data(response, ip_address, geo_data_hash)
     country = response.getCountry()
     subdivision = response.getMostSpecificSubdivision()
     city = response.getCity()
     postal = response.getPostal()
     location = response.getLocation()
 
-    geo_data_hash = Hash.new()
-    
     # if location is empty, there is no point populating geo data
     # and most likely all other fields are empty as well
     if location.getLatitude().nil? && location.getLongitude().nil?
-      tag_unsuccessful_lookup(event)
-      return geo_data_hash
+      return
     end
-    
+
     @fields.each do |field|
       case field
       when "city_name"
@@ -235,17 +226,11 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
         raise Exception.new("[#{field}] is not a supported field option.")
       end
     end
-    
-    return geo_data_hash
   end
 
   def tag_unsuccessful_lookup(event)
     @logger.debug? && @logger.debug("IP #{event[@source]} was not found in the database", :event => event)
     @tag_on_failure.each{|tag| event.tag(tag)}
-  end
-
-  def set_data(event, geo_data = {}) 
-    event[@target] = geo_data
   end
 
 end # class LogStash::Filters::GeoIP

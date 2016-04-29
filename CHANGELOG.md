@@ -1,3 +1,6 @@
+# 3.0.0-beta3
+ - Return empty result when IP lookup fails for location field (#70)
+
 # 3.0.0-beta2
  - Internal: Actually include the vendored jars
 
