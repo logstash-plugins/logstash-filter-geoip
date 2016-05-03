@@ -151,7 +151,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     return unless filter?(event)
 
     begin
-      ip = event[@source]
+      ip = event.get(@source)
       ip = ip.first if ip.is_a? Array
       geo_data_hash = Hash.new
       ip_address = InetAddress.getByName(ip)
@@ -167,7 +167,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       raise e
     end
 
-    event[@target] = geo_data_hash
+    event.set(@target, geo_data_hash)
 
     if geo_data_hash.empty?
       tag_unsuccessful_lookup(event)
@@ -229,7 +229,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def tag_unsuccessful_lookup(event)
-    @logger.debug? && @logger.debug("IP #{event[@source]} was not found in the database", :event => event)
+    @logger.debug? && @logger.debug("IP #{event.get(@source)} was not found in the database", :event => event)
     @tag_on_failure.each{|tag| event.tag(tag)}
   end
 

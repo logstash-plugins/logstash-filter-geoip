@@ -23,13 +23,13 @@ describe LogStash::Filters::GeoIP do
                            latitude longitude dma_code timezone
                            location )
       expected_fields.each do |f|
-        insist { subject["geoip"] }.include?(f)
+        insist { subject.get("geoip") }.include?(f)
       end
     end
 
     sample("ip" => "127.0.0.1") do
       # assume geoip fails on localhost lookups
-      expect(subject["geoip"]).to eq({})
+      expect(subject.get("geoip")).to eq({})
     end
   end
 
@@ -55,19 +55,19 @@ describe LogStash::Filters::GeoIP do
                              latitude longitude dma_code timezone
                              location )
         expected_fields.each do |f|
-          expect(subject["src_ip"]).to include(f)
+          expect(subject.get("src_ip")).to include(f)
         end
       end
 
       sample("ip" => "127.0.0.1") do
         # assume geoip fails on localhost lookups
-        expect(subject["src_ip"]).to eq({})
+        expect(subject.get("src_ip")).to eq({})
       end
     end
 
     context "when specifying add_tag" do
       sample("ip" => "8.8.8.8") do
-        expect(subject["tags"]).to include("done")
+        expect(subject.get("tags")).to include("done")
       end
     end
   end
@@ -87,9 +87,9 @@ describe LogStash::Filters::GeoIP do
     sample("ip" => "1.1.1.1") do
       checked = 0
       expected_fields.each do |f|
-        next unless subject["geoip"][f]
+        next unless subject.get("geoip")[f]
         checked += 1
-        insist { subject["geoip"][f].encoding } == Encoding::UTF_8
+        insist { subject.get("geoip")[f].encoding } == Encoding::UTF_8
       end
       insist { checked } > 0
     end
@@ -97,9 +97,9 @@ describe LogStash::Filters::GeoIP do
     sample("ip" => "189.2.0.0") do
       checked = 0
       expected_fields.each do |f|
-        next unless subject["geoip"][f]
+        next unless subject.get("geoip")[f]
         checked += 1
-        insist { subject["geoip"][f].encoding } == Encoding::UTF_8
+        insist { subject.get("geoip")[f].encoding } == Encoding::UTF_8
       end
       insist { checked } > 0
     end
@@ -117,7 +117,7 @@ describe LogStash::Filters::GeoIP do
       end
 
       it "should have a location field" do
-        expect(event["[geoip][location]"]).not_to(be_nil)
+        expect(event.get("[geoip][location]")).not_to(be_nil)
       end
     end
 
@@ -170,11 +170,11 @@ describe LogStash::Filters::GeoIP do
         let(:ipstring) { "N/A" }
 
         it "should set the target field to an empty hash" do
-          expect(event["geoip"]).to eq({})
+          expect(event.get("geoip")).to eq({})
         end
 
         it "should add failure tags" do
-          expect(event["tags"]).to include("_geoip_lookup_failure")
+          expect(event.get("tags")).to include("_geoip_lookup_failure")
         end
       end
 
@@ -183,7 +183,7 @@ describe LogStash::Filters::GeoIP do
         let(:ipstring) { "123.45.67.89,61.160.232.222" }
 
         it "should set the target field to an empty hash" do
-          expect(event["geoip"]).to eq({})
+          expect(event.get("geoip")).to eq({})
         end
       end
       
@@ -191,8 +191,8 @@ describe LogStash::Filters::GeoIP do
         let(:ipstring) { "113.208.89.21" }
 
         it "should set the target field to an empty hash" do
-          expect(event["geoip"]).to eq({})
-          expect(event["tags"]).to include("_geoip_lookup_failure")
+          expect(event.get("geoip")).to eq({})
+          expect(event.get("tags")).to include("_geoip_lookup_failure")
         end
       end
       
@@ -200,7 +200,7 @@ describe LogStash::Filters::GeoIP do
         let(:ipstring) { "::1" }
 
         it "should set the target field to an empty hash" do
-          expect(event["geoip"]).to eq({})
+          expect(event.get("geoip")).to eq({})
         end
       end
       
@@ -208,8 +208,8 @@ describe LogStash::Filters::GeoIP do
         let(:ipstring) { "2607:f0d0:1002:51::4" }
 
         it "should set the target field to an empty hash" do
-          expect(event["geoip"]).not_to be_empty
-          expect(event["geoip"]["city_name"]).not_to be_nil
+          expect(event.get("geoip")).not_to be_empty
+          expect(event.get("geoip")["city_name"]).not_to be_nil
         end
       end
       
