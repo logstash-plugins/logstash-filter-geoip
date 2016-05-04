@@ -9,8 +9,8 @@ rvm:
 - jruby-1.7.25
 before_install:
 - git clone -b feature/event_interface https://github.com/elastic/logstash
+script:
 - bundle exec rake vendor
 - bundle exec rake install_jars
-script:
 - bundle exec rspec spec
 jdk: oraclejdk8
