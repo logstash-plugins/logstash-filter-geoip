@@ -1,5 +1,7 @@
-## 
+## 4.0.0
   - Update the plugin to the version 2.0 of the plugin api, this change is required for Logstash 5.0 compatibility. See https://github.com/elastic/logstash/issues/5141
+  - GA release for GeoIP2 database, compatible with LS 5.x
+
 # 3.0.0-beta3
  - Return empty result when IP lookup fails for location field (#70)
 
