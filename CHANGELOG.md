@@ -1,3 +1,6 @@
+# 3.0.0
+ - GA release of GeoIP2 support to be compatible with LS 2.x
+
 # 3.0.0-beta3
  - Return empty result when IP lookup fails for location field (#70)
 
