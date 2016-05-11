@@ -3,11 +3,6 @@ require "logstash/filters/geoip"
 
 CITYDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoLite2-City.mmdb").first
 
-# %w(ip country_code2 country_code3 country_name
-#                             continent_code region_name city_name postal_code
-#                             latitude longitude dma_code timezone
-#                             location )
-
 describe LogStash::Filters::GeoIP do
 
   describe "defaults" do
