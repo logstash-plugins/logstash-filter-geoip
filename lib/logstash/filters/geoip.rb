@@ -69,11 +69,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # For the built-in GeoLiteCity database, the following are available:
   # `city_name`, `continent_code`, `country_code2`, `country_code3`, `country_name`,
   # `dma_code`, `ip`, `latitude`, `longitude`, `postal_code`, `region_name` and `timezone`.
-  config :fields, :validate => :array, :default => ['city_name', 'continent_code',
-                                                    'country_code2', 'country_code3', 'country_name',
-                                                    'dma_code', 'ip', 'latitude',
-                                                    'longitude', 'postal_code', 'region_name',
-                                                    'region_code', 'timezone', 'location']
+  config :fields, :validate => :array, :default => ['location']
 
   # Specify the field into which Logstash should store the geoip data.
   # This can be useful, for example, if you have `src\_ip` and `dst\_ip` fields and

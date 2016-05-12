@@ -10,21 +10,13 @@ describe LogStash::Filters::GeoIP do
       filter {
         geoip {
           source => "ip"
-          #database => "#{CITYDB}"
         }
       }
     CONFIG
 
     sample("ip" => "8.8.8.8") do
       insist { subject }.include?("geoip")
-
-      expected_fields = %w(ip country_code2 country_code3 country_name
-                           continent_code region_name city_name postal_code
-                           latitude longitude dma_code timezone
-                           location )
-      expected_fields.each do |f|
-        insist { subject.get("geoip") }.include?(f)
-      end
+      insist { subject.get("geoip") }.include?("location")
     end
 
     sample("ip" => "127.0.0.1") do
@@ -38,7 +30,7 @@ describe LogStash::Filters::GeoIP do
       filter {
         geoip {
           source => "ip"
-          #database => "#{CITYDB}"
+          fields => [ 'ip', 'location' ]
           target => src_ip
           add_tag => "done"
         }
@@ -49,19 +41,20 @@ describe LogStash::Filters::GeoIP do
 
       sample("ip" => "8.8.8.8") do
         expect(subject).to include("src_ip")
-
-        expected_fields = %w(ip country_code2 country_code3 country_name
-                             continent_code region_name city_name postal_code
-                             latitude longitude dma_code timezone
-                             location )
-        expected_fields.each do |f|
-          expect(subject.get("src_ip")).to include(f)
-        end
+        expect(subject.get("src_ip")).to include("location")
       end
 
       sample("ip" => "127.0.0.1") do
         # assume geoip fails on localhost lookups
         expect(subject.get("src_ip")).to eq({})
+      end
+    end
+
+
+    context "when specifying extra new fields" do
+      sample("ip" => "8.8.8.8") do
+        expect(subject).to include("src_ip")
+        expect(subject.get("src_ip")).to include("ip")
       end
     end
 
@@ -77,12 +70,11 @@ describe LogStash::Filters::GeoIP do
       filter {
         geoip {
           source => "ip"
+          fields => [ 'ip', 'country_code2', 'country_code3', 'country_name', 'continent_code', 'region_name', 'city_name', 'postal_code', 'dma_code',  'timezone', 'location' ]
         }
       }
     CONFIG
-    expected_fields = %w(ip country_code2 country_code3 country_name
-                           continent_code region_name city_name postal_code
-                           dma_code timezone)
+    expected_fields = %w(ip country_code2 country_code3 country_name continent_code region_name city_name postal_code dma_code timezone)
 
     sample("ip" => "1.1.1.1") do
       checked = 0
@@ -157,7 +149,12 @@ describe LogStash::Filters::GeoIP do
     end
 
     describe "filter method outcomes" do
-      let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message", "add_tag" => "done", "database" => CITYDB) }
+      let(:config) do
+        {
+          "source" => "message", "add_tag" => "done", "database" => CITYDB, "fields" => ["location", "city_name"]
+        }
+      end
+      let(:plugin) { LogStash::Filters::GeoIP.new(config) }
       let(:event) { LogStash::Event.new("message" => ipstring) }
 
       before do
