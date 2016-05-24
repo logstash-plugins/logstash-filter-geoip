@@ -1,3 +1,6 @@
+# 3.0.1
+  - [internal] fix utf-8 encoding of spec file for failing test
+
 # 3.0.0
  - GA release of GeoIP2 support to be compatible with LS 2.x
 
