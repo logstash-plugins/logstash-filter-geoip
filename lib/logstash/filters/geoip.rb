@@ -31,10 +31,10 @@ module JavaIO
 end
 
 
-# The GeoIP2 filter adds information about the geographical location of IP addresses,
-# based on data from the Maxmind database.
+# The GeoIP filter adds information about the geographical location of IP addresses,
+# based on data from the Maxmind GeoLite2 database.
 #
-# Starting with version 1.3.0 of Logstash, a `[geoip][location]` field is created if
+# A `[geoip][location]` field is created if
 # the GeoIP lookup returns a latitude and longitude. The field is stored in
 # http://geojson.org/geojson-spec.html[GeoJSON] format. Additionally,
 # the default Elasticsearch template provided with the
@@ -46,7 +46,7 @@ end
 # and the flexibility of having GeoJSON for all other applications (like Kibana's
 # map visualization).
 #
-# This product includes GeoLite2 data created by MaxMind, available from
+# This product includes GeoLite2 City database created by MaxMind, available freely from
 # <http://dev.maxmind.com/geoip/geoip2/geolite2/>.
 class LogStash::Filters::GeoIP < LogStash::Filters::Base
   config_name "geoip"
@@ -66,7 +66,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # Possible fields depend on the database type. By default, all geoip fields
   # are included in the event.
   #
-  # For the built-in GeoLiteCity database, the following are available:
+  # For the built-in GeoLite2 City database, the following are available:
   # `city_name`, `continent_code`, `country_code2`, `country_code3`, `country_name`,
   # `dma_code`, `ip`, `latitude`, `longitude`, `postal_code`, `region_name` and `timezone`.
   config :fields, :validate => :array, :default => ['city_name', 'continent_code',
@@ -80,11 +80,11 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # would like the GeoIP information of both IPs.
   #
   # If you save the data to a target field other than `geoip` and want to use the
-  # `geo\_point` related functions in Elasticsearch, you need to alter the template
+  # `geo_point` related functions in Elasticsearch, you need to alter the template
   # provided with the Elasticsearch output and configure the output to use the
   # new template.
   #
-  # Even if you don't use the `geo\_point` mapping, the `[target][location]` field
+  # Even if you don't use the `geo_point` mapping, the `[target][location]` field
   # is still valid GeoJSON.
   config :target, :validate => :string, :default => 'geoip'
 
