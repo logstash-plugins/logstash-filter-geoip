@@ -46,14 +46,16 @@ end
 # and the flexibility of having GeoJSON for all other applications (like Kibana's
 # map visualization).
 #
-# This product includes GeoLite2 City database created by MaxMind, available freely from
-# <http://dev.maxmind.com/geoip/geoip2/geolite2/>.
+# Note: This product includes GeoLite2 data created by MaxMind, available from
+# http://www.maxmind.com. This database is licensed under 
+# http://creativecommons.org/licenses/by-sa/4.0/[Creative Commons Attribution-ShareAlike 4.0 International License]
+
 class LogStash::Filters::GeoIP < LogStash::Filters::Base
   config_name "geoip"
 
-  # The path to the GeoIP2 database file which Logstash should use. Only City database is supported by now.
+  # The path to the GeoLite2 database file which Logstash should use. Only City database is supported by now.
   #
-  # If not specified, this will default to the GeoLiteCity database that ships
+  # If not specified, this will default to the GeoLite2 City database that ships
   # with Logstash.
   config :database, :validate => :path
 
@@ -76,7 +78,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
                                                     'region_code', 'timezone', 'location']
 
   # Specify the field into which Logstash should store the geoip data.
-  # This can be useful, for example, if you have `src\_ip` and `dst\_ip` fields and
+  # This can be useful, for example, if you have `src_ip` and `dst_ip` fields and
   # would like the GeoIP information of both IPs.
   #
   # If you save the data to a target field other than `geoip` and want to use the
@@ -140,7 +142,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       begin
         @parser = DatabaseReader::Builder.new(db_file).withCache(CHMCache.new(@cache_size)).build();
       rescue Java::ComMaxmindDb::InvalidDatabaseException => e
-        @logger.error("The Geoip2 MMDB database provided is invalid or corrupted.", :exception => e, :field => @source)
+        @logger.error("The GeoLite2 MMDB database provided is invalid or corrupted.", :exception => e, :field => @source)
         raise e
       end
     end
