@@ -139,6 +139,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       @logger.info("Using geoip database", :path => @database)
 
       db_file = JavaIO::File.new(@database)
+      metric.gauge(:cache_size, @cache_size)
       begin
         @parser = DatabaseReader::Builder.new(db_file).withCache(CHMCache.new(@cache_size)).build();
       rescue Java::ComMaxmindDb::InvalidDatabaseException => e
@@ -160,10 +161,13 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       response = @parser.city(ip_address)
       populate_geo_data(response, ip_address, geo_data_hash)
     rescue com.maxmind.geoip2.exception.AddressNotFoundException => e
+      metric.increment(:address_not_found_errors)
       @logger.debug("IP not found!", :exception => e, :field => @source, :event => event)
     rescue java.net.UnknownHostException => e
+      metric.increment(:unknown_host_errors)
       @logger.error("IP Field contained invalid IP address or hostname", :exception => e, :field => @source, :event => event)
     rescue Exception => e
+      metric.increment(:unknown_errors)
       @logger.error("Unknown error while looking up GeoIP data", :exception => e, :field => @source, :event => event)
       # Dont' swallow this, bubble up for unknown issue
       raise e
@@ -172,10 +176,11 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     event.set(@target, geo_data_hash)
 
     if geo_data_hash.empty?
-      tag_unsuccessful_lookup(event)
+      handle_unsuccessful_lookup(event)
       return
     end
 
+    metric.increment(:matches)
     filter_matched(event)
   end # def filter
   
@@ -230,7 +235,8 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     end
   end
 
-  def tag_unsuccessful_lookup(event)
+  def handle_unsuccessful_lookup(event)
+    metric.increment(:failures)
     @logger.debug? && @logger.debug("IP #{event.get(@source)} was not found in the database", :event => event)
     @tag_on_failure.each{|tag| event.tag(tag)}
   end
