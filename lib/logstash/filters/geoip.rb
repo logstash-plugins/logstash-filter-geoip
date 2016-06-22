@@ -127,6 +127,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   public
   def register
+    metric.gauge(:cache_size, @cache_size)
     suppress_all_warnings do
       if @database.nil?
         @database = ::Dir.glob(::File.join(::File.expand_path("../../../vendor/", ::File.dirname(__FILE__)),"GeoLite2-City.mmdb")).first
@@ -139,7 +140,6 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       @logger.info("Using geoip database", :path => @database)
 
       db_file = JavaIO::File.new(@database)
-      metric.gauge(:cache_size, @cache_size)
       begin
         @parser = DatabaseReader::Builder.new(db_file).withCache(CHMCache.new(@cache_size)).build();
       rescue Java::ComMaxmindDb::InvalidDatabaseException => e
