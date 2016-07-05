@@ -20,7 +20,7 @@ describe LogStash::Filters::GeoIP do
 
       expected_fields = %w(ip country_code2 country_code3 country_name
                            continent_code region_name city_name postal_code
-                           latitude longitude dma_code timezone
+                             dma_code timezone
                            location )
       expected_fields.each do |f|
         insist { subject.get("geoip") }.include?(f)
@@ -52,7 +52,7 @@ describe LogStash::Filters::GeoIP do
 
         expected_fields = %w(ip country_code2 country_code3 country_name
                              continent_code region_name city_name postal_code
-                             latitude longitude dma_code timezone
+                               dma_code timezone
                              location )
         expected_fields.each do |f|
           expect(subject.get("src_ip")).to include(f)
@@ -109,7 +109,7 @@ describe LogStash::Filters::GeoIP do
   describe "location field" do
     shared_examples_for "an event with a [geoip][location] field" do
       subject(:event) { LogStash::Event.new("message" => "8.8.8.8") }
-      let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message", "fields" => ["country_name", "location", "longitude"]) }
+      let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message", "fields" => ["country_name", "location"]) }
 
       before do
         plugin.register

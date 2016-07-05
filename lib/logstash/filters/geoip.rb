@@ -73,8 +73,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # `dma_code`, `ip`, `latitude`, `longitude`, `postal_code`, `region_name` and `timezone`.
   config :fields, :validate => :array, :default => ['city_name', 'continent_code',
                                                     'country_code2', 'country_code3', 'country_name',
-                                                    'dma_code', 'ip', 'latitude',
-                                                    'longitude', 'postal_code', 'region_name',
+                                                    'dma_code', 'ip', 'postal_code', 'region_name',
                                                     'region_code', 'timezone', 'location']
 
   # Specify the field into which Logstash should store the geoip data.
