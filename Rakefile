@@ -8,6 +8,7 @@ task :default do
 end
 
 require 'jars/installer'
+desc "install jars in the vendor directory"
 task :install_jars do
   ENV['JARS_HOME'] = Dir.pwd + "/vendor/jar-dependencies/runtime-jars"
   ENV['JARS_VENDOR'] = "false"
