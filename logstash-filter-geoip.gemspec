@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
 
   s.name            = 'logstash-filter-geoip'
-  s.version         = '4.0.0'
+  s.version         = '4.0.1'
   s.licenses        = ['Apache License (2.0)']
   s.summary         = "$summary"
   s.description     = "This gem is a Logstash plugin required to be installed on top of the Logstash core pipeline using $LS_HOME/bin/logstash-plugin install gemname. This gem is not a stand-alone program"
@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
   s.metadata = { "logstash_plugin" => "true", "logstash_group" => "filter" }
 
   # Gem dependencies
-  s.add_runtime_dependency "logstash-core-plugin-api", "~> 2.0"
+  s.add_runtime_dependency "logstash-core-plugin-api", ">= 1.60", "<= 2.99"
 
   s.requirements << "jar com.maxmind.geoip2:geoip2, 2.5.0, :exclusions=> [com.google.http-client:google-http-client]"
 
