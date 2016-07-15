@@ -188,7 +188,7 @@ describe LogStash::Filters::GeoIP do
       end
       
       context "when a IP is not found in the DB" do
-        let(:ipstring) { "113.208.89.21" }
+        let(:ipstring) { "0.0.0.0" }
 
         it "should set the target field to an empty hash" do
           expect(event.get("geoip")).to eq({})
