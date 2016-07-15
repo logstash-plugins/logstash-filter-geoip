@@ -1,3 +1,6 @@
+## 4.0.2
+  - Recreate gem since 4.0.1 lacked jars
+
 ## 4.0.1
   - Relax constraint on logstash-core-plugin-api to >= 1.60 <= 2.99
 
