@@ -15,3 +15,5 @@ task :install_jars do
 end
 
 require "logstash/devutils/rake"
+
+task :vendor => :install_jars
