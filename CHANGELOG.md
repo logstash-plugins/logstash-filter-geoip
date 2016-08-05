@@ -1,3 +1,5 @@
+## 4.0.3
+  - Update of the GeoIP2 DB
 ## 4.0.2
   - Recreate gem since 4.0.1 lacked jars
 
