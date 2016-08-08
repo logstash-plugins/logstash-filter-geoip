@@ -6,12 +6,14 @@ require "logstash-filter-geoip_jars"
 
 java_import "java.net.InetAddress"
 java_import "com.maxmind.geoip2.DatabaseReader"
+java_import "com.maxmind.geoip2.model.AnonymousIpResponse"
 java_import "com.maxmind.geoip2.model.CityResponse"
-java_import "com.maxmind.geoip2.record.Country"
-java_import "com.maxmind.geoip2.record.Subdivision"
-java_import "com.maxmind.geoip2.record.City"
-java_import "com.maxmind.geoip2.record.Postal"
-java_import "com.maxmind.geoip2.record.Location"
+java_import "com.maxmind.geoip2.model.ConnectionTypeResponse"
+java_import "com.maxmind.geoip2.model.CountryResponse"
+java_import "com.maxmind.geoip2.model.DomainResponse"
+#java_import "com.maxmind.geoip2.model.EnterpriseResponse"
+java_import "com.maxmind.geoip2.model.InsightsResponse"
+java_import "com.maxmind.geoip2.model.IspResponse"
 java_import "com.maxmind.db.CHMCache"
 
 def suppress_all_warnings
@@ -69,11 +71,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # For the built-in GeoLiteCity database, the following are available:
   # `city_name`, `continent_code`, `country_code2`, `country_code3`, `country_name`,
   # `dma_code`, `ip`, `latitude`, `longitude`, `postal_code`, `region_name` and `timezone`.
-  config :fields, :validate => :array, :default => ['city_name', 'continent_code',
-                                                    'country_code2', 'country_code3', 'country_name',
-                                                    'dma_code', 'ip', 'latitude',
-                                                    'longitude', 'postal_code', 'region_name',
-                                                    'region_code', 'timezone', 'location']
+  config :fields, :validate => :array, :default => []
 
   # Specify the field into which Logstash should store the geoip data.
   # This can be useful, for example, if you have `src\_ip` and `dst\_ip` fields and
@@ -87,6 +85,12 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # Even if you don't use the `geo\_point` mapping, the `[target][location]` field
   # is still valid GeoJSON.
   config :target, :validate => :string, :default => 'geoip'
+
+  # Specify the database type. By default "city" is selected (This is the type of the built-in GeoLite2 City database)
+  config :dbtype, :validate => ['country', 'city', 'anonymousIp', 'connectionType', 'domain', 'enterprise', 'isp'  ], :default => 'city'
+
+  # Should we merge the results into target. If set to false, we will override the value of the target field
+  config :merge, :validate => :boolean, :default => false
 
   # GeoIP lookup is surprisingly expensive. This filter uses an cache to take advantage of the fact that
   # IPs agents are often found adjacent to one another in log files and rarely have a random distribution.
@@ -155,7 +159,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       ip = ip.first if ip.is_a? Array
       geo_data_hash = Hash.new
       ip_address = InetAddress.getByName(ip)
-      response = @parser.city(ip_address)
+      response = @parser.send(@dbtype,ip_address)
       populate_geo_data(response, ip_address, geo_data_hash)
     rescue com.maxmind.geoip2.exception.AddressNotFoundException => e
       @logger.debug("IP not found!", :exception => e, :field => @source, :event => event)
@@ -166,8 +170,12 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       # Dont' swallow this, bubble up for unknown issue
       raise e
     end
-
-    event[@target] = geo_data_hash
+    if @merge
+      event[@target] ||= {}
+      event[@target].merge!(geo_data_hash)
+    else
+      event[@target] = geo_data_hash
+    end
 
     if geo_data_hash.empty?
       tag_unsuccessful_lookup(event)
@@ -176,56 +184,40 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
     filter_matched(event)
   end # def filter
-  
+
   def populate_geo_data(response, ip_address, geo_data_hash)
-    country = response.getCountry()
-    subdivision = response.getMostSpecificSubdivision()
-    city = response.getCity()
-    postal = response.getPostal()
-    location = response.getLocation()
+    case @dbtype
+      when "city"
+        country = response.getCountry()
+        subdivision = response.getMostSpecificSubdivision()
+        city = response.getCity()
+        postal = response.getPostal()
+        location = response.getLocation()
 
-    # if location is empty, there is no point populating geo data
-    # and most likely all other fields are empty as well
-    if location.getLatitude().nil? && location.getLongitude().nil?
-      return
-    end
-
-    @fields.each do |field|
-      case field
-      when "city_name"
+        # if location is empty, there is no point populating geo data
+        # and most likely all other fields are empty as well
+        if location.getLatitude().nil? && location.getLongitude().nil?
+          return
+        end
         geo_data_hash["city_name"] = city.getName()
-      when "country_name"
         geo_data_hash["country_name"] = country.getName()
-      when "continent_code"
         geo_data_hash["continent_code"] = response.getContinent().getCode()
-      when "continent_name"
         geo_data_hash["continent_name"] = response.getContinent().getName()
-      when "country_code2"
         geo_data_hash["country_code2"] = country.getIsoCode()
-      when "country_code3"
         geo_data_hash["country_code3"] = country.getIsoCode()
-      when "ip"
         geo_data_hash["ip"] = ip_address.getHostAddress()
-      when "postal_code"
         geo_data_hash["postal_code"] = postal.getCode()
-      when "dma_code"
         geo_data_hash["dma_code"] = location.getMetroCode()
-      when "region_name"
         geo_data_hash["region_name"] = subdivision.getName()
-      when "region_code"
         geo_data_hash["region_code"] = subdivision.getIsoCode()
-      when "timezone"
         geo_data_hash["timezone"] = location.getTimeZone()
-      when "location"
         geo_data_hash["location"] = [ location.getLongitude(), location.getLatitude() ]
-      when "latitude"
         geo_data_hash["latitude"] = location.getLatitude()
-      when "longitude"
         geo_data_hash["longitude"] = location.getLongitude()
       else
-        raise Exception.new("[#{field}] is not a supported field option.")
-      end
+        geo_data_hash.merge!(JSON.parse(response.toJson()))
     end
+    geo_data_hash.reject! {|key, value| !@fields.include? key} unless @fields.empty?
   end
 
   def tag_unsuccessful_lookup(event)
