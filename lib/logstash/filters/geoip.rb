@@ -202,14 +202,18 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def is_private(ip)
-    ipo = IPAddr.new(ip)
-    @private_ips.each do | private_ip |
-      @logger.debug("Checking IP inclusion", :private_ip => private_ip, :network => ipo) # TODO remove
-      if private_ip.include?(ipo)
-        return true
+    begin
+      ipo = IPAddr.new(ip)
+      @private_ips.each do | private_ip |
+        @logger.debug("Checking IP inclusion", :private_ip => private_ip, :network => ipo) # TODO remove
+        if private_ip.include?(ipo)
+          return true
+        end
       end
+      false
+    rescue => e
+      @logger.error("Couldnt check if ip is private.", :input_data => ip, :event => event)
     end
-    false
   end
 
   def get_geo_data(event)
