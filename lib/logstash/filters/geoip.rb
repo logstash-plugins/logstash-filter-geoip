@@ -212,7 +212,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       end
       false
     rescue => e
-      @logger.error("Couldnt check if ip is private.", :input_data => ip, :event => event)
+      @logger.error("Couldnt check if ip is private.", :input_data => ip)
     end
   end
 
