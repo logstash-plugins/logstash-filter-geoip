@@ -52,6 +52,9 @@ end
 
 class LogStash::Filters::GeoIP < LogStash::Filters::Base
   config_name "geoip"
+  
+  # Throw not valide IP errors
+  config :throw_ip_errors, :validate => :bool, :default => true
 
   # The path to the GeoLite2 database file which Logstash should use. Only City database is supported by now.
   #
@@ -162,7 +165,9 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     rescue com.maxmind.geoip2.exception.AddressNotFoundException => e
       @logger.debug("IP not found!", :exception => e, :field => @source, :event => event)
     rescue java.net.UnknownHostException => e
-      @logger.error("IP Field contained invalid IP address or hostname", :exception => e, :field => @source, :event => event)
+      if @throw_ip_errors?
+        @logger.error("IP Field contained invalid IP address or hostname", :exception => e, :field => @source, :event => event)
+      end
     rescue Exception => e
       @logger.error("Unknown error while looking up GeoIP data", :exception => e, :field => @source, :event => event)
       # Dont' swallow this, bubble up for unknown issue
