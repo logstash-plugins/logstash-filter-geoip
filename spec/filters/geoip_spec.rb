@@ -73,6 +73,38 @@ describe LogStash::Filters::GeoIP do
     end
   end
 
+  describe "source is derived from target" do
+    subject(:event) { LogStash::Event.new("target" => { "ip" => "173.9.34.107" } ) }
+    let(:plugin) {
+      LogStash::Filters::GeoIP.new(
+        "source" => "[target][ip]",
+        "target" => "target",
+        "fields" => [ "city_name", "region_name" ],
+        "add_tag" => "done", "database" => CITYDB
+      )
+    }
+
+    before do
+      plugin.register
+      plugin.filter(event)
+    end
+
+    context "when source field 'ip' is a subfield of 'target'" do
+
+      it "should preserve value in [target][ip]" do
+        expect(event.get("[target][ip]")).to eq("173.9.34.107")
+      end
+
+      it "should set other subfields of 'target' properly" do
+        expect(event.get("target").to_hash.keys.sort).to eq(["city_name", "ip", "region_name"])
+        expect(event.get("[target][city_name]")).to eq("Mendon")
+        expect(event.get("[target][region_name]")).to eq("Massachusetts")
+      end
+
+    end
+
+  end
+
   describe "correct encodings with default db" do
     config <<-CONFIG
       filter {
@@ -187,7 +219,7 @@ describe LogStash::Filters::GeoIP do
           expect(event.get("geoip")).to eq({})
         end
       end
-      
+
       context "when a IP is not found in the DB" do
         let(:ipstring) { "0.0.0.0" }
 
@@ -196,7 +228,7 @@ describe LogStash::Filters::GeoIP do
           expect(event.get("tags")).to include("_geoip_lookup_failure")
         end
       end
-      
+
       context "when IP is IPv6 format for localhost" do
         let(:ipstring) { "::1" }
 
@@ -204,16 +236,19 @@ describe LogStash::Filters::GeoIP do
           expect(event.get("geoip")).to eq({})
         end
       end
-      
-      context "when IP is IPv6 format" do
+
+      context "when IP is valid IPv6 format" do
         let(:ipstring) { "2607:f0d0:1002:51::4" }
 
-        it "should set the target field to an empty hash" do
+        it "should set the target fields properly" do
           expect(event.get("geoip")).not_to be_empty
-          expect(event.get("geoip")["city_name"]).not_to be_nil
+          expect(event.get("geoip")["ip"]).to eq("2607:f0d0:1002:51:0:0:0:4")
+          expect(event.get("geoip").to_hash.keys.sort).to eq(
+            ["continent_code", "country_code2", "country_code3", "country_name", "ip", "latitude", "location", "longitude"]
+          )
         end
       end
-      
+
     end
 
     context "should return the correct source field in the logging message" do
