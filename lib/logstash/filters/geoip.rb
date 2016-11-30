@@ -47,7 +47,7 @@ end
 # map visualization).
 #
 # Note: This product includes GeoLite2 data created by MaxMind, available from
-# http://www.maxmind.com. This database is licensed under 
+# http://www.maxmind.com. This database is licensed under
 # http://creativecommons.org/licenses/by-sa/4.0/[Creative Commons Attribution-ShareAlike 4.0 International License]
 
 class LogStash::Filters::GeoIP < LogStash::Filters::Base
@@ -121,7 +121,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # to having multiple caches for different instances at different points in the pipeline, that would just increase the
   # number of cache misses and waste memory.
   config :lru_cache_size, :validate => :number, :default => 1000
-  
+
   # Tags the event on failure to look up geo information. This can be used in later analysis.
   config :tag_on_failure, :validate => :array, :default => ["_geoip_lookup_failure"]
 
@@ -169,16 +169,13 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       raise e
     end
 
-    event.set(@target, geo_data_hash)
-
-    if geo_data_hash.empty?
+    if apply_geodata(geo_data_hash, event)
+      filter_matched(event)
+    else
       tag_unsuccessful_lookup(event)
-      return
     end
-
-    filter_matched(event)
   end # def filter
-  
+
   def populate_geo_data(response, ip_address, geo_data_hash)
     country = response.getCountry()
     subdivision = response.getMostSpecificSubdivision()
@@ -233,6 +230,22 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   def tag_unsuccessful_lookup(event)
     @logger.debug? && @logger.debug("IP #{event.get(@source)} was not found in the database", :event => event)
     @tag_on_failure.each{|tag| event.tag(tag)}
+  end
+
+  def apply_geodata(geo_data_hash, event)
+    # don't do anything more if the lookup result is nil?
+    return false if geo_data_hash.nil?
+    # only do event.set(@target) if the lookup result is not nil
+    event.set(@target, {}) if event.get(@target).nil?
+    # don't do anything more if the lookup result is empty?
+    return false if geo_data_hash.empty?
+    geo_data_hash.each do |key, value|
+      if @fields.include?(key) && value
+        # can't dup numerics
+        event.set("[#{@target}][#{key}]", value.is_a?(Numeric) ? value : value.dup)
+      end
+    end # geo_data_hash.each
+    true
   end
 
 end # class LogStash::Filters::GeoIP

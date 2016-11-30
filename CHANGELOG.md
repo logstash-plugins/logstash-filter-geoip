@@ -1,5 +1,10 @@
+## 4.0.4
+  - Update of the GeoIP2 DB
+  - Target should be merged and not completely overwritten (#98)
+
 ## 4.0.3
   - Update of the GeoIP2 DB
+
 ## 4.0.2
   - Recreate gem since 4.0.1 lacked jars
 
@@ -16,7 +21,7 @@
 # 3.0.0-beta2
  - Internal: Actually include the vendored jars
 
-# 3.0.0-beta1 
+# 3.0.0-beta1
  - Changed plugin to use GeoIP2 database. See http://dev.maxmind.com/geoip/geoip2/whats-new-in-geoip2/
 
 # 2.0.7
