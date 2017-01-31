@@ -1,0 +1,15 @@
+---
+sudo: false
+language: ruby
+cache:
+- bundler
+- directories:
+  - "$HOME/.m2"
+rvm:
+- jruby-1.7.25
+before_install: []
+script:
+- bundle exec rake vendor
+- bundle exec rake install_jars
+- bundle exec rspec spec
+jdk: oraclejdk8
