@@ -175,9 +175,7 @@ describe LogStash::Filters::GeoIP do
           filter {
             geoip {
               source => "ip"
-
               database => "#{CITYDB}"
-
             }
           }
         CONFIG
@@ -192,9 +190,7 @@ describe LogStash::Filters::GeoIP do
     end
 
     describe "filter method outcomes" do
-
       let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message", "add_tag" => "done", "database" => CITYDB) }
-
       let(:event) { LogStash::Event.new("message" => ipstring) }
 
       before do
@@ -218,7 +214,7 @@ describe LogStash::Filters::GeoIP do
       context "when the bad IP is two ip comma separated" do
         # regression test for issue https://github.com/logstash-plugins/logstash-filter-geoip/issues/51
         let(:ipstring) { "123.45.67.89,61.160.232.222" }
-        
+
         it "should set the target field to an empty hash" do
           expect(event.get("geoip")).to eq({})
         end
@@ -263,11 +259,6 @@ describe LogStash::Filters::GeoIP do
     end
 
   end
-
-  
-
-
-
 
   describe "an invalid database" do
     config <<-CONFIG

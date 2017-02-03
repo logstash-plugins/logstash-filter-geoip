@@ -1,20 +1,21 @@
 # encoding: utf-8
 require "logstash/filters/base"
 require "logstash/namespace"
-
+require "json"
+require "logstash-filter-geoip_jars"
 require "ipaddr"
 
 
-require "logstash-filter-geoip_jars"
-
 java_import "java.net.InetAddress"
 java_import "com.maxmind.geoip2.DatabaseReader"
+java_import "com.maxmind.geoip2.model.AnonymousIpResponse"
 java_import "com.maxmind.geoip2.model.CityResponse"
-java_import "com.maxmind.geoip2.record.Country"
-java_import "com.maxmind.geoip2.record.Subdivision"
-java_import "com.maxmind.geoip2.record.City"
-java_import "com.maxmind.geoip2.record.Postal"
-java_import "com.maxmind.geoip2.record.Location"
+java_import "com.maxmind.geoip2.model.ConnectionTypeResponse"
+java_import "com.maxmind.geoip2.model.CountryResponse"
+java_import "com.maxmind.geoip2.model.DomainResponse"
+#java_import "com.maxmind.geoip2.model.EnterpriseResponse"
+java_import "com.maxmind.geoip2.model.InsightsResponse"
+java_import "com.maxmind.geoip2.model.IspResponse"
 java_import "com.maxmind.db.CHMCache"
 
 def suppress_all_warnings
@@ -32,7 +33,6 @@ end
 module JavaIO
   include_package "java.io"
 end
-
 
 
 # The GeoIP filter adds information about the geographical location of IP addresses,
@@ -81,6 +81,8 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
                                                     'longitude', 'postal_code', 'region_name',
                                                     'region_code', 'timezone', 'location']
 
+  config :asn_fields, :validate => :array, :default => ['isp']
+
   # Specify the field into which Logstash should store the geoip data.
   # This can be useful, for example, if you have `src_ip` and `dst_ip` fields and
   # would like the GeoIP information of both IPs.
@@ -126,6 +128,15 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # number of cache misses and waste memory.
   config :lru_cache_size, :validate => :number, :default => 1000
 
+  # Tags the event on failure to look up geo information. This can be used in later analysis.
+  config :tag_on_failure, :validate => :array, :default => ["_geoip_lookup_failure"]
+
+  # Specify the database type. By default "city" is selected (This is the type of the built-in GeoLite2 City database)
+  config :dbtype, :validate => ['country', 'city', 'anonymousIp', 'connectionType', 'domain', 'enterprise', 'isp'  ], :default => 'city'
+
+  # Should we merge the results into target. If set to false, we will override the value of the target field
+  config :merge, :validate => :boolean, :default => true
+
   # If the ip field is an array: check which one is not a private ip. The first non private ip will be used.
   config :filter_private_ips, :validate => :boolean, :required => false, :default => true
 
@@ -134,10 +145,6 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   # list of ip patterns that private ips start with. 
   config :private_ip_prefixes, :validate => :array, :required => false, :default => ["10/8", "192.168/16" ,"172.16.0.0/12"]
-
-  # Tags the event on failure to look up geo information. This can be used in later analysis.
-  config :tag_on_failure, :validate => :array, :default => ["_geoip_lookup_failure"]
-
 
   public
   def register
@@ -150,7 +157,6 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
         end
       end
 
-
       @logger.info("Using geoip database", :path => @database)
 
       db_file = JavaIO::File.new(@database)
@@ -160,7 +166,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
         @logger.error("The GeoLite2 MMDB database provided is invalid or corrupted.", :exception => e, :field => @source)
         raise e
       end
-    end
+    end # supress all warnings
 
     @private_ips = @private_ip_prefixes.collect do | adress |
       begin
@@ -169,9 +175,8 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
         @logger.warn("Invalid IP network, skipping", :adress => adress)
         nil
        end
-    end
+    end 
     @private_ips.compact!
-
 
   end # def register
 
@@ -181,11 +186,15 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
     begin
       ip = event.get(@source)
+      ip = select_ip(ip)
       ip = ip.first if ip.is_a? Array
       geo_data_hash = Hash.new
       ip_address = InetAddress.getByName(ip)
-      response = @parser.city(ip_address)
+      @logger.debug("Sending ip #{ip_address} to method #{@dbtype}")
+      response = @parser.send(@dbtype,ip_address)
+      @logger.debug("Response: " + response.to_s)
       populate_geo_data(response, ip_address, geo_data_hash)
+      @logger.debug("Geodata: " + geo_data_hash.to_s)
     rescue com.maxmind.geoip2.exception.AddressNotFoundException => e
       @logger.debug("IP not found!", :exception => e, :field => @source, :event => event)
     rescue java.net.UnknownHostException => e
@@ -197,6 +206,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     end
 
     if apply_geodata(geo_data_hash, event)
+      @logger.debug("geodata successfully applied.")
       filter_matched(event)
     else
       tag_unsuccessful_lookup(event)
@@ -204,55 +214,82 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end # def filter
 
   def populate_geo_data(response, ip_address, geo_data_hash)
-    country = response.getCountry()
-    subdivision = response.getMostSpecificSubdivision()
-    city = response.getCity()
-    postal = response.getPostal()
-    location = response.getLocation()
 
-    # if location is empty, there is no point populating geo data
-    # and most likely all other fields are empty as well
-    if location.getLatitude().nil? && location.getLongitude().nil?
-      return
-    end
+    case @dbtype
+    when "city"
+      country = response.getCountry()
+      subdivision = response.getMostSpecificSubdivision()
+      city = response.getCity()
+      postal = response.getPostal()
+      location = response.getLocation()
 
-    @fields.each do |field|
-      case field
-      when "city_name"
-        geo_data_hash["city_name"] = city.getName()
-      when "country_name"
-        geo_data_hash["country_name"] = country.getName()
-      when "continent_code"
-        geo_data_hash["continent_code"] = response.getContinent().getCode()
-      when "continent_name"
-        geo_data_hash["continent_name"] = response.getContinent().getName()
-      when "country_code2"
-        geo_data_hash["country_code2"] = country.getIsoCode()
-      when "country_code3"
-        geo_data_hash["country_code3"] = country.getIsoCode()
-      when "ip"
-        geo_data_hash["ip"] = ip_address.getHostAddress()
-      when "postal_code"
-        geo_data_hash["postal_code"] = postal.getCode()
-      when "dma_code"
-        geo_data_hash["dma_code"] = location.getMetroCode()
-      when "region_name"
-        geo_data_hash["region_name"] = subdivision.getName()
-      when "region_code"
-        geo_data_hash["region_code"] = subdivision.getIsoCode()
-      when "timezone"
-        geo_data_hash["timezone"] = location.getTimeZone()
-      when "location"
-        geo_data_hash["location"] = [ location.getLongitude(), location.getLatitude() ]
-      when "latitude"
-        geo_data_hash["latitude"] = location.getLatitude()
-      when "longitude"
-        geo_data_hash["longitude"] = location.getLongitude()
-      else
-        raise Exception.new("[#{field}] is not a supported field option.")
+      # if location is empty, there is no point populating geo data
+      # and most likely all other fields are empty as well
+      if location.getLatitude().nil? && location.getLongitude().nil?
+        return
       end
-    end
-  end
+
+      @fields.each do |field|
+        case field
+        when "city_name"
+          geo_data_hash["city_name"] = city.getName()
+        when "country_name"
+          geo_data_hash["country_name"] = country.getName()
+        when "continent_code"
+          geo_data_hash["continent_code"] = response.getContinent().getCode()
+        when "continent_name"
+          geo_data_hash["continent_name"] = response.getContinent().getName()
+        when "country_code2"
+          geo_data_hash["country_code2"] = country.getIsoCode()
+        when "country_code3"
+          geo_data_hash["country_code3"] = country.getIsoCode()
+        when "ip"
+          geo_data_hash["ip"] = ip_address.getHostAddress()
+        when "postal_code"
+          geo_data_hash["postal_code"] = postal.getCode()
+        when "dma_code"
+          geo_data_hash["dma_code"] = location.getMetroCode()
+        when "region_name"
+          geo_data_hash["region_name"] = subdivision.getName()
+        when "region_code"
+          geo_data_hash["region_code"] = subdivision.getIsoCode()
+        when "timezone"
+          geo_data_hash["timezone"] = location.getTimeZone()
+        when "location"
+          geo_data_hash["location"] = [ location.getLongitude(), location.getLatitude() ]
+        when "latitude"
+          geo_data_hash["latitude"] = location.getLatitude()
+        when "longitude"
+          geo_data_hash["longitude"] = location.getLongitude()
+        else
+          raise Exception.new("[#{field}] is not a supported field option.")
+        end # case field
+      end # fields.each do
+    when "isp"
+      # example: com.maxmind.geoip2.model.IspResponse [ {"autonomous_system_number":198018,"autonomous_system_organization":"trivago GmbH",
+      #          "ip_address":"8.35.179.2","isp":"Level 3 Communications","organization":"Level 3 Communications"} ]
+    
+      @asn_fields.each do |field|
+        case field
+        when "isp"
+          geo_data_hash["isp"] = response.getIsp()
+        when "organization"
+          geo_data_hash["organization"] = city.getOrganisation()
+        when "ip_address"
+          geo_data_hash["ip_address"] = city.getIpAddress()
+        when "autonomous_system_number"
+          geo_data_hash["autonomous_system_number"] = city.getAutonomousSystemNumber()
+        when "autonomous_system_organization"
+          geo_data_hash["autonomous_system_organization"] = city.getAutonomousSystemOrganisation()
+        else
+          raise Exception.new("[#{field}] is not a supported field option.")
+        end # case field
+      end # fields.each do
+    else 
+      # TODO add error handling
+      
+    end # case @dbtype    
+  end # def populate_geo_data
 
   def tag_unsuccessful_lookup(event)
     @logger.debug? && @logger.debug("IP #{event.get(@source)} was not found in the database", :event => event)
@@ -267,7 +304,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     # don't do anything more if the lookup result is empty?
     return false if geo_data_hash.empty?
     geo_data_hash.each do |key, value|
-      if @fields.include?(key) && value
+      if (@fields.include?(key) || @asn_fields.include?(key)) && value
         # can't dup numerics
         event.set("[#{@target}][#{key}]", value.is_a?(Numeric) ? value : value.dup)
       end
@@ -317,6 +354,5 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       @logger.error("Couldnt check if ip is private.", :input_data => ip)
     end
   end
-
 
 end # class LogStash::Filters::GeoIP
