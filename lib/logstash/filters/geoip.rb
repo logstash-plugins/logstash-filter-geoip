@@ -1,10 +1,7 @@
 # encoding: utf-8
 require "logstash/filters/base"
 require "logstash/namespace"
-require "json"
 require "logstash-filter-geoip_jars"
-require "ipaddr"
-
 
 java_import "java.net.InetAddress"
 java_import "com.maxmind.geoip2.DatabaseReader"
