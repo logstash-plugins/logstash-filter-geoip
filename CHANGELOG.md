@@ -1,3 +1,6 @@
+## 4.0.5
+  - Add support for asn database
+
 ## 4.0.4
   - Update of the GeoIP2 DB
   - Target should be merged and not completely overwritten (#98)

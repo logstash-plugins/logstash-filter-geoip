@@ -137,15 +137,6 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # Should we merge the results into target. If set to false, we will override the value of the target field
   config :merge, :validate => :boolean, :default => true
 
-  # If the ip field is an array: check which one is not a private ip. The first non private ip will be used.
-  config :filter_private_ips, :validate => :boolean, :required => false, :default => true
-
-  # String by which the ip field should be tokenized
-  config :ip_split_symbol, :validate => :string, :required => false, :default => ","
-
-  # list of ip patterns that private ips start with. 
-  config :private_ip_prefixes, :validate => :array, :required => false, :default => ["10/8", "192.168/16" ,"172.16.0.0/12"]
-
   public
   def register
     suppress_all_warnings do
@@ -168,16 +159,6 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       end
     end # supress all warnings
 
-    @private_ips = @private_ip_prefixes.collect do | adress |
-      begin
-        IPAddr.new(adress)
-      rescue ArgumentError => e
-        @logger.warn("Invalid IP network, skipping", :adress => adress)
-        nil
-       end
-    end 
-    @private_ips.compact!
-
   end # def register
 
   public
@@ -186,7 +167,6 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
     begin
       ip = event.get(@source)
-      ip = select_ip(ip)
       ip = ip.first if ip.is_a? Array
       geo_data_hash = Hash.new
       ip_address = InetAddress.getByName(ip)
@@ -312,47 +292,6 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     true
   end
 
-  def select_ip(ip)
-    if ip.nil?
-      return nil
-    end
-    if ip.is_a? Array
-      if @filter_private_ips 
-        ip = get_public_ip(ip) 
-      else 
-        ip = ip.first
-      end
-    else
-      if @filter_private_ips
-        ip = get_public_ip(ip.split(@ip_split_symbol))
-      # else: return original string
-      end
-    end
-    ip
-  end
-
-  def get_public_ip(ip_array)
-    ip_array.each do | ip |
-      ip = ip.strip
-      if !is_private(ip)
-        return ip
-      end
-    end
-    nil
-  end
-
-  def is_private(ip)
-    begin
-      ipo = IPAddr.new(ip)
-      @private_ips.each do | private_ip |
-        if private_ip.include?(ipo)
-          return true
-        end
-      end
-      false
-    rescue => e
-      @logger.error("Couldnt check if ip is private.", :input_data => ip)
-    end
-  end
+  
 
 end # class LogStash::Filters::GeoIP
