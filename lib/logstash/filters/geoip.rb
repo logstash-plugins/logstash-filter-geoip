@@ -190,13 +190,13 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       ip = ip.first if ip.is_a? Array
       geo_data_hash = Hash.new
       ip_address = InetAddress.getByName(ip)
-      @logger.debug("Sending ip #{ip_address} to method #{@dbtype}")
+      #@logger.debug("Sending ip #{ip_address} to method #{@dbtype}")
       response = @parser.send(@dbtype,ip_address)
-      @logger.debug("Response: " + response.to_s)
+      #@logger.debug("Response: " + response.to_s)
       populate_geo_data(response, ip_address, geo_data_hash)
-      @logger.debug("Geodata: " + geo_data_hash.to_s)
+      #@logger.debug("Geodata: " + geo_data_hash.to_s)
     rescue com.maxmind.geoip2.exception.AddressNotFoundException => e
-      @logger.debug("IP not found!", :exception => e, :field => @source, :event => event)
+      #@logger.debug("IP not found!", :exception => e, :field => @source, :event => event)
     rescue java.net.UnknownHostException => e
       @logger.error("IP Field contained invalid IP address or hostname", :exception => e, :field => @source, :event => event)
     rescue Exception => e
@@ -206,7 +206,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     end
 
     if apply_geodata(geo_data_hash, event)
-      @logger.debug("geodata successfully applied.")
+      #@logger.debug("geodata successfully applied.")
       filter_matched(event)
     else
       tag_unsuccessful_lookup(event)
@@ -292,7 +292,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end # def populate_geo_data
 
   def tag_unsuccessful_lookup(event)
-    @logger.debug? && @logger.debug("IP #{event.get(@source)} was not found in the database", :event => event)
+    #@logger.debug? && #@logger.debug("IP #{event.get(@source)} was not found in the database", :event => event)
     @tag_on_failure.each{|tag| event.tag(tag)}
   end
 
