@@ -1,3 +1,6 @@
+## 4.0.5
+  - Docs: Clarify GeoLite2 database support
+  
 ## 4.0.4
   - Update of the GeoIP2 DB
   - Target should be merged and not completely overwritten (#98)
