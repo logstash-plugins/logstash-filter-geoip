@@ -46,9 +46,16 @@ end
 # and the flexibility of having GeoJSON for all other applications (like Kibana's
 # map visualization).
 #
-# Note: This product includes GeoLite2 data created by MaxMind, available from
+# [NOTE]
+# --
+# This product includes GeoLite2 data created by MaxMind, available from
 # http://www.maxmind.com. This database is licensed under
-# http://creativecommons.org/licenses/by-sa/4.0/[Creative Commons Attribution-ShareAlike 4.0 International License]
+# http://creativecommons.org/licenses/by-sa/4.0/[Creative Commons Attribution-ShareAlike 4.0 International License].
+#
+# Versions 4.0.0 and later of the GeoIP filter use the MaxMind GeoLite2 database
+# and support both IPv4 and IPv6 lookups. Versions prior to 4.0.0 use the legacy
+# MaxMind GeoLite database and support IPv4 lookups only.
+# --
 
 class LogStash::Filters::GeoIP < LogStash::Filters::Base
   config_name "geoip"
