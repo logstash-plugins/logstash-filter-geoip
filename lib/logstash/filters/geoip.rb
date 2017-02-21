@@ -14,21 +14,7 @@ java_import "com.maxmind.geoip2.record.Postal"
 java_import "com.maxmind.geoip2.record.Location"
 java_import "com.maxmind.db.CHMCache"
 
-def suppress_all_warnings
-  old_verbose = $VERBOSE
-  begin
-    $VERBOSE = nil
-    yield if block_given?
-  ensure
-    # always re-set to old value, even if block raises an exception
-    $VERBOSE = old_verbose
-  end
-end
-
-# create a new instance of the Java class File without shadowing the Ruby version of the File class
-module JavaIO
-  include_package "java.io"
-end
+require_relative "geoip/patch"
 
 
 # The GeoIP filter adds information about the geographical location of IP addresses,

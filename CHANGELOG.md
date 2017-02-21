@@ -1,3 +1,7 @@
+## 4.0.6
+  - Docs: Remove patch classes from the main plugin file
+  - Update of the GeoIP2 DB
+
 ## 4.0.5
   - Docs: Clarify GeoLite2 database support
   
