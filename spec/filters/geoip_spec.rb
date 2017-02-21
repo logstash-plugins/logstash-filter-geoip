@@ -97,7 +97,7 @@ describe LogStash::Filters::GeoIP do
 
       it "should set other subfields of 'target' properly" do
         expect(event.get("target").to_hash.keys.sort).to eq(["city_name", "ip", "region_name"])
-        expect(event.get("[target][city_name]")).to eq("Mendon")
+        expect(event.get("[target][city_name]")).to eq("Worcester")
         expect(event.get("[target][region_name]")).to eq("Massachusetts")
       end
 
