@@ -50,6 +50,8 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   #
   # If not specified, this will default to the GeoLite2 City database that ships
   # with Logstash.
+  # Up-to-date databases can be downloaded from here: <https://dev.maxmind.com/geoip/legacy/geolite/>
+  # Please be sure to download a legacy format database.
   config :database, :validate => :path
 
   # The field containing the IP address or hostname to map via geoip. If
