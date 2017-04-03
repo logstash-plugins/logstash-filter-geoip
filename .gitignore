@@ -4,3 +4,4 @@ Gemfile.lock
 vendor
 .idea
 lib/com
+Jars.lock
