@@ -2,6 +2,8 @@
 require "logstash/devutils/rspec/spec_helper"
 require "logstash/filters/geoip"
 
+java_import "com.maxmind.db.CHMCache"
+
 CITYDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoLite2-City.mmdb").first
 
 describe LogStash::Filters::GeoIP do
@@ -72,6 +74,27 @@ describe LogStash::Filters::GeoIP do
       end
     end
   end
+
+  describe "when geoname IDs are requested" do
+    config <<-CONFIG
+      filter {
+        geoip {
+          source => "ip"
+          database => "#{CITYDB}"
+          fields => ["continent_geoname_id", "country_geoname_id", "region_geoname_id", "city_geoname_id"]
+        }
+      }
+    CONFIG
+
+    sample("ip" => "173.9.34.107") do
+      expect(subject).to include("ip")
+      expect(subject.get("[geoip][continent_geoname_id]")).to eq(6255149) # North America
+      expect(subject.get("[geoip][country_geoname_id]")).to eq(6252001) # United States
+      expect(subject.get("[geoip][region_geoname_id]")).to eq(6254926) # Massachusetts
+      expect(subject.get("[geoip][city_geoname_id]")).to eq(4956184) # Worchester
+    end
+  end
+
 
   describe "source is derived from target" do
     subject(:event) { LogStash::Event.new("target" => { "ip" => "173.9.34.107" } ) }
@@ -273,7 +296,7 @@ describe LogStash::Filters::GeoIP do
     context "should return the correct sourcefield in the logging message" do
       sample("ip" => "8.8.8.8") do
         expect(LogStash::Filters::GeoIP.logger).to receive(:error).with(anything, include(:field => "ip"))
-        expect { subject }.to raise_error
+        expect { subject }.to raise_error(Java::ComMaxmindDb::InvalidDatabaseException)
       end
     end
   end

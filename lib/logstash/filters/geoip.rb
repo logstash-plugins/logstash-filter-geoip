@@ -63,7 +63,8 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   #
   # For the built-in GeoLite2 City database, the following are available:
   # `city_name`, `continent_code`, `country_code2`, `country_code3`, `country_name`,
-  # `dma_code`, `ip`, `latitude`, `longitude`, `postal_code`, `region_name` and `timezone`.
+  # `dma_code`, `ip`, `latitude`, `longitude`, `postal_code`, `region_name`, `timezone`,
+  # `continent_geoname_id`, `country_geoname_id`, `region_geoname_id`, and `city_geoname_id`.
   config :fields, :validate => :array, :default => ['city_name', 'continent_code',
                                                     'country_code2', 'country_code3', 'country_name',
                                                     'dma_code', 'ip', 'latitude',
@@ -214,6 +215,14 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
         geo_data_hash["latitude"] = location.getLatitude()
       when "longitude"
         geo_data_hash["longitude"] = location.getLongitude()
+      when "city_geoname_id"
+        geo_data_hash["city_geoname_id"] = city.getGeoNameId()
+      when "region_geoname_id"
+        geo_data_hash["region_geoname_id"] = subdivision.getGeoNameId()
+      when "country_geoname_id"
+        geo_data_hash["country_geoname_id"] = country.getGeoNameId()
+      when "continent_geoname_id"
+        geo_data_hash["continent_geoname_id"] = response.getContinent().getGeoNameId()
       else
         raise Exception.new("[#{field}] is not a supported field option.")
       end
