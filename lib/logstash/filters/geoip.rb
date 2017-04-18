@@ -4,19 +4,6 @@ require "logstash/namespace"
 
 require "logstash-filter-geoip_jars"
 
-java_import "java.net.InetAddress"
-java_import "com.maxmind.geoip2.DatabaseReader"
-java_import "com.maxmind.geoip2.model.CityResponse"
-java_import "com.maxmind.geoip2.record.Country"
-java_import "com.maxmind.geoip2.record.Subdivision"
-java_import "com.maxmind.geoip2.record.City"
-java_import "com.maxmind.geoip2.record.Postal"
-java_import "com.maxmind.geoip2.record.Location"
-java_import "com.maxmind.db.CHMCache"
-
-require_relative "geoip/patch"
-
-
 # The GeoIP filter adds information about the geographical location of IP addresses,
 # based on data from the Maxmind GeoLite2 database.
 #
@@ -64,11 +51,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # For the built-in GeoLite2 City database, the following are available:
   # `city_name`, `continent_code`, `country_code2`, `country_code3`, `country_name`,
   # `dma_code`, `ip`, `latitude`, `longitude`, `postal_code`, `region_name` and `timezone`.
-  config :fields, :validate => :array, :default => ['city_name', 'continent_code',
-                                                    'country_code2', 'country_code3', 'country_name',
-                                                    'dma_code', 'ip', 'latitude',
-                                                    'longitude', 'postal_code', 'region_name',
-                                                    'region_code', 'timezone', 'location']
+  config :fields, :validate => :array
 
   # Specify the field into which Logstash should store the geoip data.
   # This can be useful, for example, if you have `src_ip` and `dst_ip` fields and
@@ -113,132 +96,32 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # of the same geoip_type share the same cache. The last declared cache size will 'win'. The reason for this is that there would be no benefit
   # to having multiple caches for different instances at different points in the pipeline, that would just increase the
   # number of cache misses and waste memory.
-  config :lru_cache_size, :validate => :number, :default => 1000
+  config :lru_cache_size, :validate => :number, :default => 1000, :deprecated => "This field has been deprecated in favor of cache_size."
 
   # Tags the event on failure to look up geo information. This can be used in later analysis.
   config :tag_on_failure, :validate => :array, :default => ["_geoip_lookup_failure"]
 
   public
   def register
-    suppress_all_warnings do
-      if @database.nil?
-        @database = ::Dir.glob(::File.join(::File.expand_path("../../../vendor/", ::File.dirname(__FILE__)),"GeoLite2-City.mmdb")).first
-
-        if @database.nil? || !File.exists?(@database)
-          raise "You must specify 'database => ...' in your geoip filter (I looked for '#{@database}')"
-        end
-      end
-
-      @logger.info("Using geoip database", :path => @database)
-
-      db_file = JavaIO::File.new(@database)
-      begin
-        @parser = DatabaseReader::Builder.new(db_file).withCache(CHMCache.new(@cache_size)).build();
-      rescue Java::ComMaxmindDb::InvalidDatabaseException => e
-        @logger.error("The GeoLite2 MMDB database provided is invalid or corrupted.", :exception => e, :field => @source)
-        raise e
+    if @database.nil?
+      @database = ::Dir.glob(::File.join(::File.expand_path("../../../vendor/", ::File.dirname(__FILE__)),"GeoLiteCity*.dat")).first
+      if !File.exists?(@database)
+        raise "You must specify 'database => ...' in your geoip filter (I looked for '#{@database})'"
       end
     end
+    
+    @logger.info("Using geoip database", :path => @database)
+    
+    @geoipfilter = org.logstash.filters.GeoIpFilter.new(@source, @target, @fields,
+     @database, @cache_size, @tag_on_failure)
   end # def register
 
   public
+  def multi_filter(events)
+    @geoipfilter.receive(events)
+  end
+
   def filter(event)
-    return unless filter?(event)
-
-    begin
-      ip = event.get(@source)
-      ip = ip.first if ip.is_a? Array
-      geo_data_hash = Hash.new
-      ip_address = InetAddress.getByName(ip)
-      response = @parser.city(ip_address)
-      populate_geo_data(response, ip_address, geo_data_hash)
-    rescue com.maxmind.geoip2.exception.AddressNotFoundException => e
-      @logger.debug("IP not found!", :exception => e, :field => @source, :event => event)
-    rescue java.net.UnknownHostException => e
-      @logger.error("IP Field contained invalid IP address or hostname", :exception => e, :field => @source, :event => event)
-    rescue Exception => e
-      @logger.error("Unknown error while looking up GeoIP data", :exception => e, :field => @source, :event => event)
-      # Dont' swallow this, bubble up for unknown issue
-      raise e
-    end
-
-    if apply_geodata(geo_data_hash, event)
-      filter_matched(event)
-    else
-      tag_unsuccessful_lookup(event)
-    end
+    multi_filter([event]).first
   end # def filter
-
-  def populate_geo_data(response, ip_address, geo_data_hash)
-    country = response.getCountry()
-    subdivision = response.getMostSpecificSubdivision()
-    city = response.getCity()
-    postal = response.getPostal()
-    location = response.getLocation()
-
-    # if location is empty, there is no point populating geo data
-    # and most likely all other fields are empty as well
-    if location.getLatitude().nil? && location.getLongitude().nil?
-      return
-    end
-
-    @fields.each do |field|
-      case field
-      when "city_name"
-        geo_data_hash["city_name"] = city.getName()
-      when "country_name"
-        geo_data_hash["country_name"] = country.getName()
-      when "continent_code"
-        geo_data_hash["continent_code"] = response.getContinent().getCode()
-      when "continent_name"
-        geo_data_hash["continent_name"] = response.getContinent().getName()
-      when "country_code2"
-        geo_data_hash["country_code2"] = country.getIsoCode()
-      when "country_code3"
-        geo_data_hash["country_code3"] = country.getIsoCode()
-      when "ip"
-        geo_data_hash["ip"] = ip_address.getHostAddress()
-      when "postal_code"
-        geo_data_hash["postal_code"] = postal.getCode()
-      when "dma_code"
-        geo_data_hash["dma_code"] = location.getMetroCode()
-      when "region_name"
-        geo_data_hash["region_name"] = subdivision.getName()
-      when "region_code"
-        geo_data_hash["region_code"] = subdivision.getIsoCode()
-      when "timezone"
-        geo_data_hash["timezone"] = location.getTimeZone()
-      when "location"
-        geo_data_hash["location"] = [ location.getLongitude(), location.getLatitude() ]
-      when "latitude"
-        geo_data_hash["latitude"] = location.getLatitude()
-      when "longitude"
-        geo_data_hash["longitude"] = location.getLongitude()
-      else
-        raise Exception.new("[#{field}] is not a supported field option.")
-      end
-    end
-  end
-
-  def tag_unsuccessful_lookup(event)
-    @logger.debug? && @logger.debug("IP #{event.get(@source)} was not found in the database", :event => event)
-    @tag_on_failure.each{|tag| event.tag(tag)}
-  end
-
-  def apply_geodata(geo_data_hash, event)
-    # don't do anything more if the lookup result is nil?
-    return false if geo_data_hash.nil?
-    # only do event.set(@target) if the lookup result is not nil
-    event.set(@target, {}) if event.get(@target).nil?
-    # don't do anything more if the lookup result is empty?
-    return false if geo_data_hash.empty?
-    geo_data_hash.each do |key, value|
-      if @fields.include?(key) && value
-        # can't dup numerics
-        event.set("[#{@target}][#{key}]", value.is_a?(Numeric) ? value : value.dup)
-      end
-    end # geo_data_hash.each
-    true
-  end
-
 end # class LogStash::Filters::GeoIP
