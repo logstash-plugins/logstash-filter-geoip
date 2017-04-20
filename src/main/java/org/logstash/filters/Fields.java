@@ -24,8 +24,8 @@ import java.util.EnumSet;
 import java.util.Locale;
 
 enum Fields {
-  ANONYMOUS_SYSTEM_NUMBER("anonymous_system_number"),
-  ANONYMOUS_SYSTEM_ORGANIZATION("anonymous_system_organization"),
+  AUTONOMOUS_SYSTEM_NUMBER("asn"),
+  AUTONOMOUS_SYSTEM_ORGANIZATION("as_org"),
   CITY_NAME("city_name"),
   COUNTRY_NAME("country_name"),
   CONTINENT_CODE("continent_code"),
@@ -64,8 +64,8 @@ enum Fields {
   static final EnumSet<Fields> DEFAULT_COUNTRY_FIELDS = EnumSet.of(Fields.IP, Fields.COUNTRY_CODE2,
       Fields.IP, Fields.COUNTRY_NAME, Fields.CONTINENT_NAME);
 
-  static final EnumSet<Fields> DEFAULT_ISP_FIELDS = EnumSet.of(Fields.IP, Fields.ANONYMOUS_SYSTEM_NUMBER,
-      Fields.ANONYMOUS_SYSTEM_ORGANIZATION, Fields.ISP, Fields.ORGANIZATION);
+  static final EnumSet<Fields> DEFAULT_ISP_FIELDS = EnumSet.of(Fields.IP, Fields.AUTONOMOUS_SYSTEM_NUMBER,
+      Fields.AUTONOMOUS_SYSTEM_ORGANIZATION, Fields.ISP, Fields.ORGANIZATION);
 
   public static Fields parseField(String value) {
     try {

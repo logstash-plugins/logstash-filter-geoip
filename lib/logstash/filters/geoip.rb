@@ -113,7 +113,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
     @logger.info("Using geoip database", :path => @database)
     
-    @geoipfilter = org.logstash.filters.GeoIpFilter.new(@source, @target, @fields, @database, @cache_size)
+    @geoipfilter = org.logstash.filters.GeoIPFilter.new(@source, @target, @fields, @database, @cache_size)
   end # def register
 
   public

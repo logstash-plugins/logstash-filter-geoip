@@ -40,7 +40,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
 
-public class GeoIpFilter {
+public class GeoIPFilter {
   private static Logger logger = LogManager.getLogger();
   private static final String CITY_DB_TYPE = "GeoLite2-City";
   private static final String COUNTRY_DB_TYPE = "GeoLite2-Country";
@@ -51,7 +51,7 @@ public class GeoIpFilter {
   private final Set<Fields> desiredFields;
   private final DatabaseReader databaseReader;
 
-  public GeoIpFilter(String sourceField, String targetField, List<String> fields, String databasePath, int cacheSize) {
+  public GeoIPFilter(String sourceField, String targetField, List<String> fields, String databasePath, int cacheSize) {
     this.sourceField = sourceField;
     this.targetField = targetField;
     final File database = new File(databasePath);
@@ -67,7 +67,7 @@ public class GeoIpFilter {
 
   private Set<Fields> createDesiredFields(List<String> fields) {
     Set<Fields> desiredFields = EnumSet.noneOf(Fields.class);
-    if (fields == null) {
+    if (fields == null || fields.isEmpty()) {
       switch (databaseReader.getMetadata().getDatabaseType()) {
         case CITY_DB_TYPE:
           desiredFields = Fields.DEFAULT_CITY_FIELDS;
@@ -311,16 +311,16 @@ public class GeoIpFilter {
         case IP:
           geoData.put(Fields.IP.fieldName(), ipAddress.getHostAddress());
           break;
-        case ANONYMOUS_SYSTEM_NUMBER:
+        case AUTONOMOUS_SYSTEM_NUMBER:
           Integer asn = response.getAutonomousSystemNumber();
           if (asn != null) {
-            geoData.put(Fields.ANONYMOUS_SYSTEM_NUMBER.fieldName(), asn);
+            geoData.put(Fields.AUTONOMOUS_SYSTEM_NUMBER.fieldName(), asn);
           }
           break;
-        case ANONYMOUS_SYSTEM_ORGANIZATION:
+        case AUTONOMOUS_SYSTEM_ORGANIZATION:
           String aso = response.getAutonomousSystemOrganization();
           if (aso != null) {
-            geoData.put(Fields.ANONYMOUS_SYSTEM_ORGANIZATION.fieldName(), aso);
+            geoData.put(Fields.AUTONOMOUS_SYSTEM_ORGANIZATION.fieldName(), aso);
           }
           break;
         case ISP:
