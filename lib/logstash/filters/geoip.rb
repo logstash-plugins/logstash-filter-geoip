@@ -104,24 +104,36 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   public
   def register
     if @database.nil?
-      @database = ::Dir.glob(::File.join(::File.expand_path("../../../vendor/", ::File.dirname(__FILE__)),"GeoLiteCity*.dat")).first
-      if !File.exists?(@database)
-        raise "You must specify 'database => ...' in your geoip filter (I looked for '#{@database})'"
+      @database = ::Dir.glob(::File.join(::File.expand_path("../../../vendor/", ::File.dirname(__FILE__)),"GeoLite2-City.mmdb")).first
+
+      if @database.nil? || !File.exists?(@database)
+        raise "You must specify 'database => ...' in your geoip filter (I looked for '#{@database}')"
       end
     end
-    
+
     @logger.info("Using geoip database", :path => @database)
     
-    @geoipfilter = org.logstash.filters.GeoIpFilter.new(@source, @target, @fields,
-     @database, @cache_size, @tag_on_failure)
+    @geoipfilter = org.logstash.filters.GeoIpFilter.new(@source, @target, @fields, @database, @cache_size)
   end # def register
 
   public
   def multi_filter(events)
-    @geoipfilter.receive(events)
+    events.each do |event|
+      if @geoipfilter.handleEvent(event)
+        filter_matched(event)
+      else
+        tag_unsuccessful_lookup(event)
+      end
+    end
   end
 
   def filter(event)
     multi_filter([event]).first
   end # def filter
+
+  def tag_unsuccessful_lookup(event)
+    @logger.debug? && @logger.debug("IP #{event.get(@source)} was not found in the database", :event => event)
+    @tag_on_failure.each{|tag| event.tag(tag)}
+  end
+
 end # class LogStash::Filters::GeoIP

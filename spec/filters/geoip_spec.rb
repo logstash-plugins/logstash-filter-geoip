@@ -251,13 +251,6 @@ describe LogStash::Filters::GeoIP do
 
     end
 
-    context "should return the correct source field in the logging message" do
-      sample("ip" => "-") do
-        expect(LogStash::Filters::GeoIP.logger).to receive(:error).with(anything, include(:field => "ip"))
-        subject
-      end
-    end
-
   end
 
   describe "an invalid database" do
@@ -272,8 +265,7 @@ describe LogStash::Filters::GeoIP do
 
     context "should return the correct sourcefield in the logging message" do
       sample("ip" => "8.8.8.8") do
-        expect(LogStash::Filters::GeoIP.logger).to receive(:error).with(anything, include(:field => "ip"))
-        expect { subject }.to raise_error
+        expect { subject }.to raise_error(java.lang.IllegalArgumentException, "The database provided is invalid or corrupted.")
       end
     end
   end
