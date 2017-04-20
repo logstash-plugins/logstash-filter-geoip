@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.logstash.filters;
 
 import com.maxmind.db.CHMCache;
