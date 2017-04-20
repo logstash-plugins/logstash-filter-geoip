@@ -117,19 +117,14 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end # def register
 
   public
-  def multi_filter(events)
-    events.each do |event|
-      if @geoipfilter.handleEvent(event)
-        filter_matched(event)
-      else
-        tag_unsuccessful_lookup(event)
-      end
+  def filter(event)
+    return unless filter?(event)
+    if @geoipfilter.handleEvent(event)
+      filter_matched(event)
+    else
+      tag_unsuccessful_lookup(event)
     end
   end
-
-  def filter(event)
-    multi_filter([event]).first
-  end # def filter
 
   def tag_unsuccessful_lookup(event)
     @logger.debug? && @logger.debug("IP #{event.get(@source)} was not found in the database", :event => event)
