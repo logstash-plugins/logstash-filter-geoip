@@ -41,8 +41,14 @@ import java.util.*;
 
 public class GeoIPFilter {
   private static Logger logger = LogManager.getLogger();
-  private static final String CITY_DB_TYPE = "GeoLite2-City";
-  private static final String COUNTRY_DB_TYPE = "GeoLite2-Country";
+  // The free GeoIP2 databases
+  private static final String CITY_LITE_DB_TYPE = "GeoLite2-City";
+  private static final String COUNTRY_LITE_DB_TYPE = "GeoLite2-Country";
+  private static final String ASN_LITE_DB_TYPE = "GeoLite2-ASN";
+
+  // The paid GeoIP2 databases
+  private static final String CITY_DB_TYPE = "GeoIP2-City";
+  private static final String COUNTRY_DB_TYPE = "GeoIP2-Country";
   private static final String ISP_DB_TYPE = "GeoIP2-ISP";
   
   private final String sourceField;
@@ -68,13 +74,16 @@ public class GeoIPFilter {
     Set<Fields> desiredFields = EnumSet.noneOf(Fields.class);
     if (fields == null || fields.isEmpty()) {
       switch (databaseReader.getMetadata().getDatabaseType()) {
+        case CITY_LITE_DB_TYPE:
         case CITY_DB_TYPE:
           desiredFields = Fields.DEFAULT_CITY_FIELDS;
           break;
+        case COUNTRY_LITE_DB_TYPE:
         case COUNTRY_DB_TYPE:
           desiredFields = Fields.DEFAULT_COUNTRY_FIELDS;
           break;
         case ISP_DB_TYPE:
+        case ASN_LITE_DB_TYPE:
           desiredFields = Fields.DEFAULT_ISP_FIELDS;
           break;
       }
@@ -87,7 +96,7 @@ public class GeoIPFilter {
   }
 
   public boolean handleEvent(RubyEvent rubyEvent) {
-    Event event = rubyEvent.getEvent();
+    final Event event = rubyEvent.getEvent();
     Object input = event.getField(sourceField);
     if (input == null) {
       return false;
@@ -108,12 +117,15 @@ public class GeoIPFilter {
     try {
       final InetAddress ipAddress = InetAddress.getByName(ip);
       switch (databaseReader.getMetadata().getDatabaseType()) {
+        case CITY_LITE_DB_TYPE:
         case CITY_DB_TYPE:
           geoData = retrieveCityGeoData(ipAddress);
           break;
+        case COUNTRY_LITE_DB_TYPE:
         case COUNTRY_DB_TYPE:
           geoData = retrieveCountryGeoData(ipAddress);
           break;
+        case ASN_LITE_DB_TYPE:
         case ISP_DB_TYPE:
           geoData = retrieveIspGeoData(ipAddress);
           break;
