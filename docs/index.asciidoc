@@ -21,7 +21,8 @@ include::{include_path}/plugin_header.asciidoc[]
 ==== Description
 
 The GeoIP filter adds information about the geographical location of IP addresses,
-based on data from the Maxmind GeoLite2 database.
+based on data from the Maxmind GeoLite2 database. Commercial databases from Maxmind are 
+also supported in this plugin.
 
 A `[geoip][location]` field is created if
 the GeoIP lookup returns a latitude and longitude. The field is stored in
@@ -94,7 +95,9 @@ number of cache misses and waste memory.
   * Value type is <<path,path>>
   * There is no default value for this setting.
 
-The path to the GeoLite2 database file which Logstash should use. Only City database is supported by now.
+The path to Maxmind's database file that Logstash should use. The default database is GeoLite2-City.
+GeoLite2-City, GeoLite2-Country, GeoLite2-ASN are the free databases from Maxmind that are supported.
+GeoIP2-City, GeoIP2-ISP, GeoIP2-Country are the commercial databases from Maxmind that are supported.
 
 If not specified, this will default to the GeoLite2 City database that ships
 with Logstash.
