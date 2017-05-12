@@ -1,3 +1,7 @@
+## 4.1.0
+  - Add support for commercial databases from Maxmind.
+  - Add ASN data support via GeoIP2-ISP database.
+
 ## 4.0.6
   - Docs: Remove patch classes from the main plugin file
   - Update of the GeoIP2 DB
