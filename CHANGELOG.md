@@ -1,6 +1,9 @@
-## 4.1.0
+## 4.1.1
   - Add support for commercial databases from Maxmind.
   - Add ASN data support via GeoIP2-ISP database.
+  
+## 4.1.0
+  - Removed from RubyGems.org since it was missing the default GeoIP2 database.  
 
 ## 4.0.6
   - Docs: Remove patch classes from the main plugin file
