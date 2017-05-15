@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
 
   s.name            = 'logstash-filter-geoip'
-  s.version         = '4.1.0'
+  s.version         = '4.1.1'
   s.licenses        = ['Apache License (2.0)']
   s.summary         = "$summary"
   s.description     = "This gem is a Logstash plugin required to be installed on top of the Logstash core pipeline using $LS_HOME/bin/logstash-plugin install gemname. This gem is not a stand-alone program"
@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib", "vendor/jar-dependencies"]
 
   # Files
-  s.files = Dir["lib/**/*","spec/**/*","*.gemspec","*.md","CONTRIBUTORS","Gemfile","LICENSE","NOTICE.TXT", "vendor/jar-dependencies/**/*.jar", "vendor/jar-dependencies/**/*.rb", "VERSION", "docs/**/*"]
+  s.files = Dir['lib/**/*','spec/**/*','vendor/**/*', 'vendor/jar-dependencies/**/*.jar', '*.gemspec','*.md','CONTRIBUTORS','Gemfile','LICENSE','NOTICE.TXT', 'maxmind-db-NOTICE.txt', 'docs/**/*']
 
   # Tests
   s.test_files = s.files.grep(%r{^(test|spec|features)/})
