@@ -67,6 +67,9 @@ enum Fields {
   static final EnumSet<Fields> DEFAULT_ISP_FIELDS = EnumSet.of(Fields.IP, Fields.AUTONOMOUS_SYSTEM_NUMBER,
       Fields.AUTONOMOUS_SYSTEM_ORGANIZATION, Fields.ISP, Fields.ORGANIZATION);
 
+  static final EnumSet<Fields> DEFAULT_ASN_LITE_FIELDS = EnumSet.of(Fields.IP, Fields.AUTONOMOUS_SYSTEM_NUMBER,
+      Fields.AUTONOMOUS_SYSTEM_ORGANIZATION);
+
   public static Fields parseField(String value) {
     try {
       return valueOf(value.toUpperCase(Locale.ROOT));

@@ -3,6 +3,7 @@ require "logstash/devutils/rspec/spec_helper"
 require "logstash/filters/geoip"
 
 CITYDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoLite2-City.mmdb").first
+ASNDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoLite2-ASN.mmdb").first
 
 describe LogStash::Filters::GeoIP do
 
@@ -264,6 +265,25 @@ describe LogStash::Filters::GeoIP do
         expect { subject }.to raise_error(java.lang.IllegalArgumentException, "The database provided is invalid or corrupted.")
       end
     end
+  end
+
+  describe "GeoIP2-ASN database" do
+    config <<-CONFIG
+      filter {
+        geoip {
+          source => "ip"
+          database => "#{ASNDB}"
+        }
+      }
+    CONFIG
+
+    sample("ip" => "8.8.8.8") do
+      expect(subject.get("geoip")).not_to be_empty
+      expect(subject.get("geoip")["asn"]).to eq(15169)
+      expect(subject.get("geoip")["as_org"]).to eq("Google Inc.")
+    end
+
+
   end
 
 end

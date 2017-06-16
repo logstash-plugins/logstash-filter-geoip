@@ -22,6 +22,7 @@ import com.maxmind.db.CHMCache;
 import com.maxmind.db.InvalidDatabaseException;
 import com.maxmind.geoip2.exception.AddressNotFoundException;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
+import com.maxmind.geoip2.model.AsnResponse;
 import com.maxmind.geoip2.model.CityResponse;
 import com.maxmind.geoip2.model.CountryResponse;
 import com.maxmind.geoip2.model.IspResponse;
@@ -50,7 +51,7 @@ public class GeoIPFilter {
   private static final String CITY_DB_TYPE = "GeoIP2-City";
   private static final String COUNTRY_DB_TYPE = "GeoIP2-Country";
   private static final String ISP_DB_TYPE = "GeoIP2-ISP";
-  
+
   private final String sourceField;
   private final String targetField;
   private final Set<Fields> desiredFields;
@@ -83,8 +84,10 @@ public class GeoIPFilter {
           desiredFields = Fields.DEFAULT_COUNTRY_FIELDS;
           break;
         case ISP_DB_TYPE:
-        case ASN_LITE_DB_TYPE:
           desiredFields = Fields.DEFAULT_ISP_FIELDS;
+          break;
+        case ASN_LITE_DB_TYPE:
+          desiredFields = Fields.DEFAULT_ASN_LITE_FIELDS;
           break;
       }
     } else {
@@ -96,7 +99,10 @@ public class GeoIPFilter {
   }
 
   public boolean handleEvent(RubyEvent rubyEvent) {
-    final Event event = rubyEvent.getEvent();
+    return handleEvent2(rubyEvent.getEvent());
+  }
+
+  public boolean handleEvent2(final Event event) {
     Object input = event.getField(sourceField);
     if (input == null) {
       return false;
@@ -126,6 +132,8 @@ public class GeoIPFilter {
           geoData = retrieveCountryGeoData(ipAddress);
           break;
         case ASN_LITE_DB_TYPE:
+          geoData = retrieveAsnGeoData(ipAddress);
+          break;
         case ISP_DB_TYPE:
           geoData = retrieveIspGeoData(ipAddress);
           break;
@@ -344,6 +352,32 @@ public class GeoIPFilter {
           String org = response.getOrganization();
           if (org != null) {
             geoData.put(Fields.ORGANIZATION.fieldName(), org);
+          }
+          break;
+      }
+    }
+
+    return geoData;
+  }
+
+  private Map<String, Object> retrieveAsnGeoData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
+    AsnResponse response = databaseReader.asn(ipAddress);
+    Map<String, Object> geoData = new HashMap<>();
+    for (Fields desiredField : this.desiredFields) {
+      switch (desiredField) {
+        case IP:
+          geoData.put(Fields.IP.fieldName(), ipAddress.getHostAddress());
+          break;
+        case AUTONOMOUS_SYSTEM_NUMBER:
+          Integer asn = response.getAutonomousSystemNumber();
+          if (asn != null) {
+            geoData.put(Fields.AUTONOMOUS_SYSTEM_NUMBER.fieldName(), asn);
+          }
+          break;
+        case AUTONOMOUS_SYSTEM_ORGANIZATION:
+          String aso = response.getAutonomousSystemOrganization();
+          if (aso != null) {
+            geoData.put(Fields.AUTONOMOUS_SYSTEM_ORGANIZATION.fieldName(), aso);
           }
           break;
       }
