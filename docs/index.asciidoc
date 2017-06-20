@@ -21,8 +21,23 @@ include::{include_path}/plugin_header.asciidoc[]
 ==== Description
 
 The GeoIP filter adds information about the geographical location of IP addresses,
-based on data from the Maxmind GeoLite2 database. Commercial databases from Maxmind are 
-also supported in this plugin.
+based on data from the Maxmind GeoLite2 databases.
+
+==== Supported Databases
+
+This plugin is bundled with https://dev.maxmind.com/geoip/geoip2/geolite2[GeoLite2] City database out of the box. From Maxmind's description -- 
+"GeoLite2 databases are free IP geolocation databases comparable to, but less accurate than, MaxMind’s 
+GeoIP2 databases". Please see GeoIP Lite2 license for more details.
+
+https://www.maxmind.com/en/geoip2-databases[Commercial databases] from Maxmind are also supported in this plugin.
+
+If you need to use databases other than the bundled GeoLite2 City, you can download them directly 
+from Maxmind's website and use the `database` option to specify their location. The GeoLite2 databases 
+can be downloaded from https://dev.maxmind.com/geoip/geoip2/geolite2[here].
+
+If you would like to get Autonomous System Number(ASN) information, you can use the GeoLite2-ASN database.
+
+==== Details
 
 A `[geoip][location]` field is created if
 the GeoIP lookup returns a latitude and longitude. The field is stored in
