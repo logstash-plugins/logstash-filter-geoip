@@ -1,3 +1,7 @@
+## 4.2.0
+  - Add support for GeoLite2-ASN database from Maxmind for ASN data.
+  - Update Java dependencies to 2.9.0 to support the new ASN database.
+
 ## 4.1.1
   - Add support for commercial databases from Maxmind.
   - Add ASN data support via GeoIP2-ISP database.
