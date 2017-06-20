@@ -55,7 +55,7 @@ dependencies {
   testCompile group: "org.apache.logging.log4j", name: "log4j-api", version: "2.6.2"
   testCompile group: "org.apache.logging.log4j", name: "log4j-core", version: "2.6.2"
   testCompile group: 'org.jruby', name: 'jruby-complete', version: "1.7.26"
-  testCompile group: "com.maxmind.geoip2", name: "geoip2", version: "2.8.0"
+  testCompile group: "com.maxmind.geoip2", name: "geoip2", version: "2.9.0"
   testCompile group: "com.maxmind.db", name: "maxmind-db", version: "1.2.2"
   testCompile fileTree(dir: logstashCoreGemPath, include: '**/*.jar')
   testCompile fileTree(dir: logstashCoreEventGemPath, include: '**/*.jar')
