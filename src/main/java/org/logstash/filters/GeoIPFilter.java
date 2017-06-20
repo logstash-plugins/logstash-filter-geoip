@@ -99,10 +99,7 @@ public class GeoIPFilter {
   }
 
   public boolean handleEvent(RubyEvent rubyEvent) {
-    return handleEvent2(rubyEvent.getEvent());
-  }
-
-  public boolean handleEvent2(final Event event) {
+    final Event event = rubyEvent.getEvent();
     Object input = event.getField(sourceField);
     if (input == null) {
       return false;
