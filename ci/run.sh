@@ -1,3 +1,6 @@
+#!/bin/bash
+current_dir="$(dirname "$0")"
+
 bundle install
 bundle exec rake gradle.properties
 ./gradlew assemble
