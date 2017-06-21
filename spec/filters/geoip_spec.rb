@@ -3,7 +3,8 @@ require "logstash/devutils/rspec/spec_helper"
 require "logstash/filters/geoip"
 
 CITYDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoLite2-City.mmdb").first
-ASNDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoLite2-ASN.mmdb").first
+# this is downloaded in build dir so we don't accidentally package this database when creating a gem
+ASNDB = ::Dir.glob(::File.expand_path("../../build/GeoLite2-ASN_*", ::File.dirname(__FILE__))+"/GeoLite2-ASN.mmdb").first
 
 describe LogStash::Filters::GeoIP do
 
