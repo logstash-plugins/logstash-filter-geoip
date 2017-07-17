@@ -33,11 +33,14 @@ require "logstash-filter-geoip_jars"
 class LogStash::Filters::GeoIP < LogStash::Filters::Base
   config_name "geoip"
 
-  # The path to the GeoLite2 database file which Logstash should use. Only City database is supported by now.
+  # The path to the GeoLite2 database file which Logstash should use. City and ASN databases are supported.
   #
   # If not specified, this will default to the GeoLite2 City database that ships
   # with Logstash.
   config :database, :validate => :path
+
+  # If using the default database, which type should Logstash use.  Valid values are "City" and "ASN", and case matters.
+  config :default_database_type, :validate => ["City","ASN"], :default => "City"
 
   # The field containing the IP address or hostname to map via geoip. If
   # this field is an array, only the first value will be used.
@@ -104,7 +107,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   public
   def register
     if @database.nil?
-      @database = ::Dir.glob(::File.join(::File.expand_path("../../../vendor/", ::File.dirname(__FILE__)),"GeoLite2-City.mmdb")).first
+      @database = ::Dir.glob(::File.join(::File.expand_path("../../../vendor/", ::File.dirname(__FILE__)),"GeoLite2-#{@default_database_type}.mmdb")).first
 
       if @database.nil? || !File.exists?(@database)
         raise "You must specify 'database => ...' in your geoip filter (I looked for '#{@database}')"
