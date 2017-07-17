@@ -1,6 +1,14 @@
 [
     {
         "url": "http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz",
-        "sha1": "dc594fb45880bb33767f3280f2f108389f24db22"
+        "sha1": "5f1d57e747b06e4c40a34db8dbb5b04651434ffd"
+    },
+    {
+        "url": "https://s3.amazonaws.com/download.elasticsearch.org/logstash/maxmind/GeoLite2-ASN.mmdb",
+        "sha1": "d968898454106a56a9b5a5d0e7f7465fc93c6800"
+    },
+    {
+        "url": "https://s3.amazonaws.com/download.elasticsearch.org/logstash/maxmind/LICENSE.txt",
+        "sha1": "9f7561e561089d23f49aa3ce9ff055c4ad6b2920"
     }
 ]

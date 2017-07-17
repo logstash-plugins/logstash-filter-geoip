@@ -67,10 +67,6 @@ dependencies {
   compileOnly fileTree(dir: logstashCoreEventGemPath, include: '**/*.jar')
 }
 
-test {
-  dependsOn 'downloadASNDatabaseForTest'
-}
-
 task rubyBootstrap << {
   description "Try bundler"
   def jruby = new org.jruby.embed.ScriptingContainer()
@@ -124,21 +120,6 @@ task vendor << {
   File projectJarFile = file("${vendorPathPrefix}/${projectGroupPath}/${project.name}/${project.version}/${project.name}-${project.version}.jar")
   projectJarFile.mkdirs()
   Files.copy(file("$buildDir/libs/${project.name}-${project.version}.jar").toPath(), projectJarFile.toPath(), REPLACE_EXISTING)
-}
-
-String databaseRootResource = 'http://geolite.maxmind.com/download/geoip/database/'
-
-task downloadASNDatabaseForTest(type: Download, overwrite: false) {
-  src([
-    databaseRootResource + 'GeoLite2-ASN.tar.gz'
-  ])
-  dest file("build")
-  doLast {
-    copy {
-      from tarTree('build/GeoLite2-ASN.tar.gz')
-      into file("build")
-    }
-  }
 }
 
 vendor.dependsOn(jar, generateGemJarRequiresFile)
