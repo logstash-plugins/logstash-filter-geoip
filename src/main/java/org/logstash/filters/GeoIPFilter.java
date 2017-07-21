@@ -49,6 +49,11 @@ public class GeoIPFilter {
 
   // The paid GeoIP2 databases
   private static final String CITY_DB_TYPE = "GeoIP2-City";
+  private static final String CITY_AFRICA_DB_TYPE = "GeoIP2-City-Africa";
+  private static final String CITY_ASIA_PACIFIC_DB_TYPE = "GeoIP2-City-Asia-Pacific";
+  private static final String CITY_EUROPE_DB_TYPE = "GeoIP2-City-Europe";
+  private static final String CITY_NORTH_AMERICA_DB_TYPE = "GeoIP2-City-North-America";
+  private static final String CITY_SOUTH_AMERICA_DB_TYPE = "GeoIP2-City-South-America";
   private static final String COUNTRY_DB_TYPE = "GeoIP2-Country";
   private static final String ISP_DB_TYPE = "GeoIP2-ISP";
 
@@ -77,6 +82,11 @@ public class GeoIPFilter {
       switch (databaseReader.getMetadata().getDatabaseType()) {
         case CITY_LITE_DB_TYPE:
         case CITY_DB_TYPE:
+        case CITY_AFRICA_DB_TYPE:
+        case CITY_ASIA_PACIFIC_DB_TYPE:
+        case CITY_EUROPE_DB_TYPE:
+        case CITY_NORTH_AMERICA_DB_TYPE:
+        case CITY_SOUTH_AMERICA_DB_TYPE:
           desiredFields = Fields.DEFAULT_CITY_FIELDS;
           break;
         case COUNTRY_LITE_DB_TYPE:
@@ -122,6 +132,11 @@ public class GeoIPFilter {
       switch (databaseReader.getMetadata().getDatabaseType()) {
         case CITY_LITE_DB_TYPE:
         case CITY_DB_TYPE:
+        case CITY_AFRICA_DB_TYPE:
+        case CITY_ASIA_PACIFIC_DB_TYPE:
+        case CITY_EUROPE_DB_TYPE:
+        case CITY_NORTH_AMERICA_DB_TYPE:
+        case CITY_SOUTH_AMERICA_DB_TYPE:
           geoData = retrieveCityGeoData(ipAddress);
           break;
         case COUNTRY_LITE_DB_TYPE:
