@@ -85,21 +85,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # number of cache misses and waste memory.
   config :cache_size, :validate => :number, :default => 1000
 
-  # GeoIP lookup is surprisingly expensive. This filter uses an LRU cache to take advantage of the fact that
-  # IPs agents are often found adjacent to one another in log files and rarely have a random distribution.
-  # The higher you set this the more likely an item is to be in the cache and the faster this filter will run.
-  # However, if you set this too high you can use more memory than desired.
-  #
-  # Experiment with different values for this option to find the best performance for your dataset.
-  #
-  # This MUST be set to a value > 0. There is really no reason to not want this behavior, the overhead is minimal
-  # and the speed gains are large.
-  #
-  # It is important to note that this config value is global to the geoip_type. That is to say all instances of the geoip filter
-  # of the same geoip_type share the same cache. The last declared cache size will 'win'. The reason for this is that there would be no benefit
-  # to having multiple caches for different instances at different points in the pipeline, that would just increase the
-  # number of cache misses and waste memory.
-  config :lru_cache_size, :validate => :number, :default => 1000, :deprecated => "This field has been deprecated in favor of cache_size."
+  config :lru_cache_size, :validate => :number, :obsolete => "This field has been obsoleted in favor of cache_size."
 
   # Tags the event on failure to look up geo information. This can be used in later analysis.
   config :tag_on_failure, :validate => :array, :default => ["_geoip_lookup_failure"]
