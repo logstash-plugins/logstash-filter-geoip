@@ -1,3 +1,6 @@
+## 5.0.1
+  - Fix some documentation issues
+
 ## 5.0.0
   - Make deprecated field lru_cache_size obsolete
 
