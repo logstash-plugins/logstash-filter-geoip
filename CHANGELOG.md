@@ -1,3 +1,6 @@
+## 4.3.1
+ - Documentation changes
+
 ## 4.3.0
   - Bundle the GeoLite2-ASN database by default
   - Add default_database_type configuration option to allow selection between the GeoLite2-City and GeoLote2-ASN databases.
