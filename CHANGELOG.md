@@ -1,3 +1,6 @@
+## 5.0.2
+  - Update gemspec summary
+
 ## 5.0.1
   - Fix some documentation issues
 
