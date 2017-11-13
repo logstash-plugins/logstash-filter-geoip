@@ -1,7 +1,7 @@
 [
     {
         "url": "http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz",
-        "sha1": "327fb6545e9fa6a632b6c791eea77f47a988a4ab"
+        "sha1": "fe165dab8ed0f2e980fbce81d05f5e120b0b1fa9"
     },
     {
         "url": "https://s3.amazonaws.com/download.elasticsearch.org/logstash/maxmind/GeoLite2-ASN.mmdb",
