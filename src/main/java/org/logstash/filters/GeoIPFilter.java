@@ -114,15 +114,19 @@ public class GeoIPFilter {
     if (input == null) {
       return false;
     }
-
     String ip;
 
     if (input instanceof List) {
       ip = (String) ((List) input).get(0);
+
     } else if (input instanceof String) {
       ip = (String) input;
     } else {
       throw new IllegalArgumentException("Expected input field value to be String or List type");
+    }
+
+    if (ip.trim().isEmpty()){
+      return false;
     }
 
     Map<String, Object> geoData = new HashMap<>();

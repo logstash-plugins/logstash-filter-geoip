@@ -1,3 +1,7 @@
+## 5.0.3
+ - Skip lookup operation if source field contains an empty string 
+ - Update of the GeoIP2 DB
+
 ## 5.0.2
   - Update gemspec summary
 
