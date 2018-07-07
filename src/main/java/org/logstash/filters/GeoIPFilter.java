@@ -26,6 +26,7 @@ import com.maxmind.geoip2.model.AsnResponse;
 import com.maxmind.geoip2.model.CityResponse;
 import com.maxmind.geoip2.model.CountryResponse;
 import com.maxmind.geoip2.model.IspResponse;
+import com.maxmind.geoip2.model.AnonymousIpResponse;
 import com.maxmind.geoip2.record.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -101,7 +102,7 @@ public class GeoIPFilter {
           desiredFields = Fields.DEFAULT_ASN_LITE_FIELDS;
           break;
         case ANONYMOUS_DB_TYPE:
-          desiredFields = Fields.DEFAULT_ANONYMOUS_DB_TYPE;
+          desiredFields = Fields.DEFAULT_ANONYMOUS_FIELDS;
           break;
       }
     } else {
