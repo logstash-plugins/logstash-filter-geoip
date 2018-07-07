@@ -56,6 +56,7 @@ public class GeoIPFilter {
   private static final String CITY_SOUTH_AMERICA_DB_TYPE = "GeoIP2-City-South-America";
   private static final String COUNTRY_DB_TYPE = "GeoIP2-Country";
   private static final String ISP_DB_TYPE = "GeoIP2-ISP";
+  private static final String ANONYMOUS_DB_TYPE = "GeoIP2-Anonymous-IP";
 
   private final String sourceField;
   private final String targetField;
@@ -98,6 +99,9 @@ public class GeoIPFilter {
           break;
         case ASN_LITE_DB_TYPE:
           desiredFields = Fields.DEFAULT_ASN_LITE_FIELDS;
+          break;
+        case ANONYMOUS_DB_TYPE:
+          desiredFields = Fields.DEFAULT_ANONYMOUS_DB_TYPE;
           break;
       }
     } else {
@@ -153,6 +157,8 @@ public class GeoIPFilter {
         case ISP_DB_TYPE:
           geoData = retrieveIspGeoData(ipAddress);
           break;
+        case ANONYMOUS_DB_TYPE:
+          geoData = retrieveAnonymousData(ipAddress);
         default:
           throw new IllegalStateException("Unsupported database type " + databaseReader.getMetadata().getDatabaseType() + "");
       }
@@ -394,6 +400,50 @@ public class GeoIPFilter {
           String aso = response.getAutonomousSystemOrganization();
           if (aso != null) {
             geoData.put(Fields.AUTONOMOUS_SYSTEM_ORGANIZATION.fieldName(), aso);
+          }
+          break;
+      }
+    }
+
+    return geoData;
+  }
+
+  private Map<String, Object> retrieveAnonymousData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
+    AnonymousIpResponse response = databaseReader.anonymousIp(ipAddress);
+    Map<String, Object> geoData = new HashMap<>();
+    for (Fields desiredField : this.desiredFields) {
+      switch (desiredField) {
+        case IP:
+          geoData.put(Fields.IP.fieldName(), ipAddress.getHostAddress());
+          break;
+        case ANONYMOUS_IS_ANONOYMOUS:
+          Boolean is_anonoymous = response.isAnonymous();
+          if (is_anonoymous != null) {
+            geoData.put(Fields.ANONYMOUS_IS_ANONYMOUS.fieldName(), is_anonoymous);
+          }
+          break;
+        case ANONYMOUS_IS_VPN:
+          Boolean is_vpn = response.isAnonymousVpn();
+          if (is_vpn != null) {
+            geoData.put(Fields.ANONYMOUS_IS_VPN.fieldName(), is_vpn);
+          }
+          break;
+        case ANONYMOUS_IS_HOSTING_PROVIDER:
+          Boolean is_hosting_provider = response.isHostingProvider();
+          if (is_hosting_provider != null) {
+            geoData.put(Fields.ANONYMOUS_IS_HOSTING_PROVIDER.fieldName(), is_hosting_provider);
+          }
+          break;
+        case ANONYMOUS_IS_PUBLIC_PROXY:
+          Boolean is_public_proxy = response.isPublicProxy();
+          if (is_public_proxy != null) {
+            geoData.put(Fields.ANONYMOUS_IS_PUBLIC_PROXY.fieldName(), is_public_proxy);
+          }
+          break;
+        case ANONYMOUS_IS_TOR_EXIT_NODE:
+          Boolean is_tor_exit_node = response.isTorExitNode();
+          if (is_tor_exit_node != null) {
+            geoData.put(Fields.ANONYMOUS_IS_TOR_EXIT_NODE.fieldName(), is_tor_exit_node);
           }
           break;
       }
