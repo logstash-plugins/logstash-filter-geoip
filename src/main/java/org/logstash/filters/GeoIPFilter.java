@@ -416,7 +416,7 @@ public class GeoIPFilter {
         case IP:
           geoData.put(Fields.IP.fieldName(), ipAddress.getHostAddress());
           break;
-        case ANONYMOUS_IS_ANONOYMOUS:
+        case ANONYMOUS_IS_ANONYMOUS:
           Boolean is_anonoymous = response.isAnonymous();
           if (is_anonoymous != null) {
             geoData.put(Fields.ANONYMOUS_IS_ANONYMOUS.fieldName(), is_anonoymous);
