@@ -118,7 +118,6 @@ public class GeoIPFilter {
 
     if (input instanceof List) {
       ip = (String) ((List) input).get(0);
-
     } else if (input instanceof String) {
       ip = (String) input;
     } else {
