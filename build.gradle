@@ -24,7 +24,7 @@ apply plugin: "idea"
 
 // TODO(sissel): Move this to a file shared by the gemspec.
 group "org.logstash.filters"
-version "4.2.0"
+version "6.0.0"
 
 import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING
