@@ -25,6 +25,7 @@ import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.AsnResponse;
 import com.maxmind.geoip2.model.CityResponse;
 import com.maxmind.geoip2.model.CountryResponse;
+import com.maxmind.geoip2.model.DomainResponse;
 import com.maxmind.geoip2.model.IspResponse;
 import com.maxmind.geoip2.record.*;
 import org.apache.logging.log4j.LogManager;
@@ -56,6 +57,7 @@ public class GeoIPFilter {
   private static final String CITY_SOUTH_AMERICA_DB_TYPE = "GeoIP2-City-South-America";
   private static final String COUNTRY_DB_TYPE = "GeoIP2-Country";
   private static final String ISP_DB_TYPE = "GeoIP2-ISP";
+  private static final String DOMAIN_DB_TYPE = "GeoIP2-Domain";
 
   private final String sourceField;
   private final String targetField;
@@ -99,6 +101,8 @@ public class GeoIPFilter {
         case ASN_LITE_DB_TYPE:
           desiredFields = Fields.DEFAULT_ASN_LITE_FIELDS;
           break;
+        case DOMAIN_DB_TYPE:
+          desiredFields = Fields.DEFAULT_DOMAIN_FIELDS;
       }
     } else {
       for (String fieldName : fields) {
@@ -152,6 +156,9 @@ public class GeoIPFilter {
           break;
         case ISP_DB_TYPE:
           geoData = retrieveIspGeoData(ipAddress);
+          break;
+        case DOMAIN_DB_TYPE:
+          geoData = retrieveDomainGeoData(ipAddress);
           break;
         default:
           throw new IllegalStateException("Unsupported database type " + databaseReader.getMetadata().getDatabaseType() + "");
@@ -395,6 +402,21 @@ public class GeoIPFilter {
           if (aso != null) {
             geoData.put(Fields.AUTONOMOUS_SYSTEM_ORGANIZATION.fieldName(), aso);
           }
+          break;
+      }
+    }
+
+    return geoData;
+  }
+
+  private Map<String, Object> retrieveDomainGeoData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
+    DomainResponse response = databaseReader.domain(ipAddress);
+    Map<String, Object> geoData = new HashMap<>();
+    for (Fields desiredField : this.desiredFields) {
+      switch (desiredField) {
+        case DOMAIN:
+          String domain = response.getDomain();
+          geoData.put(Fields.DOMAIN.fieldName(), domain);
           break;
       }
     }
