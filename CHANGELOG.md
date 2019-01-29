@@ -1,3 +1,6 @@
+## 6.0.0
+  - Removed obsolete lru_cache_size field
+
 ## 5.0.3
  - Skip lookup operation if source field contains an empty string 
  - Update of the GeoIP2 DB
