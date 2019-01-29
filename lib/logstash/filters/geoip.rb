@@ -85,8 +85,6 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # number of cache misses and waste memory.
   config :cache_size, :validate => :number, :default => 1000
 
-  config :lru_cache_size, :validate => :number, :obsolete => "This field has been obsoleted in favor of cache_size."
-
   # Tags the event on failure to look up geo information. This can be used in later analysis.
   config :tag_on_failure, :validate => :array, :default => ["_geoip_lookup_failure"]
 

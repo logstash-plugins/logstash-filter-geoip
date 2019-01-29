@@ -27,7 +27,6 @@ def delete_create_gradle_properties
   FileUtils.rm_f(gradle_properties_file)
   File.open(gradle_properties_file, "w") do |f|
     f.puts "logstashCoreGemPath=#{lsc_path}"
-    f.puts "logstashCoreEventGemPath=#{lsce_path}"
   end
   puts "-------------------> Wrote #{gradle_properties_file}"
   puts `cat #{gradle_properties_file}`

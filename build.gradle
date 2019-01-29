@@ -24,7 +24,7 @@ apply plugin: "idea"
 
 // TODO(sissel): Move this to a file shared by the gemspec.
 group "org.logstash.filters"
-version "4.2.0"
+version "6.0.0"
 
 import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING
@@ -60,11 +60,9 @@ dependencies {
   testCompile group: "com.maxmind.geoip2", name: "geoip2", version: "2.9.0"
   testCompile group: "com.maxmind.db", name: "maxmind-db", version: "1.2.2"
   testCompile fileTree(dir: logstashCoreGemPath, include: '**/*.jar')
-  testCompile fileTree(dir: logstashCoreEventGemPath, include: '**/*.jar')
 
   compileOnly group: 'org.jruby', name: 'jruby-complete', version: "1.7.26"
   compileOnly fileTree(dir: logstashCoreGemPath, include: '**/*.jar')
-  compileOnly fileTree(dir: logstashCoreEventGemPath, include: '**/*.jar')
 }
 
 task rubyBootstrap << {
