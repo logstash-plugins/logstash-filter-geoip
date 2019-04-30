@@ -33,7 +33,7 @@ https://www.maxmind.com/en/geoip2-databases[Commercial databases] from Maxmind a
 
 If you need to use databases other than the bundled GeoLite2 City, you can download them directly
 from Maxmind's website and use the `database` option to specify their location. The GeoLite2 databases
-can be downloaded from https://dev.maxmind.com/geoip/geoip2/geolite2[here].
+can be https://dev.maxmind.com/geoip/geoip2/geolite2[downloaded from here].
 
 If you would like to get Autonomous System Number(ASN) information, you can use the GeoLite2-ASN database.
 
@@ -44,7 +44,7 @@ the GeoIP lookup returns a latitude and longitude. The field is stored in
 http://geojson.org/geojson-spec.html[GeoJSON] format. Additionally,
 the default Elasticsearch template provided with the
 {logstash-ref}/plugins-outputs-elasticsearch.html[elasticsearch output] maps
-the `[geoip][location]` field to an http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/mapping-geo-point-type.html#_mapping_options[Elasticsearch geo_point].
+the `[geoip][location]` field to an {ref}/geo-point.html[Elasticsearch Geo_point datatype].
 
 As this field is a `geo_point` _and_ it is still valid GeoJSON, you get
 the awesomeness of Elasticsearch's geospatial query, facet and filter functions
