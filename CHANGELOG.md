@@ -1,3 +1,7 @@
+## 6.0.1
+  - Fixed deeplink to Elasticsearch Reference 
+  [#tbd](https://github.com/logstash-plugins/logstash-filter-geoip/pull/tbd)
+
 ## 6.0.0
   - Removed obsolete lru_cache_size field
 
