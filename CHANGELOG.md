@@ -1,3 +1,6 @@
+## 6.0.2
+  - Update of GeoLite2 DB
+
 ## 6.0.1
   - Fixed deeplink to Elasticsearch Reference 
   [#151](https://github.com/logstash-plugins/logstash-filter-geoip/pull/151)
