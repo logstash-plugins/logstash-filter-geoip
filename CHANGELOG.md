@@ -1,3 +1,6 @@
+## 6.0.3
+  - Fixed docs for missing region_code [#158](https://github.com/logstash-plugins/logstash-filter-geoip/pull/158)
+
 ## 6.0.2
   - Update of GeoLite2 DB [#157](https://github.com/logstash-plugins/logstash-filter-geoip/pull/157)
 
