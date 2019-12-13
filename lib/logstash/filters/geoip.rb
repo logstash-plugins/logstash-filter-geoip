@@ -56,6 +56,13 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # `dma_code`, `ip`, `latitude`, `longitude`, `postal_code`, `region_name` and `timezone`.
   config :fields, :validate => :array
 
+  # An array of geoip locales to be used in the event.
+  #
+  # locales are gracefully resolved from beginning, with default as 'en'
+  #
+  # it matches locales support in mmdb files
+  config :locales, :validate => :array, :default => ['en']
+
   # Specify the field into which Logstash should store the geoip data.
   # This can be useful, for example, if you have `src_ip` and `dst_ip` fields and
   # would like the GeoIP information of both IPs.
@@ -99,8 +106,9 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     end
 
     @logger.info("Using geoip database", :path => @database)
-    
-    @geoipfilter = org.logstash.filters.GeoIPFilter.new(@source, @target, @fields, @database, @cache_size)
+
+    locales = (@locales + ['en']).uniq
+    @geoipfilter = org.logstash.filters.GeoIPFilter.new(@source, @target, locales, @fields, @database, @cache_size)
   end # def register
 
   public

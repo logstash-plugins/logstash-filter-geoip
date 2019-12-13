@@ -290,8 +290,31 @@ describe LogStash::Filters::GeoIP do
       expect(subject.get("geoip")["asn"]).to eq(15169)
       expect(subject.get("geoip")["as_org"]).to eq("Google Inc.")
     end
+  end
 
+  describe "support locales" do
+    config <<-CONFIG
+      filter {
+        geoip {
+          source => "ip"
+          locales => ["zh-CN", "pt-BR"]
+        }
+      }
+    CONFIG
 
+    sample("ip" => "106.38.102.106") do
+      expect(subject.get("geoip")).not_to be_empty
+      expect(subject.get("geoip")["ip"]).to eq("106.38.102.106")
+      expect(subject.get("geoip")["city_name"]).to eq("北京")
+      expect(subject.get("geoip")["country_name"]).to eq("中国")
+    end
+
+    sample("ip" => "189.2.0.0") do
+      expect(subject.get("geoip")).not_to be_empty
+      expect(subject.get("geoip")["ip"]).to eq("189.2.0.0")
+      expect(subject.get("geoip")["city_name"]).to eq("São Paulo")
+      expect(subject.get("geoip")["country_name"]).to eq("巴西")
+    end
   end
 
 end

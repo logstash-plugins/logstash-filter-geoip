@@ -59,12 +59,14 @@ public class GeoIPFilter {
 
   private final String sourceField;
   private final String targetField;
+  private final List<String> desiredLocales;
   private final Set<Fields> desiredFields;
   private final DatabaseReader databaseReader;
 
-  public GeoIPFilter(String sourceField, String targetField, List<String> fields, String databasePath, int cacheSize) {
+  public GeoIPFilter(String sourceField, String targetField, List<String> locales, List<String> fields, String databasePath, int cacheSize) {
     this.sourceField = sourceField;
     this.targetField = targetField;
+    this.desiredLocales = locales;
     final File database = new File(databasePath);
     try {
       this.databaseReader = new DatabaseReader.Builder(database).withCache(new CHMCache(cacheSize)).build();
@@ -206,7 +208,7 @@ public class GeoIPFilter {
     for (Fields desiredField : this.desiredFields) {
       switch (desiredField) {
         case CITY_NAME:
-          String cityName = city.getName();
+          String cityName = getNameAccordingLocales(city.getNames(), this.desiredLocales);
           if (cityName != null) {
             geoData.put(Fields.CITY_NAME.fieldName(), cityName);
           }
@@ -218,13 +220,13 @@ public class GeoIPFilter {
           }
           break;
         case CONTINENT_NAME:
-          String continentName = continent.getName();
+          String continentName = getNameAccordingLocales(continent.getNames(), this.desiredLocales);
           if (continentName != null) {
             geoData.put(Fields.CONTINENT_NAME.fieldName(), continentName);
           }
           break;
         case COUNTRY_NAME:
-          String countryName = country.getName();
+          String countryName = getNameAccordingLocales(country.getNames(), this.desiredLocales);
           if (countryName != null) {
             geoData.put(Fields.COUNTRY_NAME.fieldName(), countryName);
           }
@@ -257,7 +259,7 @@ public class GeoIPFilter {
           }
           break;
         case REGION_NAME:
-          String subdivisionName = subdivision.getName();
+          String subdivisionName = getNameAccordingLocales(subdivision.getNames(), this.desiredLocales);
           if (subdivisionName != null) {
             geoData.put(Fields.REGION_NAME.fieldName(), subdivisionName);
           }
@@ -320,13 +322,13 @@ public class GeoIPFilter {
           }
           break;
         case COUNTRY_NAME:
-          String countryName = country.getName();
+          String countryName = getNameAccordingLocales(country.getNames(), this.desiredLocales);
           if (countryName != null) {
             geoData.put(Fields.COUNTRY_NAME.fieldName(), countryName);
           }
           break;
         case CONTINENT_NAME:
-          String continentName = continent.getName();
+          String continentName = getNameAccordingLocales(continent.getNames(), this.desiredLocales);
           if (continentName != null) {
             geoData.put(Fields.CONTINENT_NAME.fieldName(), continentName);
           }
@@ -400,5 +402,18 @@ public class GeoIPFilter {
     }
 
     return geoData;
+  }
+
+  private String getNameAccordingLocales(Map<String, String> names, List<String> locales) {
+    int size = locales.size();
+    if (size <= 0) {
+      return null;
+    }
+
+    String first = locales.get(0);
+    if (names.containsKey(first)) {
+      return names.get(first);
+    }
+    return this.getNameAccordingLocales(names, locales.subList(1, size));
   }
 }
