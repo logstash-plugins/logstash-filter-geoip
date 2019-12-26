@@ -69,6 +69,9 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # is still valid GeoJSON.
   config :target, :validate => :string, :default => 'geoip'
 
+  # This field is used to identify the locale of the country name, city name and other data acquired.
+  config :locale, :validate => :string, :default => 'en-US'
+
   # GeoIP lookup is surprisingly expensive. This filter uses an cache to take advantage of the fact that
   # IPs agents are often found adjacent to one another in log files and rarely have a random distribution.
   # The higher you set this the more likely an item is to be in the cache and the faster this filter will run.
@@ -100,7 +103,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
     @logger.info("Using geoip database", :path => @database)
     
-    @geoipfilter = org.logstash.filters.GeoIPFilter.new(@source, @target, @fields, @database, @cache_size)
+    @geoipfilter = org.logstash.filters.GeoIPFilter.new(@source, @target, @fields, @database, @locale, @cache_size)
   end # def register
 
   public

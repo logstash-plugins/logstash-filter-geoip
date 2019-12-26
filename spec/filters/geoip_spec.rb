@@ -75,6 +75,7 @@ describe LogStash::Filters::GeoIP do
       LogStash::Filters::GeoIP.new(
         "source" => "[target][ip]",
         "target" => "target",
+        "locale" => "en-US",
         "fields" => [ "city_name", "region_name" ],
         "add_tag" => "done", "database" => CITYDB
       )

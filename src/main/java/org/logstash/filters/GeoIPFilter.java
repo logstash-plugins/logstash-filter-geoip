@@ -59,12 +59,14 @@ public class GeoIPFilter {
 
   private final String sourceField;
   private final String targetField;
+  private final String locale;
   private final Set<Fields> desiredFields;
   private final DatabaseReader databaseReader;
 
-  public GeoIPFilter(String sourceField, String targetField, List<String> fields, String databasePath, int cacheSize) {
+  public GeoIPFilter(String sourceField, String targetField, List<String> fields, String databasePath, String locale, int cacheSize) {
     this.sourceField = sourceField;
     this.targetField = targetField;
+    this.locale = locale;
     final File database = new File(databasePath);
     try {
       this.databaseReader = new DatabaseReader.Builder(database).withCache(new CHMCache(cacheSize)).build();
@@ -206,7 +208,7 @@ public class GeoIPFilter {
     for (Fields desiredField : this.desiredFields) {
       switch (desiredField) {
         case CITY_NAME:
-          String cityName = city.getName();
+          String cityName = city.getNames().get(this.locale);
           if (cityName != null) {
             geoData.put(Fields.CITY_NAME.fieldName(), cityName);
           }
@@ -218,13 +220,13 @@ public class GeoIPFilter {
           }
           break;
         case CONTINENT_NAME:
-          String continentName = continent.getName();
+          String continentName = continent.getNames().get(this.locale);
           if (continentName != null) {
             geoData.put(Fields.CONTINENT_NAME.fieldName(), continentName);
           }
           break;
         case COUNTRY_NAME:
-          String countryName = country.getName();
+          String countryName = country.getNames().get(this.locale);
           if (countryName != null) {
             geoData.put(Fields.COUNTRY_NAME.fieldName(), countryName);
           }
@@ -257,7 +259,7 @@ public class GeoIPFilter {
           }
           break;
         case REGION_NAME:
-          String subdivisionName = subdivision.getName();
+          String subdivisionName = subdivision.getNames().get(this.locale);
           if (subdivisionName != null) {
             geoData.put(Fields.REGION_NAME.fieldName(), subdivisionName);
           }
