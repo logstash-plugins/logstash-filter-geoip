@@ -73,6 +73,7 @@ This plugin supports the following configuration options plus the <<plugins-{typ
 | <<plugins-{type}s-{plugin}-cache_size>> |<<number,number>>|No
 | <<plugins-{type}s-{plugin}-database>> |a valid filesystem path|No
 | <<plugins-{type}s-{plugin}-default_database_type>> |`City` or `ASN`|No
+| <<plugins-{type}s-{plugin}-locale>> |a valid locale name|No
 | <<plugins-{type}s-{plugin}-fields>> |<<array,array>>|No
 | <<plugins-{type}s-{plugin}-source>> |<<string,string>>|Yes
 | <<plugins-{type}s-{plugin}-tag_on_failure>> |<<array,array>>|No
@@ -126,6 +127,14 @@ This plugin now includes both the GeoLite2-City and GeoLite2-ASN databases.  If 
   * Value type is <<string,string>>
   * The default value is `City`
   * The only acceptable values are `City` and `ASN`
+
+[id="plugins-{type}s-{plugin}-locale"]
+===== ``
+
+  * Value type is <<string,string>>
+  * Default value is `"en-US"`
+
+According the locale filed to output country name, city name etc.
 
 [id="plugins-{type}s-{plugin}-fields"]
 ===== `fields`
