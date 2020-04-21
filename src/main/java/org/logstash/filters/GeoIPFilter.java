@@ -62,13 +62,13 @@ public class GeoIPFilter {
   private static final String ANONYMOUS_DB_TYPE = "GeoIP2-Anonymous-IP";
   private static final String CONNECTION_TYPE_DB_TYPE = "GeoIP2-Connection-Type";
 
-  // anonymous ip issues
+  // The Anonymous ip issues
   private static final String IS_ANONYMOUS = "is_anonymous";
   private static final String IS_ANONYMOUS_VPN = "is_anonymous_vpn";
   private static final String IS_HOSTING_PROVIDER = "is_hosting_provider";
   private static final String IS_PUBLIC_PROXY = "is_public_proxy";
   private static final String IS_TOR_EXIT_NODE = "is_tor_exit_node";
-  
+
   private final String sourceField;
   private final String targetField;
   private final Set<Fields> desiredFields;
