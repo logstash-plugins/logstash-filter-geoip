@@ -25,7 +25,9 @@ import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.AsnResponse;
 import com.maxmind.geoip2.model.CityResponse;
 import com.maxmind.geoip2.model.CountryResponse;
+import com.maxmind.geoip2.model.ConnectionTypeResponse;
 import com.maxmind.geoip2.model.IspResponse;
+import com.maxmind.geoip2.model.AnonymousIpResponse;
 import com.maxmind.geoip2.record.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,6 +43,7 @@ import java.net.UnknownHostException;
 import java.util.*;
 
 public class GeoIPFilter {
+
   private static Logger logger = LogManager.getLogger();
   // The free GeoIP2 databases
   private static final String CITY_LITE_DB_TYPE = "GeoLite2-City";
@@ -56,6 +59,15 @@ public class GeoIPFilter {
   private static final String CITY_SOUTH_AMERICA_DB_TYPE = "GeoIP2-City-South-America";
   private static final String COUNTRY_DB_TYPE = "GeoIP2-Country";
   private static final String ISP_DB_TYPE = "GeoIP2-ISP";
+  private static final String ANONYMOUS_DB_TYPE = "GeoIP2-Anonymous-IP";
+  private static final String CONNECTION_TYPE_DB_TYPE = "GeoIP2-Connection-Type";
+
+  private static final String IS_ANONYMOUS = "is_anonymous";
+  private static final String IS_ANONYMOUS_VPN = "is_anonymous_vpn";
+  private static final String IS_HOSTING_PROVIDER = "is_hosting_provider";
+  private static final String IS_PUBLIC_PROXY = "is_public_proxy";
+  private static final String IS_TOR_EXIT_NODE = "is_tor_exit_node";
+
 
   private final String sourceField;
   private final String targetField;
@@ -99,6 +111,12 @@ public class GeoIPFilter {
         case ASN_LITE_DB_TYPE:
           desiredFields = Fields.DEFAULT_ASN_LITE_FIELDS;
           break;
+        case ANONYMOUS_DB_TYPE:
+          desiredFields = Fields.DEFAULT_ANONYMOUS_FIELDS;
+          break;
+        case CONNECTION_TYPE_DB_TYPE:
+          desiredFields = Fields.DEFAULT_CONNECTION_TYPE_FIELDS;
+          break;
       }
     } else {
       for (String fieldName : fields) {
@@ -125,7 +143,7 @@ public class GeoIPFilter {
       throw new IllegalArgumentException("Expected input field value to be String or List type");
     }
 
-    if (ip.trim().isEmpty()){
+    if (ip.trim().isEmpty()) {
       return false;
     }
 
@@ -152,6 +170,12 @@ public class GeoIPFilter {
           break;
         case ISP_DB_TYPE:
           geoData = retrieveIspGeoData(ipAddress);
+          break;
+        case ANONYMOUS_DB_TYPE:
+          geoData = retrieveAnonymousData(ipAddress);
+          break;
+        case CONNECTION_TYPE_DB_TYPE:
+          geoData = retrieveConnectionTypeData(ipAddress);
           break;
         default:
           throw new IllegalStateException("Unsupported database type " + databaseReader.getMetadata().getDatabaseType() + "");
@@ -181,13 +205,13 @@ public class GeoIPFilter {
     }
 
     String s = "[" + this.targetField + "][";
-    for (Map.Entry<String, Object> it: geoData.entrySet()) {
+    for (Map.Entry<String, Object> it : geoData.entrySet()) {
       event.setField(s + it.getKey() + "]", it.getValue());
     }
     return true;
   }
 
-  private Map<String,Object> retrieveCityGeoData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
+  private Map<String, Object> retrieveCityGeoData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
     CityResponse response = databaseReader.city(ipAddress);
     Country country = response.getCountry();
     City city = response.getCity();
@@ -302,7 +326,7 @@ public class GeoIPFilter {
     return geoData;
   }
 
-  private Map<String,Object> retrieveCountryGeoData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
+  private Map<String, Object> retrieveCountryGeoData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
     CountryResponse response = databaseReader.country(ipAddress);
     Country country = response.getCountry();
     Continent continent = response.getContinent();
@@ -394,6 +418,62 @@ public class GeoIPFilter {
           String aso = response.getAutonomousSystemOrganization();
           if (aso != null) {
             geoData.put(Fields.AUTONOMOUS_SYSTEM_ORGANIZATION.fieldName(), aso);
+          }
+          break;
+      }
+    }
+
+    return geoData;
+  }
+
+  private Map<String, Object> retrieveAnonymousData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
+    AnonymousIpResponse response = databaseReader.anonymousIp(ipAddress);
+    Map<String, Object> geoData = new HashMap<>();
+    List<String> anonymousTags = new ArrayList<>();
+    for (Fields desiredField : this.desiredFields) {
+      switch (desiredField) {
+        case IP:
+          geoData.put(Fields.IP.fieldName(), ipAddress.getHostAddress());
+          break;
+        case ANONYMOUS_TAGS:
+          if(response.isAnonymous()) {
+            anonymousTags.add(GeoIPFilter.IS_ANONYMOUS);
+          }
+          if(response.isAnonymousVpn()) {
+            anonymousTags.add(GeoIPFilter.IS_ANONYMOUS_VPN);
+          }
+          if(response.isHostingProvider()) {
+            anonymousTags.add(GeoIPFilter.IS_HOSTING_PROVIDER);
+          }
+          if(response.isPublicProxy()) {
+            anonymousTags.add(GeoIPFilter.IS_PUBLIC_PROXY);
+          }
+          if(response.isTorExitNode()) {
+            anonymousTags.add(GeoIPFilter.IS_TOR_EXIT_NODE);
+          }
+          break;
+      }
+    }
+
+    if(!anonymousTags.isEmpty()){
+      geoData.put(Fields.ANONYMOUS_TAGS.fieldName(), anonymousTags);
+    }
+
+    return geoData;
+  }
+
+  private Map<String, Object> retrieveConnectionTypeData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
+    ConnectionTypeResponse response = databaseReader.connectionType(ipAddress);
+    Map<String, Object> geoData = new HashMap<>();
+    for (Fields desiredField : this.desiredFields) {
+      switch (desiredField) {
+        case IP:
+          geoData.put(Fields.IP.fieldName(), ipAddress.getHostAddress());
+          break;
+        case CONNECTION_TYPE:
+          ConnectionTypeResponse.ConnectionType connectionType = response.getConnectionType();
+          if (connectionType != null) {
+            geoData.put(Fields.CONNECTION_TYPE.fieldName(), connectionType.name());
           }
           break;
       }

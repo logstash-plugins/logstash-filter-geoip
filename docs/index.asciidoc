@@ -113,7 +113,7 @@ number of cache misses and waste memory.
 
 The path to Maxmind's database file that Logstash should use. The default database is GeoLite2-City.
 GeoLite2-City, GeoLite2-Country, GeoLite2-ASN are the free databases from Maxmind that are supported.
-GeoIP2-City, GeoIP2-ISP, GeoIP2-Country are the commercial databases from Maxmind that are supported.
+GeoIP2-City, GeoIP2-ISP, GeoIP2-Country, GeoIP2-Anonymous-IP, GeoIP2-Connection-Type are the commercial databases from Maxmind that are supported.
 
 If not specified, this will default to the GeoLite2 City database that ships
 with Logstash.
