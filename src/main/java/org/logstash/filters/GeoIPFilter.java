@@ -454,7 +454,7 @@ public class GeoIPFilter {
           break;
       }
     }
-
+    // add anonymmous tags field if there is at least one issue
     if(!anonymousTags.isEmpty()){
       geoData.put(Fields.ANONYMOUS_TAGS.fieldName(), anonymousTags);
     }
