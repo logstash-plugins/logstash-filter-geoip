@@ -140,7 +140,7 @@ are included in the event.
 
 For the built-in GeoLite2 City database, the following are available:
 `city_name`, `continent_code`, `country_code2`, `country_code3`, `country_name`,
-`dma_code`, `ip`, `latitude`, `longitude`, `postal_code`, `region_code`,
+`dma_code`, `ip`, `latitude`, `location`, `longitude`, `postal_code`, `region_code`,
 `region_name` and `timezone`.
 
 [id="plugins-{type}s-{plugin}-source"]
