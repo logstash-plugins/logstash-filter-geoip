@@ -3,6 +3,7 @@ require "logstash/filters/base"
 require "logstash/namespace"
 
 require "logstash-filter-geoip_jars"
+require "logstash/filters/geoip/database_manager"
 
 # The GeoIP filter adds information about the geographical location of IP addresses,
 # based on data from the Maxmind GeoLite2 database.
@@ -40,7 +41,9 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   config :database, :validate => :path
 
   # If using the default database, which type should Logstash use.  Valid values are "City" and "ASN", and case matters.
-  config :default_database_type, :validate => ["City","ASN"], :default => "City"
+  CITY = "City"
+  ASN = "ASN"
+  config :default_database_type, :validate => [CITY, ASN], :default => CITY
 
   # The field containing the IP address or hostname to map via geoip. If
   # this field is an array, only the first value will be used.
@@ -90,18 +93,12 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   public
   def register
-    if @database.nil?
-      @database = ::Dir.glob(::File.join(::File.expand_path("../../../vendor/", ::File.dirname(__FILE__)),"GeoLite2-#{@default_database_type}.mmdb")).first
+    @database_path = @database
 
-      if @database.nil? || !File.exists?(@database)
-        raise "You must specify 'database => ...' in your geoip filter (I looked for '#{@database}')"
-      end
-    end
+    @database_manager = LogStash::Filters::Geoip::DatabaseManager.new(self, @database_path, @default_database_type)
 
-    @logger.info("Using geoip database", :path => @database)
-    
-    @geoipfilter = org.logstash.filters.GeoIPFilter.new(@source, @target, @fields, @database, @cache_size)
-  end # def register
+    setup_filter_handler
+  end
 
   public
   def filter(event)
@@ -116,6 +113,24 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   def tag_unsuccessful_lookup(event)
     @logger.debug? && @logger.debug("IP #{event.get(@source)} was not found in the database", :event => event)
     @tag_on_failure.each{|tag| event.tag(tag)}
+  end
+
+  def setup_filter_handler
+    @database_path = @database_manager.database_path
+    @logger.info("Using geoip database", :path => @database_path)
+    @geoipfilter = org.logstash.filters.GeoIPFilter.new(@source, @target, @fields, @database_path, @cache_size)
+  end
+
+  def reset_filter_handler
+    # @pipeline_id = execution_context.pipeline_id
+    # @agent = execution_context.agent
+    # pipeline = @agent.get_pipeline(@pipeline_id)
+    @logger.info("GeoIPFilter is removed")
+    @geoipfilter = nil
+  end
+
+  def close
+    @database_manager.close
   end
 
 end # class LogStash::Filters::GeoIP

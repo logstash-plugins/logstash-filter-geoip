@@ -4,15 +4,15 @@ require "insist"
 require "logstash/filters/geoip"
 
 CITYDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoLite2-City.mmdb").first
+ASNDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoLite2-ASN.mmdb").first
 
 describe LogStash::Filters::GeoIP do
-
   describe "defaults" do
     config <<-CONFIG
       filter {
         geoip {
           source => "ip"
-          #database => "#{CITYDB}"
+          database => "#{CITYDB}"
         }
       }
     CONFIG
@@ -38,7 +38,7 @@ describe LogStash::Filters::GeoIP do
       filter {
         geoip {
           source => "ip"
-          # database => "#{CITYDB}"
+          database => "#{CITYDB}"
           target => src_ip
           add_tag => "done"
         }
@@ -94,8 +94,8 @@ describe LogStash::Filters::GeoIP do
 
       it "should set other subfields of 'target' properly" do
         expect(event.get("target").to_hash.keys.sort).to eq(["city_name", "ip", "region_name"])
-        expect(event.get("[target][city_name]")).to eq("Nashua")
-        expect(event.get("[target][region_name]")).to eq("New Hampshire")
+        expect(event.get("[target][city_name]")).to eq("Malden")
+        expect(event.get("[target][region_name]")).to eq("Massachusetts")
       end
 
     end
@@ -107,6 +107,7 @@ describe LogStash::Filters::GeoIP do
       filter {
         geoip {
           source => "ip"
+          database => "#{CITYDB}"
         }
       }
     CONFIG
@@ -139,7 +140,7 @@ describe LogStash::Filters::GeoIP do
   describe "location field" do
     shared_examples_for "an event with a [geoip][location] field" do
       subject(:event) { LogStash::Event.new("message" => "8.8.8.8") }
-      let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message", "fields" => ["country_name", "location", "longitude"]) }
+      let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message", "fields" => fields, "database" => CITYDB) }
 
       before do
         plugin.register
@@ -280,7 +281,7 @@ describe LogStash::Filters::GeoIP do
       filter {
         geoip {
           source => "ip"
-          # database => "" # use the bundled ASN
+          database => "#{ASNDB}"
           default_database_type => "ASN"
         }
       }
@@ -289,10 +290,8 @@ describe LogStash::Filters::GeoIP do
     sample("ip" => "8.8.8.8") do
       expect(subject.get("geoip")).not_to be_empty
       expect(subject.get("geoip")["asn"]).to eq(15169)
-      expect(subject.get("geoip")["as_org"]).to eq("Google Inc.")
+      expect(subject.get("geoip")["as_org"]).to eq("Google LLC")
     end
-
-
   end
 
 end

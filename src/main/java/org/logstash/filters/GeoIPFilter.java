@@ -76,6 +76,19 @@ public class GeoIPFilter {
     this.desiredFields = createDesiredFields(fields);
   }
 
+  public static boolean validate_database(String databasePath) {
+    final File database = new File(databasePath);
+    try {
+      new DatabaseReader.Builder(database).build();
+      return true;
+    } catch (InvalidDatabaseException e) {
+      logger.debug("The database provided is invalid or corrupted");
+    } catch (IOException e) {
+      logger.debug("The database provided was not found in the path");
+    }
+    return false;
+  }
+
   private Set<Fields> createDesiredFields(List<String> fields) {
     Set<Fields> desiredFields = EnumSet.noneOf(Fields.class);
     if (fields == null || fields.isEmpty()) {
