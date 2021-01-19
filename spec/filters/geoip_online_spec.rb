@@ -8,23 +8,10 @@ describe LogStash::Filters::GeoIP do
   before(:each) do
     stub_const('LogStash::OSS', false)
     stub_const('LogStash::Filters::Geoip::DatabaseManager::GEOIP_HOST', GEOIP_STAGING_HOST)
+    ::File.delete(METADATA_PATH) if ::File.exist?(METADATA_PATH)
   end
 
-  describe "online mode" do
-    let(:event) { LogStash::Event.new("target" => { "ip" => "173.9.34.107" } ) }
-    let(:plugin) {
-      LogStash::Filters::GeoIP.new(
-        "source" => "[target][ip]",
-        "target" => "target",
-        "fields" => [ "city_name", "region_name" ],
-        "add_tag" => "done"
-      )
-    }
-
-    before(:all) do
-      ::File.delete(METADATA_PATH) if ::File.exist?(METADATA_PATH)
-    end
-
+  describe "config without address in LS >= 7.12" do
     before(:each) do
       dir_path = Stud::Temporary.directory
       File.open(dir_path + '/uuid', 'w') { |f| f.write(SecureRandom.uuid) }
@@ -43,14 +30,15 @@ describe LogStash::Filters::GeoIP do
 
       sample("ip" => "173.9.34.107") do
         expect(subject).not_to be_nil
+
         new_database_name = ::File.read(METADATA_PATH).split(",").last[0..-2]
         expect(new_database_name).not_to eq(DEFAULT_CITY_DB_NAME)
         expect(::File.exist?(get_file_path(new_database_name))).to be_truthy
       end
     end
 
-    context "should raise error when database is outdated" do
-      subject(:event) { LogStash::Event.new("target" => { "ip" => "173.9.34.107" } ) }
+    context "with event" do
+      let(:event) { LogStash::Event.new("target" => { "ip" => "173.9.34.107" }) }
       let(:plugin) {
         LogStash::Filters::GeoIP.new(
           "source" => "[target][ip]",
@@ -60,17 +48,27 @@ describe LogStash::Filters::GeoIP do
         )
       }
 
-      it "when processed" do
-        skip
-
-        plugin.register
-        plugin.filter(event)
-        expect(event.get("[target][ip]")).to eq("173.9.34.107")
-
-        plugin.reset_filter_handler
-        expect { plugin.filter(event) }.to raise_error /nil/
+      it "should raise error if Logstash is running in OSS" do
+        stub_const('LogStash::OSS', true)
+        expect { plugin.register }.to raise_error /You are running in open source version/
       end
     end
-  end
+  end if LOGSTASH_VERSION >= '7.12'
 
+  describe "config without address in LS < 7.12" do
+    context "should run in offline mode" do
+      config <<-CONFIG
+      filter {
+        geoip {
+          source => "ip"
+        }
+      }
+      CONFIG
+
+      sample("ip" => "173.9.34.107") do
+        expect(subject).not_to be_nil
+        expect(::File.exist?(METADATA_PATH)).to be_falsey
+      end
+    end
+  end if LOGSTASH_VERSION < '7.12'
 end

@@ -122,11 +122,11 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def reset_filter_handler
-    # @pipeline_id = execution_context.pipeline_id
-    # @agent = execution_context.agent
-    # pipeline = @agent.get_pipeline(@pipeline_id)
-    @logger.info("GeoIPFilter is removed")
-    @geoipfilter = nil
+    @logger.info("GeoIP filter is terminating")
+    pipeline_id = execution_context.pipeline_id.to_sym
+    agent = execution_context.agent
+    action = LogStash::PipelineAction::Stop.new(pipeline_id)
+    agent.converge_state_with_resolved_actions([action])
   end
 
   def close

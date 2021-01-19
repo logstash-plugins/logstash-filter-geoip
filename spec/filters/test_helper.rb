@@ -6,6 +6,7 @@ DEFAULT_CITY_DB_PATH = get_file_path("GeoLite2-City.mmdb")
 DEFAULT_ASN_DB_PATH = get_file_path("GeoLite2-ASN.mmdb")
 METADATA_PATH = get_file_path("metadata.csv")
 DEFAULT_CITY_DB_NAME = "GeoLite2-City.mmdb"
+DEFAULT_ASN_DB_NAME = "GeoLite2-ASN.mmdb"
 SECOND_CITY_DB_NAME = "GeoLite2-City_20200220.mmdb"
 GEOIP_STAGING_HOST = "https://paisano-staging.elastic.dev"
 GEOIP_STAGING_ENDPOINT = "#{GEOIP_STAGING_HOST}/v1/geoip/database/"
@@ -16,8 +17,8 @@ def write_temp_metadata(temp_file_path, row = nil)
   asn = md5(DEFAULT_ASN_DB_PATH)
 
   metadata = []
-  metadata << ["ASN",now,"",asn,"GeoLite2-ASN.mmdb"]
-  metadata << ["City",now,"",city,"GeoLite2-City.mmdb"]
+  metadata << ["ASN",now,"",asn,DEFAULT_ASN_DB_NAME]
+  metadata << ["City",now,"",city,DEFAULT_CITY_DB_NAME]
   metadata << row if row
   CSV.open temp_file_path, 'w' do |csv|
     metadata.each { |row| csv << row }

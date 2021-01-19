@@ -15,7 +15,7 @@ module LogStash module Filters module Geoip class DatabaseManager
 
   def initialize(geoip, database_path, database_type)
     @geoip = geoip
-    @mode = database_path.nil? ? :online : :offline
+    @mode = get_mode(database_path)
     @metadata_path = get_file_path("metadata.csv")
     @database_type = database_type
     @database_path = patch_database_path(database_path)
@@ -39,11 +39,11 @@ module LogStash module Filters module Geoip class DatabaseManager
   GEOIP_ENDPOINT = "#{GEOIP_HOST}/v1/geoip/database/".freeze
   DEFAULT_DATABASE_FILENAME = ["GeoLite2-ASN.mmdb", "GeoLite2-City.mmdb"].freeze
 
+  public
   # Check available update and download the latest database. Unzip download and validate the file.
   # Update timestamp if access the server successfully
   # In case exception happen, check the last update time. If it failed to update for 30 days, pipeline should stop
   # return true for has update, false for no update
-  public
   def execute_download_check
     begin
       has_update, database_info = check_update
@@ -66,15 +66,28 @@ module LogStash module Filters module Geoip class DatabaseManager
 
   # scheduler callback
   def call(job, time)
-    logger.info "schedule database checking..."
+    logger.info "scheduler database checking"
 
-    if execute_download_check
-      @geoip.setup_filter_handler
+    begin
+      if execute_download_check
+        @geoip.setup_filter_handler
+      end
+    rescue DatabaseExpiryError => e
+      logger.error(e.message, :cause => e.cause, :backtrace => e.backtrace)
+      @geoip.reset_filter_handler
     end
   end
 
   def close
     @scheduler.every_jobs.each(&:unschedule) if @scheduler
+  end
+
+  def get_mode(database_path)
+    if database_path.nil? and get_logstash_version >= 7.12
+      :online
+    else
+      :offline
+    end
   end
 
   def database_path
@@ -171,8 +184,7 @@ module LogStash module Filters module Geoip class DatabaseManager
 
     case
     when days_without_update >= 30
-      @geoip.reset_filter_handler
-      raise "The MaxMind database has been used for more than 30 days without update. According to EULA, GeoIP plugin needs to stop in order to be compliant. Please check the network settings and allow Logstash accesses the internet to download the latest database, or switch to offline mode (:database => PATH_TO_YOUR_DATABASE) to use a self-managed database from maxmind.com"
+      raise DatabaseExpiryError, "The MaxMind database has been used for more than 30 days without update. According to EULA, GeoIP plugin needs to stop in order to be compliant. Please check the network settings and allow Logstash accesses the internet to download the latest database, or switch to offline mode (:database => PATH_TO_YOUR_DATABASE) to use a self-managed database from maxmind.com"
     when days_without_update >= 25
       logger.warn("The MaxMind database has been used for #{days_without_update} days without update. Logstash will stop the GeoIP plugin in #{30 - days_without_update} days. Please check the network settings and allow Logstash accesses the internet to download the latest database ")
     end
@@ -238,11 +250,18 @@ module LogStash module Filters module Geoip class DatabaseManager
     @uuid ||= ::File.read(::File.join(LogStash::SETTINGS.get("path.data"), "uuid"))
   end
 
+  def get_logstash_version
+    LOGSTASH_VERSION.to_f
+  end
+
   class Column
     DATABASE_TYPE = 0
     UPDATE_AT     = 1
     GZ_MD5        = 2
     MD5           = 3
     FILENAME      = 4
+  end
+
+  class DatabaseExpiryError < StandardError
   end
 end end end end

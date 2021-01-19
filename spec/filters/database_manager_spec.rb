@@ -1,4 +1,5 @@
 require "logstash/filters/geoip/database_manager"
+require "logstash/filters/geoip"
 require "digest"
 require_relative 'test_helper'
 
@@ -190,7 +191,6 @@ module LogStash module Filters module Geoip
     context "check age" do
       it "should raise error when 30 days has passed" do
         write_temp_metadata(temp_metadata_path, ["City", (Time.now - (60 * 60 * 24 * 33)).to_i, "",md5(DEFAULT_CITY_DB_PATH),DEFAULT_CITY_DB_NAME])
-        expect(mock_geoip_plugin).to receive(:reset_filter_handler)
 
         expect{ db_manager.send(:check_age) }.to raise_error /be compliant/
       end
@@ -226,7 +226,6 @@ module LogStash module Filters module Geoip
       it "should raise error when 30 days has passed" do
         allow(db_manager).to receive(:check_update).and_raise("boom")
         write_temp_metadata(temp_metadata_path, ["City", (Time.now - (60 * 60 * 24 * 33)).to_i, "",md5(DEFAULT_CITY_DB_PATH),DEFAULT_CITY_DB_NAME])
-        expect(mock_geoip_plugin).to receive(:reset_filter_handler)
 
         expect{ db_manager.send(:execute_download_check) }.to raise_error /be compliant/
       end
@@ -240,6 +239,21 @@ module LogStash module Filters module Geoip
         expect(logger).to receive(:warn)
 
         expect(db_manager.send(:execute_download_check)).to be_falsey
+      end
+    end
+
+    context "scheduler call" do
+      it "should call plugin reset when raise error and last update > 30 days" do
+        allow(db_manager).to receive(:get_uuid).and_raise("boom")
+        allow(db_manager).to receive(:get_metadata).and_return([["City",0,"","",DEFAULT_CITY_DB_NAME]])
+        expect(mock_geoip_plugin).to receive(:reset_filter_handler)
+        db_manager.send(:call, nil, nil)
+      end
+
+      it "should not call plugin setup when database is up to date" do
+        allow(db_manager).to receive(:check_update).and_return([false, nil])
+        allow(mock_geoip_plugin).to receive(:setup_filter_handler).never
+        db_manager.send(:call, nil, nil)
       end
     end
 
@@ -278,6 +292,18 @@ module LogStash module Filters module Geoip
 
         db_manager.send(:clean_up_database)
         [DEFAULT_CITY_DB_PATH, DEFAULT_ASN_DB_PATH].each { |file_path| expect(::File.exist?(file_path)).to be_truthy }
+      end
+    end
+
+    context "get mode" do
+      it "should be online if LS >= 7.12" do
+        stub_const('LOGSTASH_VERSION', '8.0')
+        expect(db_manager.send(:get_mode, nil)).to be_eql(:online)
+      end
+
+      it "should be online if LS < 7.12" do
+        stub_const('LOGSTASH_VERSION', '7.11')
+        expect(db_manager.send(:get_mode, nil)).to be_eql(:offline)
       end
     end
   end
