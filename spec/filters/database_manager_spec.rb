@@ -4,6 +4,12 @@ require "digest"
 require_relative 'test_helper'
 
 module LogStash module Filters module Geoip
+  RSpec.configure do |c|
+    c.define_derived_metadata do |meta|
+      meta[:aggregate_failures] = true
+    end
+  end
+
   describe DatabaseManager do
     let(:mock_geoip_plugin)  { double("geoip_plugin") }
     let(:db_manager) do
@@ -88,6 +94,11 @@ module LogStash module Filters module Geoip
         conn = db_manager.send(:rest_client)
         res = conn.get("#{GEOIP_STAGING_ENDPOINT}?key=#{SecureRandom.uuid}")
         expect(res.status).to eq(200)
+      end
+
+      it "should raise error when endpoint response 4xx" do
+        conn = db_manager.send(:rest_client)
+        expect { conn.get("#{GEOIP_STAGING_HOST}?key=#{SecureRandom.uuid}") }.to raise_error /404/
       end
     end
 
