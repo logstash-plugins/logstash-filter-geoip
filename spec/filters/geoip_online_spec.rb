@@ -50,7 +50,7 @@ describe LogStash::Filters::GeoIP do
 
       it "should raise error if Logstash is running in OSS" do
         stub_const('LogStash::OSS', true)
-        expect { plugin.register }.to raise_error /You are running in open source version/
+        expect { plugin.register }.to raise_error /open source version/
       end
     end
   end if LOGSTASH_VERSION >= '7.12'
