@@ -97,7 +97,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
     @database_manager = LogStash::Filters::Geoip::DatabaseManager.new(self, @database_path, @default_database_type)
 
-    setup_filter_handler
+    setup_filter(@database_manager.database_path)
   end
 
   public
@@ -115,14 +115,14 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     @tag_on_failure.each{|tag| event.tag(tag)}
   end
 
-  def setup_filter_handler
-    @database_path = @database_manager.database_path
+  def setup_filter(database_path)
+    @database_path = database_path
     @logger.info("Using geoip database", :path => @database_path)
     @geoipfilter = org.logstash.filters.GeoIPFilter.new(@source, @target, @fields, @database_path, @cache_size)
   end
 
-  def reset_filter_handler
-    @logger.info("GeoIP filter is terminating")
+  def terminate_filter
+    @logger.info("geoip plugin is terminating")
     pipeline_id = execution_context.pipeline_id
     execution_context.agent.stop_pipeline(pipeline_id)
   end

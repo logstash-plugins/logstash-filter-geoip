@@ -26,7 +26,10 @@ module LogStash module Filters module Geoip class DatabaseManager
     @database_path = patch_database_path(database_path)
 
     if @mode == :online
-      raise "logstash-filter-geoip is under elastic Basic License. You are running in open source version, hence the pipeline stops" if LogStash::OSS
+      raise "logstash-filter-geoip is under Elastic License, but Logstash is currently in open source version. "\
+            "In order to run `online` mode, please use Logstash default distribution. " if LogStash::OSS
+
+      logger.info "By using `online` mode, you accepted and agreed MaxMind EULA. For more detail, please visit https://www.maxmind.com/en/geolite2/eula"
 
       clean_up_database
       setup_metadata
@@ -36,7 +39,12 @@ module LogStash module Filters module Geoip class DatabaseManager
       @scheduler = Rufus::Scheduler.new({:max_work_threads => 1})
       @scheduler.every('24h', self)
     else
-      logger.info("You are running GeoIP plugin in offline mode. Logstash will not check for new database update.")
+      if database_path.nil? and logstash_version < 7.12
+        logger.info "Logstash is running in version #{LOGSTASH_VERSION} and geoip plugin with default setting. If you want the plugin to manage database and keep database updated, please use Logstash 7.12 or newer."
+      end
+
+      logger.info "geoip plugin is in offline mode. Logstash points to static database files and will not check for update. "\
+                  "Keep in mind that if you are not using the database shipped with this plugin, please go to https://www.maxmind.com/en/geolite2/eula to accept and agree the terms and conditions."
     end
   end
 
@@ -74,11 +82,11 @@ module LogStash module Filters module Geoip class DatabaseManager
 
     begin
       if execute_download_check
-        @geoip.setup_filter_handler
+        @geoip.setup_filter(database_path)
       end
     rescue DatabaseExpiryError => e
       logger.error(e.message, :cause => e.cause, :backtrace => e.backtrace)
-      @geoip.reset_filter_handler
+      @geoip.terminate_filter
     end
   end
 

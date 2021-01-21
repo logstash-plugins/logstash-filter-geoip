@@ -208,7 +208,7 @@ module LogStash module Filters module Geoip
 
       it "should give warning after 25 days" do
         write_temp_metadata(temp_metadata_path, ["City", (Time.now - (60 * 60 * 24 * 25)).to_i, "",md5(DEFAULT_CITY_DB_PATH),DEFAULT_CITY_DB_NAME])
-        expect(mock_geoip_plugin).to receive(:reset_filter_handler).never
+        expect(mock_geoip_plugin).to receive(:terminate_filter).never
         expect(DatabaseManager).to receive(:logger).and_return(logger)
         expect(logger).to receive(:warn)
 
@@ -257,13 +257,13 @@ module LogStash module Filters module Geoip
       it "should call plugin reset when raise error and last update > 30 days" do
         allow(db_manager).to receive(:get_uuid).and_raise("boom")
         allow(db_manager).to receive(:get_metadata).and_return([["City",0,"","",DEFAULT_CITY_DB_NAME]])
-        expect(mock_geoip_plugin).to receive(:reset_filter_handler)
+        expect(mock_geoip_plugin).to receive(:terminate_filter)
         db_manager.send(:call, nil, nil)
       end
 
       it "should not call plugin setup when database is up to date" do
         allow(db_manager).to receive(:check_update).and_return([false, nil])
-        allow(mock_geoip_plugin).to receive(:setup_filter_handler).never
+        allow(mock_geoip_plugin).to receive(:setup_filter).never
         db_manager.send(:call, nil, nil)
       end
     end
