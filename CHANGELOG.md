@@ -1,3 +1,7 @@
+## 7.0.0
+  - Changed the plugin to use EULA GeoIP2 Database with auto-update [#172](https://github.com/logstash-plugins/logstash-filter-geoip/pull/172)
+    This is a breaking change working with Logstash 7.12+
+
 ## 6.0.3
   - Fixed docs for missing region_code [#158](https://github.com/logstash-plugins/logstash-filter-geoip/pull/158)
 
