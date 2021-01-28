@@ -1,3 +1,6 @@
+## 6.0.4
+  - Add locales support for output fields, such as `country_name` and `city_name` [#160](https://github.com/logstash-plugins/logstash-filter-geoip/pull/160)
+
 ## 6.0.3
   - Fixed docs for missing region_code [#158](https://github.com/logstash-plugins/logstash-filter-geoip/pull/158)
 
