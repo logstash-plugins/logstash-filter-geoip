@@ -13,11 +13,11 @@ require "date"
 # The mission of DatabaseManager is to ensure the plugin running an up-to-date MaxMind database and
 #   thus users are compliant with EULA.
 # DatabaseManager does a daily checking by calling an endpoint to notice a version update.
-# It records the update timestamp and md5 of the database in the metadata file
+# DatabaseMetadata records the update timestamp and md5 of the database in the metadata file
 #   to keep track of versions and the number of days disconnects to the endpoint.
-# Once a new database version release, DatabaseManager downloads it, and GeoIP Filter uses it on-the-fly.
+# Once a new database version release, DownloadManager downloads it, and GeoIP Filter uses it on-the-fly.
 # If the last update timestamp is 25 days ago, a warning message shows in the log;
-# if it is 30 days ago, the GeoIP Filter should shutdown in order to be compliant.
+# if it was 30 days ago, the GeoIP Filter should shutdown in order to be compliant.
 # There are online mode and offline mode in DatabaseManager. `online` is for automatic database update
 #   while `offline` is for static database path provided by users or Logstash running in <= 7.11
 module LogStash module Filters module Geoip class DatabaseManager
@@ -34,7 +34,8 @@ module LogStash module Filters module Geoip class DatabaseManager
       raise "logstash-filter-geoip is under Elastic License, but Logstash is currently in open source version. "\
             "In order to run `online` mode, please use Logstash default distribution. " if LogStash::OSS
 
-      logger.info "By using `online` mode, you accepted and agreed MaxMind EULA. For more details please visit https://www.maxmind.com/en/geolite2/eula"
+      logger.info "By using `online` mode, you accepted and agreed MaxMind EULA. "\
+                  "For more details please visit https://www.maxmind.com/en/geolite2/eula"
 
       setup
       clean_up_database
@@ -45,11 +46,13 @@ module LogStash module Filters module Geoip class DatabaseManager
       @scheduler.every('24h', self)
     else
       if database_path.nil? and logstash_version < 7.12
-        logger.info "Logstash is running in version #{LOGSTASH_VERSION} and geoip plugin with default setting. If you want the plugin to manage database and keep database updated, please use Logstash 7.12 or newer."
+        logger.info "Logstash is running in version #{LOGSTASH_VERSION} and GeoIP plugin with default setting. "\
+                    "If you want the plugin to manage database and keep database updated, please use Logstash 7.12 or newer."
       end
 
-      logger.info "geoip plugin is in offline mode. Logstash points to static database files and will not check for update. "\
-                  "Keep in mind that if you are not using the database shipped with this plugin, please go to https://www.maxmind.com/en/geolite2/eula to accept and agree the terms and conditions."
+      logger.info "GeoIP plugin is in offline mode. Logstash points to static database files and will not check for update. "\
+                  "Keep in mind that if you are not using the database shipped with this plugin, "\
+                  "please go to https://www.maxmind.com/en/geolite2/eula to accept and agree the terms and conditions."
     end
   end
 
@@ -116,9 +119,14 @@ module LogStash module Filters module Geoip class DatabaseManager
 
     case
     when days_without_update >= 30
-      raise DatabaseExpiryError, "The MaxMind database has been used for more than 30 days without update. According to EULA, GeoIP plugin needs to stop in order to be compliant. Please check the network settings and allow Logstash accesses the internet to download the latest database, or switch to offline mode (:database => PATH_TO_YOUR_DATABASE) to use a self-managed database from maxmind.com"
+      raise DatabaseExpiryError, "The MaxMind database has been used for more than 30 days. Logstash is unable to get newer version from internet. "\
+      "According to EULA, GeoIP plugin needs to stop in order to be compliant. "\
+      "Please check the network settings and allow Logstash accesses the internet to download the latest database, "\
+      "or switch to offline mode (:database => PATH_TO_YOUR_DATABASE) to use a self-managed database which you can download from https://dev.maxmind.com/geoip/geoip2/geolite2/ "
     when days_without_update >= 25
-      logger.warn("The MaxMind database has been used for #{days_without_update} days without update. Logstash will stop the GeoIP plugin in #{30 - days_without_update} days. Please check the network settings and allow Logstash accesses the internet to download the latest database ")
+      logger.warn("The MaxMind database has been used for #{days_without_update} days without update. "\
+      "Logstash will stop the GeoIP plugin in #{30 - days_without_update} days. "\
+      "Please check the network settings and allow Logstash accesses the internet to download the latest database ")
     end
   end
 

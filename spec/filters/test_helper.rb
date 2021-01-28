@@ -47,3 +47,7 @@ end
 def delete_file(*filepaths)
   filepaths.map { |filepath| ::File.delete(filepath) if ::File.exist?(filepath) }
 end
+
+def get_metadata_database_name
+  ::File.exist?(METADATA_PATH) ? ::File.read(METADATA_PATH).split(",").last[0..-2] : nil
+end
