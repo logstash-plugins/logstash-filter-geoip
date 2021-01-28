@@ -1,5 +1,12 @@
+require "logstash-core/logstash-core"
+require "digest"
+
 def get_file_path(filename)
   ::File.join(::File.expand_path("../../vendor/", ::File.dirname(__FILE__)), filename)
+end
+
+def md5(file_path)
+  ::File.exist?(file_path) ? Digest::MD5.hexdigest(::File.read(file_path)) : ''
 end
 
 DEFAULT_CITY_DB_PATH = get_file_path("GeoLite2-City.mmdb")
@@ -8,6 +15,9 @@ METADATA_PATH = get_file_path("metadata.csv")
 DEFAULT_CITY_DB_NAME = "GeoLite2-City.mmdb"
 DEFAULT_ASN_DB_NAME = "GeoLite2-ASN.mmdb"
 SECOND_CITY_DB_NAME = "GeoLite2-City_20200220.mmdb"
+SECOND_CITY_DB_PATH = get_file_path("GeoLite2-City_20200220.mmdb")
+DEFAULT_CITY_DB_MD5 = md5(DEFAULT_CITY_DB_PATH)
+DEFAULT_ASN_DB_MD5 = md5(DEFAULT_ASN_DB_PATH)
 GEOIP_STAGING_HOST = "https://paisano-staging.elastic.dev"
 GEOIP_STAGING_ENDPOINT = "#{GEOIP_STAGING_HOST}/v1/geoip/database/"
 
@@ -34,6 +44,6 @@ def copy_city_database(filename)
   FileUtils.cp(DEFAULT_CITY_DB_PATH, new_path)
 end
 
-def md5(file_path)
-  Digest::MD5.hexdigest(::File.read(file_path))
+def delete_file(*filepaths)
+  filepaths.map { |filepath| ::File.delete(filepath) if ::File.exist?(filepath) }
 end

@@ -93,10 +93,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   public
   def register
-    @database_path = @database
-
-    @database_manager = LogStash::Filters::Geoip::DatabaseManager.new(self, @database_path, @default_database_type)
-
+    @database_manager = LogStash::Filters::Geoip::DatabaseManager.new(self, @database, @default_database_type)
     setup_filter(@database_manager.database_path)
   end
 
@@ -116,9 +113,9 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def setup_filter(database_path)
-    @database_path = database_path
-    @logger.info("Using geoip database", :path => @database_path)
-    @geoipfilter = org.logstash.filters.GeoIPFilter.new(@source, @target, @fields, @database_path, @cache_size)
+    @database = database_path
+    @logger.info("Using geoip database", :path => @database)
+    @geoipfilter = org.logstash.filters.GeoIPFilter.new(@source, @target, @fields, @database, @cache_size)
   end
 
   def terminate_filter

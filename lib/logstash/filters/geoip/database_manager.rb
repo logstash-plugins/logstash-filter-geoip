@@ -1,27 +1,32 @@
 require "logstash/util/loggable"
-require "logstash/agent"
-require "csv"
-require "digest"
+require "logstash/filters/geoip/util"
+require "logstash/filters/geoip/database_metadata"
+require "logstash/filters/geoip/download_manager"
 require "faraday"
 require "json"
 require "zlib"
 require "stud/try"
 require "down"
 require "rufus/scheduler"
+require "date"
 
-# The mission of DatabaseManager is to ensure the plugin running an up-to-date MaxMind database and thus users are compliant with EULA.
-# DM does a daily checking by calling an endpoint to notice a version update.
-# It records the update timestamp and md5 of the database in the metadata file to keep track of versions and the number of days disconnects to the endpoint.
-# Once a new database version release, DM downloads it, and GeoIP Filter uses it on-the-fly.
-# If the last update timestamp is 25 days ago, a warning message shows in the log; if it is 30 days ago, the GeoIP Filter should shutdown in order to be compliant.
-# There are online mode and offline mode in DM. `online` is for automatic database update while `offline` is for static database path provided by users or Logstash running in <= 7.11
+# The mission of DatabaseManager is to ensure the plugin running an up-to-date MaxMind database and
+#   thus users are compliant with EULA.
+# DatabaseManager does a daily checking by calling an endpoint to notice a version update.
+# It records the update timestamp and md5 of the database in the metadata file
+#   to keep track of versions and the number of days disconnects to the endpoint.
+# Once a new database version release, DatabaseManager downloads it, and GeoIP Filter uses it on-the-fly.
+# If the last update timestamp is 25 days ago, a warning message shows in the log;
+# if it is 30 days ago, the GeoIP Filter should shutdown in order to be compliant.
+# There are online mode and offline mode in DatabaseManager. `online` is for automatic database update
+#   while `offline` is for static database path provided by users or Logstash running in <= 7.11
 module LogStash module Filters module Geoip class DatabaseManager
   include LogStash::Util::Loggable
+  include LogStash::Filters::Geoip::Util
 
   def initialize(geoip, database_path, database_type)
     @geoip = geoip
     @mode = get_mode(database_path)
-    @metadata_path = get_file_path("metadata.csv")
     @database_type = database_type
     @database_path = patch_database_path(database_path)
 
@@ -29,11 +34,11 @@ module LogStash module Filters module Geoip class DatabaseManager
       raise "logstash-filter-geoip is under Elastic License, but Logstash is currently in open source version. "\
             "In order to run `online` mode, please use Logstash default distribution. " if LogStash::OSS
 
-      logger.info "By using `online` mode, you accepted and agreed MaxMind EULA. For more detail, please visit https://www.maxmind.com/en/geolite2/eula"
+      logger.info "By using `online` mode, you accepted and agreed MaxMind EULA. For more details please visit https://www.maxmind.com/en/geolite2/eula"
 
+      setup
       clean_up_database
-      setup_metadata
-      execute_download_check
+      execute_download_job
 
       # check database update periodically. trigger `call` method
       @scheduler = Rufus::Scheduler.new({:max_work_threads => 1})
@@ -48,26 +53,15 @@ module LogStash module Filters module Geoip class DatabaseManager
     end
   end
 
-  GEOIP_HOST = "https://paisano.elastic.dev".freeze
-  GEOIP_ENDPOINT = "#{GEOIP_HOST}/v1/geoip/database/".freeze
   DEFAULT_DATABASE_FILENAME = ["GeoLite2-ASN.mmdb", "GeoLite2-City.mmdb"].freeze
 
   public
-  # Check available update and download it. Unzip and validate the file.
-  # Update timestamp if calling the server successfully
-  # return true for update, false for no update
-  def execute_download_check
+
+  def execute_download_job
     begin
-      has_update, database_info = check_update
-
-      if has_update
-        zip_path = download_database(database_info)
-        new_database_path = unzip(zip_path)
-        assert_database(new_database_path)
-        @database_path = new_database_path
-      end
-
-      save_timestamp
+      has_update, new_database_path = @download_manager.fetch_database
+      @database_path = new_database_path if has_update
+      @metadata.save_timestamp(@database_path)
       has_update
     rescue => e
       logger.error(e.message, :cause => e.cause, :backtrace => e.backtrace)
@@ -78,10 +72,10 @@ module LogStash module Filters module Geoip class DatabaseManager
 
   # scheduler callback
   def call(job, time)
-    logger.info "scheduler database checking"
+    logger.debug "scheduler is running"
 
     begin
-      if execute_download_check
+      if execute_download_job
         @geoip.setup_filter(database_path)
       end
     rescue DatabaseExpiryError => e
@@ -104,21 +98,6 @@ module LogStash module Filters module Geoip class DatabaseManager
   end
 
   protected
-  # Resolve database path from metadata and validate with md5
-  # Write current timestamp if metadata file is missing
-  def setup_metadata
-    metadata = get_metadata.last
-
-    if metadata
-      path = get_file_path(metadata[Column::FILENAME])
-      if file_exist?(path) && (md5(path) == metadata[Column::MD5])
-        @database_path = path
-      end
-    else
-      save_timestamp
-    end
-  end
-
   # return a valid database path or default database path
   def patch_database_path(database_path)
     unless file_exist?(database_path)
@@ -132,62 +111,8 @@ module LogStash module Filters module Geoip class DatabaseManager
     database_path
   end
 
-  # csv format: database_type, update_at, gz_md5, md5, filename
-  def save_timestamp
-    metadata = get_metadata(false)
-    metadata << [@database_type, Time.now.to_i, md5(database_zip_path), md5(@database_path), database_filename]
-
-    ::CSV.open @metadata_path, 'w' do |csv|
-      metadata.each { |row| csv << row }
-    end
-  end
-
-  # Call infra endpoint to get md5 of latest database and verify with metadata
-  # return [has_update, server db info]
-  def check_update
-    uuid = get_uuid
-    res = rest_client.get("#{GEOIP_ENDPOINT}?key=#{uuid}")
-
-    all_db = JSON.parse(res.body)
-    target_db = all_db.select { |info| info['name'].include?(@database_type) }.first
-
-    metadata = get_metadata.last
-    if metadata
-      [metadata[Column::GZ_MD5] != target_db['md5_hash'], target_db]
-    else
-      [true, target_db]
-    end
-  end
-
-  def download_database(server_db)
-    Stud.try(3.times) do
-      new_database_zip_path = get_file_path(server_db['name'].gsub(@database_type, "#{@database_type}_#{Time.now.to_i}"))
-      Down.download(server_db['url'], destination: new_database_zip_path)
-      raise "the new download has wrong checksum" if md5(new_database_zip_path) != server_db['md5_hash']
-      new_database_zip_path
-    end
-  end
-
-  def unzip(zip_path)
-    database_path = zip_path[0...-3]
-    Zlib::GzipReader.open(zip_path) do |gz|
-      ::File.open(database_path, "wb") do |f|
-        f.print gz.read
-      end
-    end
-    database_path
-  end
-
-  # Make sure the path has usable database
-  def assert_database(database_path)
-    raise "failed to load database #{database_path}" unless org.logstash.filters.GeoIPFilter.validate_database(database_path)
-  end
-
   def check_age
-    metadata = get_metadata.last
-    timestamp = (metadata)? metadata[Column::UPDATE_AT] : 0
-
-    days_without_update = (Time.now.to_i - timestamp.to_i) / (24 * 60 * 60)
+    days_without_update = (Date.today - Time.at(@metadata.updated_at).to_date).to_i
 
     case
     when days_without_update >= 30
@@ -197,75 +122,30 @@ module LogStash module Filters module Geoip class DatabaseManager
     end
   end
 
-  # Give rows of metadata in default database type, or empty array
-  def get_metadata(match_type = true)
-    if file_exist?(@metadata_path)
-      ::CSV.parse(::File.read(@metadata_path), headers: false).select do |row|
-        b = row[Column::DATABASE_TYPE].eql?(@database_type)
-        (match_type)? b: !b
-      end
-    else
-      Array.new
-    end
-  end
-
   # Clean up files .mmdb, .gz which are not mentioned in metadata and not default database
   def clean_up_database
-    if file_exist?(@metadata_path)
-      used_filenames = ::CSV.parse(::File.read(@metadata_path), headers: false).flat_map do |row|
-        [row[Column::FILENAME], row[Column::FILENAME].gsub('mmdb', 'gz')]
-      end
-      protected_filenames = (used_filenames + DEFAULT_DATABASE_FILENAME).uniq
-
+    if @metadata.exist?
+      protected_filenames = (@metadata.database_filenames + DEFAULT_DATABASE_FILENAME).uniq
       existing_filenames = ::Dir.glob(get_file_path('*.{mmdb,gz}')).map { |path| path.split("/").last }
 
       (existing_filenames - protected_filenames).each do |filename|
         ::File.delete(get_file_path(filename))
+        logger.debug("old database #{filename} is deleted")
       end
     end
   end
 
-  def rest_client
-    @client ||= Faraday.new do |conn|
-      conn.adapter :net_http
-      conn.use Faraday::Response::RaiseError
-    end
-  end
+  def setup
+    @metadata = DatabaseMetadata.new(@database_type)
+    @metadata.save_timestamp(@database_path) unless @metadata.exist?
 
-  def get_file_path(filename)
-    ::File.join(::File.expand_path("../../../../vendor/", ::File.dirname(__FILE__)), filename)
-  end
+    @database_path = @metadata.database_path || @database_path
 
-  def file_exist?(path)
-    !path.nil? && ::File.exist?(path)
-  end
-
-  def database_filename
-    @database_path.split("/").last
-  end
-
-  def database_zip_path
-    @database_path + '.gz'
-  end
-
-  def md5(file_path)
-    file_exist?(file_path) ? Digest::MD5.hexdigest(::File.read(file_path)): ""
-  end
-
-  def get_uuid
-    @uuid ||= ::File.read(::File.join(LogStash::SETTINGS.get("path.data"), "uuid"))
+    @download_manager = DownloadManager.new(@database_type, @metadata)
   end
 
   def logstash_version
     LOGSTASH_VERSION.to_f
-  end
-
-  class Column
-    DATABASE_TYPE = 0
-    UPDATE_AT     = 1
-    GZ_MD5        = 2
-    MD5           = 3
-    FILENAME      = 4
   end
 
   class DatabaseExpiryError < StandardError

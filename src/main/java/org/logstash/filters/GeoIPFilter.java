@@ -76,7 +76,7 @@ public class GeoIPFilter {
     this.desiredFields = createDesiredFields(fields);
   }
 
-  public static boolean validate_database(String databasePath) {
+  public static boolean isDatabaseValid(String databasePath) {
     final File database = new File(databasePath);
     try {
       new DatabaseReader.Builder(database).build();
