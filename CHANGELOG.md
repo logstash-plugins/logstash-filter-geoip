@@ -1,3 +1,6 @@
+## 6.0.4
+  - Enable the use of MaxMind GeoIP2-Domain databases [#162](https://github.com/logstash-plugins/logstash-filter-geoip/pull/162)
+
 ## 6.0.3
   - Fixed docs for missing region_code [#158](https://github.com/logstash-plugins/logstash-filter-geoip/pull/158)
 

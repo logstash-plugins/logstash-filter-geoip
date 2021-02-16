@@ -32,6 +32,7 @@ enum Fields {
   CONTINENT_NAME("continent_name"),
   COUNTRY_CODE2("country_code2"),
   COUNTRY_CODE3("country_code3"),
+  DOMAIN("domain"),
   IP("ip"),
   ISP("isp"),
   POSTAL_CODE("postal_code"),
@@ -69,6 +70,8 @@ enum Fields {
 
   static final EnumSet<Fields> DEFAULT_ASN_LITE_FIELDS = EnumSet.of(Fields.IP, Fields.AUTONOMOUS_SYSTEM_NUMBER,
       Fields.AUTONOMOUS_SYSTEM_ORGANIZATION);
+
+  static final EnumSet<Fields> DEFAULT_DOMAIN_FIELDS = EnumSet.of(Fields.DOMAIN);
 
   public static Fields parseField(String value) {
     try {
