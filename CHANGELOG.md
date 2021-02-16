@@ -1,3 +1,6 @@
+## 6.0.5
+  - Fix database download task. Upgrade project to java 11 [#175](https://github.com/logstash-plugins/logstash-filter-geoip/pull/175)
+
 ## 6.0.4
   - Enable the use of MaxMind GeoIP2-Domain databases [#162](https://github.com/logstash-plugins/logstash-filter-geoip/pull/162)
 
