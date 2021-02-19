@@ -37,6 +37,19 @@ can be https://dev.maxmind.com/geoip/geoip2/geolite2[downloaded from here].
 
 If you would like to get Autonomous System Number(ASN) information, you can use the GeoLite2-ASN database.
 
+[id="plugins-{type}s-{plugin}-database_license"]
+==== Database License
+
+MaxMind changed from releasing the database under a CC license to a proprietary EULA,
+the EULA requires Logstash to update the MaxMind database for our users within 30 days of MaxMind updating their database.
+
+For Logstash default distribution user, the plugin manages database for you.
+With the default setting, an auto-update makes sure database run in the latest version.
+For any reason Logstash fails to download database for 30 days, Logstash will stop the plugin pipeline in order to be compliant.
+If user config `database` option to a path, the plugin does not check for database update, and thus user has to be compliant on their own.
+
+For Logstash open source user, the plugin use the Maxmind CC license database by default.
+
 ==== Details
 
 A `[geoip][location]` field is created if
@@ -116,7 +129,8 @@ GeoLite2-City, GeoLite2-Country, GeoLite2-ASN are the free databases from Maxmin
 GeoIP2-City, GeoIP2-ISP, GeoIP2-Country are the commercial databases from Maxmind that are supported.
 
 If not specified, this will default to the GeoLite2 City database that ships
-with Logstash.
+with Logstash. Database auto-update applies to default distribution.
+{logstash-ref}/plugins-filters-geoip.html#plugins-filters-geoip-database_license[see also database license]
 
 [id="plugins-{type}s-{plugin}-default_database_type"]
 ===== `default_database_type`
