@@ -1,5 +1,6 @@
 ## 7.0.0
-  - Changed the plugin to use EULA GeoIP2 Database with auto-update if Logstash has Elastic license [#176](https://github.com/logstash-plugins/logstash-filter-geoip/pull/176)
+  - Changed the plugin to use EULA GeoIP2 Database with auto-update [#176](https://github.com/logstash-plugins/logstash-filter-geoip/pull/176)
+    Available in Logstash 7.13+ Elastic license
 
 ## 6.0.5
   - Fix database download task. Upgrade project to java 11 [#175](https://github.com/logstash-plugins/logstash-filter-geoip/pull/175)
