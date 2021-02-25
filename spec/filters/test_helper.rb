@@ -15,6 +15,7 @@ end
 
 METADATA_PATH = get_file_path("metadata.csv")
 DEFAULT_CITY_DB_PATH = get_file_path("GeoLite2-City.mmdb")
+DEFAULT_ASN_DB_PATH = get_file_path("GeoLite2-ASN.mmdb")
 
 major, minor = LOGSTASH_VERSION.split(".")
 MAJOR = major.to_i

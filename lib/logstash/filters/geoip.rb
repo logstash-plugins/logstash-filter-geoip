@@ -90,16 +90,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   public
   def register
-    @vendor_path = ::File.expand_path("../../../vendor/", ::File.dirname(__FILE__))
-
-    database_path = if load_database_manager?
-                      @database_manager = LogStash::Filters::Geoip::DatabaseManager.new(self, @database, @default_database_type, @vendor_path)
-                      @database_manager.database_path
-                    else
-                      @database.nil? ? ::File.join(@vendor_path, "GeoLite2-#{@default_database_type}.mmdb") : @database
-                    end
-
-    setup_filter(database_path)
+    setup_filter(select_database_path)
   end
 
   public
@@ -131,6 +122,17 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   def close
     @database_manager.close unless @database_manager.nil?
+  end
+
+  def select_database_path
+    vendor_path = ::File.expand_path("../../../vendor/", ::File.dirname(__FILE__))
+
+    if load_database_manager?
+      @database_manager = LogStash::Filters::Geoip::DatabaseManager.new(self, @database, @default_database_type, vendor_path)
+      @database_manager.database_path
+    else
+      @database.nil? ? ::File.join(vendor_path, "GeoLite2-#{@default_database_type}.mmdb") : @database
+    end
   end
 
   def load_database_manager?
