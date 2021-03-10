@@ -1,3 +1,6 @@
+## 7.0.1
+  - [DOC] Add documentation for MaxMind database license change [#177](https://github.com/logstash-plugins/logstash-filter-geoip/pull/177)
+
 ## 7.0.0
   - Changed the plugin to use EULA GeoIP2 Database with auto-update [#176](https://github.com/logstash-plugins/logstash-filter-geoip/pull/176)
     Available in Logstash 7.13+ Elastic license
