@@ -5,7 +5,7 @@ require "logstash/namespace"
 require "logstash-filter-geoip_jars"
 
 # The GeoIP filter adds information about the geographical location of IP addresses,
-# based on data from the Maxmind GeoLite2 database.
+# based on data from the MaxMind GeoLite2 database.
 #
 # A `[geoip][location]` field is created if
 # the GeoIP lookup returns a latitude and longitude. The field is stored in
