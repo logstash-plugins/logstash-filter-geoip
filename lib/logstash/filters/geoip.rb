@@ -1,8 +1,8 @@
 # encoding: utf-8
 require "logstash/filters/base"
 require "logstash/namespace"
-
 require "logstash-filter-geoip_jars"
+
 
 # The GeoIP filter adds information about the geographical location of IP addresses,
 # based on data from the MaxMind GeoLite2 database.
@@ -90,18 +90,8 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   public
   def register
-    if @database.nil?
-      @database = ::Dir.glob(::File.join(::File.expand_path("../../../vendor/", ::File.dirname(__FILE__)),"GeoLite2-#{@default_database_type}.mmdb")).first
-
-      if @database.nil? || !File.exists?(@database)
-        raise "You must specify 'database => ...' in your geoip filter (I looked for '#{@database}')"
-      end
-    end
-
-    @logger.info("Using geoip database", :path => @database)
-    
-    @geoipfilter = org.logstash.filters.GeoIPFilter.new(@source, @target, @fields, @database, @cache_size)
-  end # def register
+    setup_filter(select_database_path)
+  end
 
   public
   def filter(event)
@@ -116,6 +106,43 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   def tag_unsuccessful_lookup(event)
     @logger.debug? && @logger.debug("IP #{event.get(@source)} was not found in the database", :event => event)
     @tag_on_failure.each{|tag| event.tag(tag)}
+  end
+
+  def setup_filter(database_path)
+    @database = database_path
+    @logger.info("Using geoip database", :path => @database)
+    @geoipfilter = org.logstash.filters.GeoIPFilter.new(@source, @target, @fields, @database, @cache_size)
+  end
+
+  def terminate_filter
+    @logger.info("geoip plugin is terminating")
+    pipeline_id = execution_context.pipeline_id
+    execution_context.agent.stop_pipeline(pipeline_id)
+  end
+
+  def close
+    @database_manager.close unless @database_manager.nil?
+  end
+
+  def select_database_path
+    vendor_path = ::File.expand_path("../../../vendor/", ::File.dirname(__FILE__))
+
+    if load_database_manager?
+      @database_manager = LogStash::Filters::Geoip::DatabaseManager.new(self, @database, @default_database_type, vendor_path)
+      @database_manager.database_path
+    else
+      @database.nil? ? ::File.join(vendor_path, "GeoLite2-#{@default_database_type}.mmdb") : @database
+    end
+  end
+
+  def load_database_manager?
+    begin
+      require_relative "#{LogStash::Environment::LOGSTASH_HOME}/x-pack/lib/filters/geoip/database_manager"
+      true
+    rescue LoadError => e
+      @logger.info("DatabaseManager is not in classpath", :version => LOGSTASH_VERSION, :exception => e)
+      false
+    end
   end
 
 end # class LogStash::Filters::GeoIP
