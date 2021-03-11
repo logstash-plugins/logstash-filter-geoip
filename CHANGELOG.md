@@ -1,3 +1,6 @@
+## 7.0.1
+  - [DOC] Add documentation for MaxMind database license change [#177](https://github.com/logstash-plugins/logstash-filter-geoip/pull/177)
+
 ## 7.0.0
   - Changed the plugin to use EULA GeoIP2 Database with auto-update [#176](https://github.com/logstash-plugins/logstash-filter-geoip/pull/176)
     Available in Logstash 7.13+ Elastic license
@@ -39,11 +42,11 @@
   - Add default_database_type configuration option to allow selection between the GeoLite2-City and GeoLote2-ASN databases.
 
 ## 4.2.0
-  - Add support for GeoLite2-ASN database from Maxmind for ASN data.
+  - Add support for GeoLite2-ASN database from MaxMind for ASN data.
   - Update Java dependencies to 2.9.0 to support the new ASN database.
 
 ## 4.1.1
-  - Add support for commercial databases from Maxmind.
+  - Add support for commercial databases from MaxMind.
   - Add ASN data support via GeoIP2-ISP database.
   
 ## 4.1.0
