@@ -134,9 +134,10 @@ The path to MaxMind's database file that Logstash should use. The default databa
 GeoLite2-City, GeoLite2-Country, GeoLite2-ASN are the free databases from MaxMind that are supported.
 GeoIP2-City, GeoIP2-ISP, GeoIP2-Country are the commercial databases from MaxMind that are supported.
 
-Database auto-update applies to default distribution. When `database` point to user's database path,
-auto-update will be disabled
-{logstash-ref}/plugins-filters-geoip.html#plugins-filters-geoip-database_license[see also database license]
+Database auto-update applies to default distribution. When `database` points to user's database path,
+auto-update will be disabled.
+See
+<<plugins-{type}s-{plugin}-database_license,Database License>> for more information.
 
 [id="plugins-{type}s-{plugin}-default_database_type"]
 ===== `default_database_type`
