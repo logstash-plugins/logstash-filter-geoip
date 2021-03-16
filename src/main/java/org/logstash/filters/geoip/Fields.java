@@ -19,8 +19,6 @@ package org.logstash.filters.geoip;
  * under the License.
  */
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
