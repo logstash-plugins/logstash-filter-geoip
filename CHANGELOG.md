@@ -1,3 +1,6 @@
+## 7.1.0
+  - Add ECS compatibility [#178](https://github.com/logstash-plugins/logstash-filter-geoip/pull/178)
+
 ## 7.0.1
   - [DOC] Add documentation for MaxMind database license change [#177](https://github.com/logstash-plugins/logstash-filter-geoip/pull/177)
 
