@@ -219,6 +219,11 @@ public class GeoIPFilter {
     for (Map.Entry<Fields, Object> it: geoData.entrySet()) {
       final Fields field = it.getKey();
       final String subFieldReference = this.fieldReferenceExtractor.apply(field);
+
+      if (subFieldReference.equals("[]")) {
+        continue; // skip the incompatible ECS field
+      }
+
       event.setField(targetFieldReference + subFieldReference, it.getValue());
     }
     return true;

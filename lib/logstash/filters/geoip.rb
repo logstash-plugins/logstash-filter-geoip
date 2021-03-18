@@ -91,7 +91,14 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   public
 
-  ECS_TARGET_FIELD = ['client', 'destination', 'host', 'observer', 'server', 'source'].freeze
+  ECS_TARGET_FIELD = %w{
+    client
+    destination
+    host
+    observer
+    server
+    source
+  }.map(&:freeze).freeze
 
   def register
     setup_target_field
@@ -114,10 +121,15 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def setup_target_field
-    @target ||= ecs_select[disabled:'geoip', v1:'client']
+    if ecs_compatibility == :disabled
+      @target ||= 'geoip'
+    else
+      auto_target = @source[0...-4] if @source.end_with?('[ip]') and @source.length > 4
+      @target ||= auto_target || fail(LogStash::ConfigurationError, "GeoIP Filter in ECS-Compatiblity mode "\
+                                            "requires a `target` when `source` is not an `ip` sub-field")
 
-    if ecs_compatibility != :disabled and !ECS_TARGET_FIELD.include?(@target)
-      @logger.warn("ECS expect `target` value in #{ECS_TARGET_FIELD}")
+      normalized_target = (@target.start_with?('[') and @target.end_with?(']'))? @target[1...-1] : @target
+      logger.warn("ECS expect `target` value in #{ECS_TARGET_FIELD}") unless ECS_TARGET_FIELD.include?(normalized_target)
     end
   end
 

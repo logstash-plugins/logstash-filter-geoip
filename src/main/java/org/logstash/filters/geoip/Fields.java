@@ -31,7 +31,7 @@ enum Fields {
   CONTINENT_CODE("geo.continent_code", "continent_code"),
   CONTINENT_NAME("geo.continent_name", "continent_name"),
   COUNTRY_CODE2("geo.country_iso_code", "country_code2"),
-  COUNTRY_CODE3("country_code3"),
+  COUNTRY_CODE3("", "country_code3"), // `country_code3` is not ECS compatible and will be skipped in ECS mode
   DOMAIN("domain"),
   IP("ip"),
   ISP("mmdb.isp", "isp"),
@@ -116,6 +116,11 @@ enum Fields {
     return fields;
   }
 
+  /**
+   * Normalizes a dot-separated field path into a bracket-notation Logstash Field Reference
+   * @param fieldName: a dot-separated field path (e.g., `geo.location.lat`)
+   * @return: a bracket-notation Field Reference (e.g., `[geo][location][lat]`)
+   */
   private static String normalizeFieldReferenceFragment(final String fieldName) {
     return  Stream.of(fieldName.split("\\."))
             .map((f) -> "[" + f + "]")

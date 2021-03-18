@@ -1,7 +1,7 @@
 # encoding: utf-8
 require "logstash/devutils/rspec/spec_helper"
-require "insist"
 require "logstash/filters/geoip"
+require_relative 'test_helper'
 require 'logstash/plugin_mixins/ecs_compatibility_support/spec_helper'
 
 CITYDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoLite2-City.mmdb").first
@@ -33,12 +33,18 @@ describe LogStash::Filters::GeoIP do
             plugin.filter(event)
 
             expect( event.get ecs_select[disabled: "[#{target}][ip]", v1: "[#{target}][ip]"] ).to eq ip
-            expect( event.get ecs_select[disabled: "[#{target}][country_code3]", v1: "[#{target}][country_code3]"] ).to eq 'US'
             expect( event.get ecs_select[disabled: "[#{target}][country_code2]", v1: "[#{target}][geo][country_iso_code]"] ).to eq 'US'
             expect( event.get ecs_select[disabled: "[#{target}][country_name]", v1: "[#{target}][geo][country_name]"] ).to eq 'United States'
             expect( event.get ecs_select[disabled: "[#{target}][continent_code]", v1: "[#{target}][geo][continent_code]"] ).to eq 'NA'
             expect( event.get ecs_select[disabled: "[#{target}][location][lat]", v1: "[#{target}][geo][location][lat]"] ).to eq 37.751
             expect( event.get ecs_select[disabled: "[#{target}][location][lon]", v1: "[#{target}][geo][location][lon]"] ).to eq -97.822
+
+            if ecs_select.active_mode == :disabled
+              expect( event.get "[#{target}][country_code3]" ).to eq 'US'
+            else
+              expect( event.get "[#{target}][geo][country_code3]" ).to be_nil
+              expect( event.get "[#{target}][country_code3]" ).to be_nil
+            end
           end
         end
 
@@ -63,33 +69,135 @@ describe LogStash::Filters::GeoIP do
             plugin.filter(event)
 
             expect( event.get ecs_select[disabled: "[#{target}][ip]", v1: "[#{target}][ip]"] ).to be_nil
+            expect( event.get ecs_select[disabled: "[#{target}][country_code2]", v1: "[#{target}][geo][country_iso_code]"] ).to be_nil
+            expect( event.get ecs_select[disabled: "[#{target}][country_name]", v1: "[#{target}][geo][country_name]"] ).to be_nil
+            expect( event.get ecs_select[disabled: "[#{target}][continent_code]", v1: "[#{target}][geo][continent_code]"] ).to be_nil
+            expect( event.get ecs_select[disabled: "[#{target}][location][lat]", v1: "[#{target}][geo][location][lat]"] ).to be_nil
+            expect( event.get ecs_select[disabled: "[#{target}][location][lon]", v1: "[#{target}][geo][location][lon]"] ).to be_nil
+
             expect( event.get ecs_select[disabled: "[#{target}][continent_name]", v1: "[#{target}][geo][continent_name]"] ).to eq "North America"
             expect( event.get ecs_select[disabled: "[#{target}][timezone]", v1: "[#{target}][geo][timezone]"] ).to eq "America/Chicago"
           end
         end
 
-
       end
     end
 
-    context "when target is unset", :ecs_compatibility_support do
-      ecs_compatibility_matrix(:disabled, :v1) do |ecs_select|
-        let(:event) { LogStash::Event.new("message" => "8.8.8.8") }
-        let(:options) { {"source" => "message", "database" => CITYDB} }
-        before(:each) do
-          allow_any_instance_of(described_class).to receive(:ecs_compatibility).and_return(ecs_compatibility)
+    context "setup target field" do
+      let(:ip) { "8.8.8.8" }
+      let(:event) { LogStash::Event.new("message" => ip) }
+      let(:common_options) { {"source" => "message", "database" => CITYDB} }
+
+      context "ECS disabled" do
+        before do
+          allow_any_instance_of(described_class).to receive(:ecs_compatibility).and_return(:disabled)
           plugin.register
+          plugin.filter(event)
         end
 
-        it "should use default target value" do
-          plugin.filter(event)
+        context "`target` is unset" do
+          let(:options) { common_options }
+          it "should use 'geoip'" do
+            expect( event.get "[geoip][ip]" ).to eq ip
+          end
+        end
 
-          expect( event.get ecs_select[disabled: "[geoip][country_code3]", v1: "[client][country_code3]"] ).to eq 'US'
-          expect( event.get ecs_select[disabled: "[geoip][country_code2]", v1: "[client][geo][country_iso_code]"] ).to eq 'US'
+        context "`target` is set" do
+          let(:target) { 'host' }
+          let(:options) { common_options.merge({"target" => target}) }
+          it "should use `target`" do
+            expect( event.get "[#{target}][ip]" ).to eq ip
+          end
+        end
+      end
+
+      context "ECS mode" do
+        before do
+          allow_any_instance_of(described_class).to receive(:ecs_compatibility).and_return(:v1)
+        end
+
+        context "`target` is unset" do
+
+          context "`source` end with [ip]" do
+            let(:event) { LogStash::Event.new("host" => {"ip" => ip}) }
+            let(:options) { common_options.merge({"source" => "[host][ip]"}) }
+
+            it "should use [host] as target" do
+              plugin.register
+              plugin.filter(event)
+              expect( event.get "[host][geo][country_iso_code]" ).to eq 'US'
+            end
+          end
+
+          context "`source` end with [ip] but `target` does not match ECS template" do
+            let(:event) { LogStash::Event.new("hostname" => {"ip" => ip}) }
+            let(:options) { common_options.merge({"source" => "[hostname][ip]"}) }
+
+            it "should use [hostname] as target with warning" do
+              expect(plugin.logger).to receive(:warn)
+              plugin.register
+              plugin.filter(event)
+              expect( event.get "[hostname][geo][country_iso_code]" ).to eq 'US'
+            end
+          end
+
+          context "`source` == [ip]" do
+            let(:event) { LogStash::Event.new("ip" => ip) }
+            let(:options) { common_options.merge({"source" => "[ip]"}) }
+
+            it "should raise error to require `target`" do
+              expect { plugin.register }.to raise_error LogStash::ConfigurationError
+            end
+          end
+
+          context "`source` not end with [ip]" do
+            let(:event) { LogStash::Event.new("host_ip" => ip) }
+            let(:options) { common_options.merge({"source" => "host_ip"}) }
+
+            it "should raise error to require `target`" do
+              expect { plugin.register }.to raise_error LogStash::ConfigurationError
+            end
+          end
+        end
+
+        context "`target` is set" do
+          let(:event) { LogStash::Event.new("client" => {"ip" => ip}) }
+          let(:options) { common_options.merge({"source" => "[client][ip]", "target" => target}) }
+
+          context "`target` matches ECS template" do
+            let(:target) { 'host' }
+
+            it "should use `target`" do
+              plugin.register
+              plugin.filter(event)
+              expect( event.get "[#{target}][geo][country_iso_code]" ).to eq 'US'
+            end
+          end
+
+          context "`target` in canonical field reference syntax matches ECS template" do
+            let(:target) { '[host]' }
+
+            it "should normalize and use `target`" do
+              expect(plugin.logger).to receive(:warn).never
+              plugin.register
+              plugin.filter(event)
+              expect( event.get "[host][geo][country_iso_code]" ).to eq 'US'
+            end
+          end
+
+          context "`target` does not match ECS template" do
+            let(:target) { 'host_ip' }
+
+            it "should use `target` with warning" do
+              expect(plugin.logger).to receive(:warn)
+              plugin.register
+              plugin.filter(event)
+              expect( event.get "[#{target}][geo][country_iso_code]" ).to eq 'US'
+            end
+          end
         end
       end
     end
 
   end
-
 end
