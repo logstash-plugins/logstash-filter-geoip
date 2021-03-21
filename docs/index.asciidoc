@@ -200,10 +200,13 @@ Tags the event on failure to look up geo information. This can be used in later 
 [id="plugins-{type}s-{plugin}-target"]
 ===== `target`
 
+  * This is an optional setting with condition.
   * Value type is <<string,string>>
   * Default value depends on whether <<plugins-{type}s-{plugin}-ecs_compatibility>> is enabled:
-  ** ECS Compatibility disabled: `"geoip"`
-  ** ECS Compatibility enabled: `"client"`
+  ** ECS Compatibility disabled: `geoip`
+  ** ECS Compatibility enabled: If `source` is an `ip` sub-field, eg. `[client][ip]`,
+      `target` will automatically set to the parent field, in this example `[client]`,
+      otherwise, `target` is a required setting
   *** `geo` field is nested in `[client][geo]`
   *** ECS compatible values are `client`, `destination`, `host`, `observer`, `server`, `source`
 

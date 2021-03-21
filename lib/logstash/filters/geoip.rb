@@ -63,8 +63,12 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # This can be useful, for example, if you have `src_ip` and `dst_ip` fields and
   # would like the GeoIP information of both IPs.
   #
-  # ECS disabled default: `geoip` or ECS default: `client`
-  # ECS `geo` fields are expected to be nested at:
+  # ECS disabled/ Legacy default: `geoip`
+  # ECS default: The `target` is auto-generated from `source` when the `source` specifies an `ip` sub-field
+  # For example, source => [client][ip], `target` will be `client`
+  # If `source` is not an `ip` sub-field, source => client_ip, `target` setting is mandatory
+  #
+  # Elasticsearch ECS mode expected `geo` fields to be nested at:
   # `client`, `destination`, `host`, `observer`, `server`, `source`
   #
   # `geo` fields are not expected to be used directly at the root of the events
@@ -126,7 +130,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     else
       auto_target = @source[0...-4] if @source.end_with?('[ip]') and @source.length > 4
       @target ||= auto_target || fail(LogStash::ConfigurationError, "GeoIP Filter in ECS-Compatiblity mode "\
-                                            "requires a `target` when `source` is not an `ip` sub-field")
+                                            "requires a `target` when `source` is not an `ip` sub-field, eg. [client][ip]")
 
       normalized_target = (@target.start_with?('[') and @target.end_with?(']'))? @target[1...-1] : @target
       logger.warn("ECS expect `target` value in #{ECS_TARGET_FIELD}") unless ECS_TARGET_FIELD.include?(normalized_target)
