@@ -3,8 +3,8 @@ require "logstash/devutils/rspec/spec_helper"
 require "insist"
 require "logstash/filters/geoip"
 
-CITYDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoLite2-City.mmdb").first
-ASNDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoLite2-ASN.mmdb").first
+CITYDB = ::Dir.glob(::File.expand_path(::File.join("..", "..", "..", "vendor", "GeoLite2-City.mmdb"), __FILE__)).first
+ASNDB = ::Dir.glob(::File.expand_path(::File.join("..", "..", "..", "vendor", "GeoLite2-ASN.mmdb"), __FILE__)).first
 
 describe LogStash::Filters::GeoIP do
   describe "defaults" do

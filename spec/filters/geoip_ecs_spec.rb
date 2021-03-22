@@ -4,8 +4,8 @@ require "logstash/filters/geoip"
 require_relative 'test_helper'
 require 'logstash/plugin_mixins/ecs_compatibility_support/spec_helper'
 
-CITYDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoLite2-City.mmdb").first
-ASNDB = ::Dir.glob(::File.expand_path("../../vendor/", ::File.dirname(__FILE__))+"/GeoLite2-ASN.mmdb").first
+CITYDB = ::Dir.glob(::File.expand_path(::File.join("..", "..", "..", "vendor", "GeoLite2-City.mmdb"), __FILE__)).first
+ASNDB = ::Dir.glob(::File.expand_path(::File.join("..", "..", "..", "vendor", "GeoLite2-ASN.mmdb"), __FILE__)).first
 
 describe LogStash::Filters::GeoIP do
   let(:options) { {} }
