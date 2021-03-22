@@ -154,7 +154,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def select_database_path
-    vendor_path = ::File.expand_path("../../../vendor/", ::File.dirname(__FILE__))
+    vendor_path = ::File.expand_path(::File.join("..", "..", "..", "..", "vendor"), __FILE__)
 
     if load_database_manager?
       @database_manager = LogStash::Filters::Geoip::DatabaseManager.new(self, @database, @default_database_type, vendor_path)
@@ -166,7 +166,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   def load_database_manager?
     begin
-      require_relative "#{LogStash::Environment::LOGSTASH_HOME}/x-pack/lib/filters/geoip/database_manager"
+      require_relative ::File.join(LogStash::Environment::LOGSTASH_HOME, "x-pack", "lib", "filters", "geoip", "database_manager")
       true
     rescue LoadError => e
       @logger.info("DatabaseManager is not in classpath", :version => LOGSTASH_VERSION, :exception => e)
