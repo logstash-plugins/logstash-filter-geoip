@@ -128,14 +128,20 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     if ecs_compatibility == :disabled
       @target ||= 'geoip'
     else
-      auto_target = @source[0...-4] if @source.end_with?('[ip]') and @source.length > 4
-      @target ||= auto_target || fail(LogStash::ConfigurationError, "GeoIP Filter in ECS-Compatiblity mode "\
-                                            "requires a `target` when `source` is not an `ip` sub-field, eg. [client][ip]")
-
-      normalized_target = (@target.start_with?('[') and @target.end_with?(']'))? @target[1...-1] : @target
-      logger.warn("ECS expect `target` value in #{ECS_TARGET_FIELD}") unless ECS_TARGET_FIELD.include?(normalized_target)
+      @target ||= auto_target_from_source!
+      # normalize top-level fields to not be bracket-wrapped
+      normalized_target = @target.gsub(/\A\[([^\[\]]+)\]\z/,'\1')
+      logger.warn("ECS expect `target` value `#{normalized_target}` in #{ECS_TARGET_FIELD}") unless ECS_TARGET_FIELD.include?(normalized_target)
     end
   end
+
+  def auto_target_from_source!
+    return @source[0...-4] if @source.end_with?('[ip]') && @source.length > 4
+
+    fail(LogStash::ConfigurationError, "GeoIP Filter in ECS-Compatiblity mode "\
+                                       "requires a `target` when `source` is not an `ip` sub-field, eg. [client][ip]")
+  end
+
 
   def setup_filter(database_path)
     @database = database_path

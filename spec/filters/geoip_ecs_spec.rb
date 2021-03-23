@@ -122,7 +122,7 @@ describe LogStash::Filters::GeoIP do
             let(:event) { LogStash::Event.new("host" => {"ip" => ip}) }
             let(:options) { common_options.merge({"source" => "[host][ip]"}) }
 
-            it "should use [host] as target" do
+            it "should use source's parent as target" do
               plugin.register
               plugin.filter(event)
               expect( event.get "[host][geo][country_iso_code]" ).to eq 'US'
@@ -133,7 +133,7 @@ describe LogStash::Filters::GeoIP do
             let(:event) { LogStash::Event.new("hostname" => {"ip" => ip}) }
             let(:options) { common_options.merge({"source" => "[hostname][ip]"}) }
 
-            it "should use [hostname] as target with warning" do
+            it "should use source's parent as target with warning" do
               expect(plugin.logger).to receive(:warn)
               plugin.register
               plugin.filter(event)
@@ -146,7 +146,7 @@ describe LogStash::Filters::GeoIP do
             let(:options) { common_options.merge({"source" => "[ip]"}) }
 
             it "should raise error to require `target`" do
-              expect { plugin.register }.to raise_error LogStash::ConfigurationError
+              expect { plugin.register }.to raise_error LogStash::ConfigurationError, /requires a `target`/
             end
           end
 
@@ -155,7 +155,7 @@ describe LogStash::Filters::GeoIP do
             let(:options) { common_options.merge({"source" => "host_ip"}) }
 
             it "should raise error to require `target`" do
-              expect { plugin.register }.to raise_error LogStash::ConfigurationError
+              expect { plugin.register }.to raise_error LogStash::ConfigurationError, /requires a `target`/
             end
           end
         end
@@ -189,7 +189,7 @@ describe LogStash::Filters::GeoIP do
             let(:target) { 'host_ip' }
 
             it "should use `target` with warning" do
-              expect(plugin.logger).to receive(:warn)
+              expect(plugin.logger).to receive(:warn).with(/ECS expect `target`/)
               plugin.register
               plugin.filter(event)
               expect( event.get "[#{target}][geo][country_iso_code]" ).to eq 'US'
