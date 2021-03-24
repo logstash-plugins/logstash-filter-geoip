@@ -89,10 +89,10 @@ This plugin supports the following configuration options plus the <<plugins-{typ
 [cols="<,<,<",options="header",]
 |=======================================================================
 |Setting |Input type|Required
-| <<plugins-{type}s-{plugin}-ecs_compatibility>> | <<string,string>>|No
 | <<plugins-{type}s-{plugin}-cache_size>> |<<number,number>>|No
 | <<plugins-{type}s-{plugin}-database>> |a valid filesystem path|No
 | <<plugins-{type}s-{plugin}-default_database_type>> |`City` or `ASN`|No
+| <<plugins-{type}s-{plugin}-ecs_compatibility>> | <<string,string>>|No
 | <<plugins-{type}s-{plugin}-fields>> |<<array,array>>|No
 | <<plugins-{type}s-{plugin}-source>> |<<string,string>>|Yes
 | <<plugins-{type}s-{plugin}-tag_on_failure>> |<<array,array>>|No
@@ -103,20 +103,6 @@ Also see <<plugins-{type}s-{plugin}-common-options>> for a list of options suppo
 filter plugins.
 
 &nbsp;
-
-[id="plugins-{type}s-{plugin}-ecs_compatibility"]
-===== `ecs_compatibility`
-
-* Value type is <<string,string>>
-* Supported values are:
-** `disabled`: unstructured geo data added at root level
-** `v1`: uses fields that are compatible with Elastic Common Schema (for example, `[client][geo][country_name]`)
-* Default value depends on which version of Logstash is running:
-** When Logstash provides a `pipeline.ecs_compatibility` setting, its value is used as the default
-** Otherwise, the default value is `disabled`.
-
-Controls this plugin's compatibility with the {ecs-ref}[Elastic Common Schema (ECS)].
-The value of this setting affects the _default_ value of <<plugins-{type}s-{plugin}-target>>.
 
 [id="plugins-{type}s-{plugin}-cache_size"]
 ===== `cache_size`
@@ -178,6 +164,20 @@ For the built-in GeoLite2 City database, the following are available:
 `city_name`, `continent_code`, `country_code2`, `country_code3`, `country_name`,
 `dma_code`, `ip`, `latitude`, `longitude`, `postal_code`, `region_code`,
 `region_name` and `timezone`.
+
+[id="plugins-{type}s-{plugin}-ecs_compatibility"]
+===== `ecs_compatibility`
+
+* Value type is <<string,string>>
+* Supported values are:
+** `disabled`: unstructured geo data added at root level
+** `v1`: uses fields that are compatible with Elastic Common Schema (for example, `[client][geo][country_name]`)
+* Default value depends on which version of Logstash is running:
+** When Logstash provides a `pipeline.ecs_compatibility` setting, its value is used as the default
+** Otherwise, the default value is `disabled`.
+
+Controls this plugin's compatibility with the {ecs-ref}[Elastic Common Schema (ECS)].
+The value of this setting affects the _default_ value of <<plugins-{type}s-{plugin}-target>>.
 
 [id="plugins-{type}s-{plugin}-source"]
 ===== `source`
