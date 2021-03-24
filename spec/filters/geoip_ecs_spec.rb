@@ -134,7 +134,7 @@ describe LogStash::Filters::GeoIP do
             let(:options) { common_options.merge({"source" => "[hostname][ip]"}) }
 
             it "should use source's parent as target with warning" do
-              expect(plugin.logger).to receive(:warn)
+              expect(plugin.logger).to receive(:warn).with(/ECS expect `target`/)
               plugin.register
               plugin.filter(event)
               expect( event.get "[hostname][geo][country_iso_code]" ).to eq 'US'
