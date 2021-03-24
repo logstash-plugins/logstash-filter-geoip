@@ -116,7 +116,7 @@ filter plugins.
 ** Otherwise, the default value is `disabled`.
 
 Controls this plugin's compatibility with the {ecs-ref}[Elastic Common Schema (ECS)].
-The value of this setting affects the _default_ value of <<plugins-{type}s-{plugin}-syslog_pri_field_name>>.
+The value of this setting affects the _default_ value of <<plugins-{type}s-{plugin}-target>>.
 
 [id="plugins-{type}s-{plugin}-cache_size"]
 ===== `cache_size`
@@ -205,7 +205,7 @@ Tags the event on failure to look up geo information. This can be used in later 
   * Default value depends on whether <<plugins-{type}s-{plugin}-ecs_compatibility>> is enabled:
   ** ECS Compatibility disabled: `geoip`
   ** ECS Compatibility enabled: If `source` is an `ip` sub-field, eg. `[client][ip]`,
-      `target` will automatically set to the parent field, in this example `[client]`,
+      `target` will automatically set to the parent field, in this example `client`,
       otherwise, `target` is a required setting
   *** `geo` field is nested in `[client][geo]`
   *** ECS compatible values are `client`, `destination`, `host`, `observer`, `server`, `source`
