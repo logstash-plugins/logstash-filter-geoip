@@ -2,6 +2,7 @@
 require "logstash/filters/base"
 require "logstash/namespace"
 require "logstash-filter-geoip_jars"
+require "logstash/plugin_mixins/ecs_compatibility_support"
 
 
 # The GeoIP filter adds information about the geographical location of IP addresses,
@@ -31,6 +32,8 @@ require "logstash-filter-geoip_jars"
 # --
 
 class LogStash::Filters::GeoIP < LogStash::Filters::Base
+  include LogStash::PluginMixins::ECSCompatibilitySupport(:disabled, :v1)
+
   config_name "geoip"
 
   # The path to the GeoLite2 database file which Logstash should use. City and ASN databases are supported.
@@ -60,14 +63,16 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   # This can be useful, for example, if you have `src_ip` and `dst_ip` fields and
   # would like the GeoIP information of both IPs.
   #
-  # If you save the data to a target field other than `geoip` and want to use the
-  # `geo_point` related functions in Elasticsearch, you need to alter the template
-  # provided with the Elasticsearch output and configure the output to use the
-  # new template.
+  # ECS disabled/ Legacy default: `geoip`
+  # ECS default: The `target` is auto-generated from `source` when the `source` specifies an `ip` sub-field
+  # For example, source => [client][ip], `target` will be `client`
+  # If `source` is not an `ip` sub-field, source => client_ip, `target` setting is mandatory
   #
-  # Even if you don't use the `geo_point` mapping, the `[target][location]` field
-  # is still valid GeoJSON.
-  config :target, :validate => :string, :default => 'geoip'
+  # Elasticsearch ECS mode expected `geo` fields to be nested at:
+  # `client`, `destination`, `host`, `observer`, `server`, `source`
+  #
+  # `geo` fields are not expected to be used directly at the root of the events
+  config :target, :validate => :string
 
   # GeoIP lookup is surprisingly expensive. This filter uses an cache to take advantage of the fact that
   # IPs agents are often found adjacent to one another in log files and rarely have a random distribution.
@@ -89,7 +94,18 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   config :tag_on_failure, :validate => :array, :default => ["_geoip_lookup_failure"]
 
   public
+
+  ECS_TARGET_FIELD = %w{
+    client
+    destination
+    host
+    observer
+    server
+    source
+  }.map(&:freeze).freeze
+
   def register
+    setup_target_field
     setup_filter(select_database_path)
   end
 
@@ -108,10 +124,29 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     @tag_on_failure.each{|tag| event.tag(tag)}
   end
 
+  def setup_target_field
+    if ecs_compatibility == :disabled
+      @target ||= 'geoip'
+    else
+      @target ||= auto_target_from_source!
+      # normalize top-level fields to not be bracket-wrapped
+      normalized_target = @target.gsub(/\A\[([^\[\]]+)\]\z/,'\1')
+      logger.warn("ECS expect `target` value `#{normalized_target}` in #{ECS_TARGET_FIELD}") unless ECS_TARGET_FIELD.include?(normalized_target)
+    end
+  end
+
+  def auto_target_from_source!
+    return @source[0...-4] if @source.end_with?('[ip]') && @source.length > 4
+
+    fail(LogStash::ConfigurationError, "GeoIP Filter in ECS-Compatiblity mode "\
+                                       "requires a `target` when `source` is not an `ip` sub-field, eg. [client][ip]")
+  end
+
+
   def setup_filter(database_path)
     @database = database_path
     @logger.info("Using geoip database", :path => @database)
-    @geoipfilter = org.logstash.filters.GeoIPFilter.new(@source, @target, @fields, @database, @cache_size)
+    @geoipfilter = org.logstash.filters.geoip.GeoIPFilter.new(@source, @target, @fields, @database, @cache_size, ecs_compatibility.to_s)
   end
 
   def terminate_filter
@@ -125,7 +160,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def select_database_path
-    vendor_path = ::File.expand_path("../../../vendor/", ::File.dirname(__FILE__))
+    vendor_path = ::File.expand_path(::File.join("..", "..", "..", "..", "vendor"), __FILE__)
 
     if load_database_manager?
       @database_manager = LogStash::Filters::Geoip::DatabaseManager.new(self, @database, @default_database_type, vendor_path)
@@ -137,7 +172,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   def load_database_manager?
     begin
-      require_relative "#{LogStash::Environment::LOGSTASH_HOME}/x-pack/lib/filters/geoip/database_manager"
+      require_relative ::File.join(LogStash::Environment::LOGSTASH_HOME, "x-pack", "lib", "filters", "geoip", "database_manager")
       true
     rescue LoadError => e
       @logger.info("DatabaseManager is not in classpath", :version => LOGSTASH_VERSION, :exception => e)
