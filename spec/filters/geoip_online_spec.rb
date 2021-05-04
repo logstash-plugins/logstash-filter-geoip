@@ -33,11 +33,11 @@ describe LogStash::Filters::GeoIP do
         plugin.register
         plugin.filter(event)
         plugin.close
-        first_database_name = get_metadata_database_name
+        first_database_name = get_metadata_city_database_name
         plugin.register
         plugin.filter(event2)
         plugin.close
-        second_database_name = get_metadata_database_name
+        second_database_name = get_metadata_city_database_name
 
         expect(first_database_name).not_to be_nil
         expect(first_database_name).to eq(second_database_name)
