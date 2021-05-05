@@ -112,15 +112,13 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   public
   def filter(event)
     return unless filter?(event)
+    return event.tag("_geoip_expired_database") unless @healthy_database
+
     if @geoipfilter.handleEvent(event)
       filter_matched(event)
     else
       tag_unsuccessful_lookup(event)
     end
-  end
-
-  def filter?(event)
-    @pass
   end
 
   def tag_unsuccessful_lookup(event)
@@ -168,19 +166,19 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def expire_action
-    bypass_filter
+    fail_filter
   end
 
   def setup_filter(database_path)
-    @pass = true
+    @healthy_database = true
     @database = database_path
     @logger.info("Using geoip database", :path => @database)
     @geoipfilter = org.logstash.filters.geoip.GeoIPFilter.new(@source, @target, @fields, @database, @cache_size, ecs_compatibility.to_s)
   end
 
-  def bypass_filter
+  def fail_filter
     @logger.info("geoip plugin stop filtering")
-    @pass = false
+    @healthy_database = false
   end
 
   def terminate_filter

@@ -17,7 +17,7 @@ end
 def get_metadata_city_database_name
   if ::File.exist?(METADATA_PATH)
     city = ::CSV.read(METADATA_PATH, headers: false).select { |row| row[0].eql?("City") }.last
-    city[4]
+    city[3]
   else
     nil
   end

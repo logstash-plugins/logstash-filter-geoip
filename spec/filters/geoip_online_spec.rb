@@ -33,15 +33,15 @@ describe LogStash::Filters::GeoIP do
         plugin.register
         plugin.filter(event)
         plugin.close
-        first_database_name = get_metadata_city_database_name
+        first_dirname = get_metadata_city_database_name
         plugin.register
         plugin.filter(event2)
         plugin.close
-        second_database_name = get_metadata_city_database_name
+        second_dirname = get_metadata_city_database_name
 
-        expect(first_database_name).not_to be_nil
-        expect(first_database_name).to eq(second_database_name)
-        expect(::File.exist?(get_file_path(first_database_name))).to be_truthy
+        expect(first_dirname).not_to be_nil
+        expect(first_dirname).to eq(second_dirname)
+        expect(::File.exist?(get_file_path(first_dirname))).to be_truthy
       end
     end
   end if MAJOR >= 8 || (MAJOR == 7 && MINOR >= 13)
