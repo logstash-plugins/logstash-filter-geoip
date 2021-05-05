@@ -119,6 +119,10 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     end
   end
 
+  def filter?(event)
+    @pass
+  end
+
   def tag_unsuccessful_lookup(event)
     @logger.debug? && @logger.debug("IP #{event.get(@source)} was not found in the database", :event => event)
     @tag_on_failure.each{|tag| event.tag(tag)}
@@ -142,23 +146,6 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
                                        "requires a `target` when `source` is not an `ip` sub-field, eg. [client][ip]")
   end
 
-
-  def setup_filter(database_path)
-    @database = database_path
-    @logger.info("Using geoip database", :path => @database)
-    @geoipfilter = org.logstash.filters.geoip.GeoIPFilter.new(@source, @target, @fields, @database, @cache_size, ecs_compatibility.to_s)
-  end
-
-  def terminate_filter
-    @logger.info("geoip plugin is terminating")
-    pipeline_id = execution_context.pipeline_id
-    execution_context.agent.stop_pipeline(pipeline_id)
-  end
-
-  def close
-    @database_manager.unsubscribe_database_path(@default_database_type, self) unless @database_manager.nil?
-  end
-
   def select_database_path
     vendor_path = ::File.expand_path(::File.join("..", "..", "..", "..", "vendor"), __FILE__)
 
@@ -179,5 +166,34 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
       false
     end
   end
+
+  def expire_action
+    bypass_filter
+  end
+
+  def setup_filter(database_path)
+    @pass = true
+    @database = database_path
+    @logger.info("Using geoip database", :path => @database)
+    @geoipfilter = org.logstash.filters.geoip.GeoIPFilter.new(@source, @target, @fields, @database, @cache_size, ecs_compatibility.to_s)
+  end
+
+  def bypass_filter
+    @logger.info("geoip plugin stop filtering")
+    @pass = false
+  end
+
+  def terminate_filter
+    @logger.info("geoip plugin is terminating")
+    pipeline_id = execution_context.pipeline_id
+    execution_context.agent.stop_pipeline(pipeline_id)
+  end
+
+  def close
+    @database_manager.unsubscribe_database_path(@default_database_type, self) unless @database_manager.nil?
+  end
+
+
+
 
 end # class LogStash::Filters::GeoIP
