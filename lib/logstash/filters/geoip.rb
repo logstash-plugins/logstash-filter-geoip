@@ -190,8 +190,4 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   def close
     @database_manager.unsubscribe_database_path(@default_database_type, self) unless @database_manager.nil?
   end
-
-
-
-
 end # class LogStash::Filters::GeoIP
