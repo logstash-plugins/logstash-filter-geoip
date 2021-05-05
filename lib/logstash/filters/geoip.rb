@@ -145,12 +145,11 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def select_database_path
-    vendor_path = ::File.expand_path(::File.join("..", "..", "..", "..", "vendor"), __FILE__)
-
     if load_database_manager?
       @database_manager = LogStash::Filters::Geoip::DatabaseManager.instance
       @database_manager.subscribe_database_path(@default_database_type, @database, self)
     else
+      vendor_path = ::File.expand_path(::File.join("..", "..", "..", "..", "vendor"), __FILE__)
       @database.nil? ? ::File.join(vendor_path, "GeoLite2-#{@default_database_type}.mmdb") : @database
     end
   end
