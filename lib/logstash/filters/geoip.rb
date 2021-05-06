@@ -164,8 +164,14 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     end
   end
 
+  # call by DatabaseManager
   def expire_action
     fail_filter
+  end
+
+  # call by DatabaseManager
+  def update_database(database_path)
+    setup_filter(database_path)
   end
 
   def setup_filter(database_path)
