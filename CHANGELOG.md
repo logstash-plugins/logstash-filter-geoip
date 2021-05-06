@@ -1,3 +1,6 @@
+## 7.2.0
+  - Change the database expiry action and fix duplicate download in multiple pipelines [#181](https://github.com/logstash-plugins/logstash-filter-geoip/pull/181)
+
 ## 7.1.0
   - Add ECS compatibility [#179](https://github.com/logstash-plugins/logstash-filter-geoip/pull/179)
 
