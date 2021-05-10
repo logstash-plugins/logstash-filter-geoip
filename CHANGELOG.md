@@ -1,5 +1,5 @@
 ## 7.1.1
-  - Changed the behaviour of database expiry. Instead of failing the ingestion pipeline, it adds a tag [#182](https://github.com/logstash-plugins/logstash-filter-geoip/pull/182)
+  - Changed the behaviour of database expiry. Instead of stopping the pipeline, it adds a tag `_geoip_expired_database` [#182](https://github.com/logstash-plugins/logstash-filter-geoip/pull/182)
 
 ## 7.1.0
   - Add ECS compatibility [#179](https://github.com/logstash-plugins/logstash-filter-geoip/pull/179)
