@@ -144,6 +144,39 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
                                        "requires a `target` when `source` is not an `ip` sub-field, eg. [client][ip]")
   end
 
+  def setup_filter(database_path)
+    @healthy_database = true
+    @database = database_path
+    @logger.info("Using geoip database", :path => @database, :healthy_database => @healthy_database)
+    @geoipfilter = org.logstash.filters.geoip.GeoIPFilter.new(@source, @target, @fields, @database, @cache_size, ecs_compatibility.to_s)
+  end
+
+  # call by DatabaseManager
+  def update_database(database_path)
+    setup_filter(database_path)
+  end
+
+  # call by DatabaseManager
+  def expire_action
+    fail_filter
+  end
+
+  def fail_filter
+    @healthy_database = false
+    @logger.warn("geoip plugin will stop filtering and will tag all events with the '_geoip_expired_database' tag.",
+                 :healthy_database => @healthy_database)
+  end
+
+  def terminate_filter
+    @logger.info("geoip plugin is terminating")
+    pipeline_id = execution_context.pipeline_id
+    execution_context.agent.stop_pipeline(pipeline_id)
+  end
+
+  def close
+    @database_manager.close unless @database_manager.nil?
+  end
+
   def select_database_path
     if load_database_manager?
       @database_manager = LogStash::Filters::Geoip::DatabaseManager.instance
@@ -164,35 +197,4 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
     end
   end
 
-  # call by DatabaseManager
-  def expire_action
-    fail_filter
-  end
-
-  # call by DatabaseManager
-  def update_database(database_path)
-    setup_filter(database_path)
-  end
-
-  def setup_filter(database_path)
-    @healthy_database = true
-    @database = database_path
-    @logger.info("Using geoip database", :path => @database)
-    @geoipfilter = org.logstash.filters.geoip.GeoIPFilter.new(@source, @target, @fields, @database, @cache_size, ecs_compatibility.to_s)
-  end
-
-  def fail_filter
-    @logger.info("geoip plugin stop filtering")
-    @healthy_database = false
-  end
-
-  def terminate_filter
-    @logger.info("geoip plugin is terminating")
-    pipeline_id = execution_context.pipeline_id
-    execution_context.agent.stop_pipeline(pipeline_id)
-  end
-
-  def close
-    @database_manager.unsubscribe_database_path(@default_database_type, self) unless @database_manager.nil?
-  end
 end # class LogStash::Filters::GeoIP
