@@ -10,7 +10,7 @@ describe LogStash::Filters::GeoIP do
     ::File.delete(METADATA_PATH) if ::File.exist?(METADATA_PATH)
   end
 
-  describe "config without database path in LS >= 7.13", :aggregate_failures do
+  xdescribe "config without database path in LS >= 7.13", :aggregate_failures do
     before(:each) do
       dir_path = Stud::Temporary.directory
       File.open(dir_path + '/uuid', 'w') { |f| f.write(SecureRandom.uuid) }
@@ -61,5 +61,5 @@ describe LogStash::Filters::GeoIP do
         expect(::File.exist?(METADATA_PATH)).to be_falsey
       end
     end
-  end if MAJOR < 7 || (MAJOR == 7 && MINOR <= 12)
+  end if MAJOR < 7 || (MAJOR == 7 && MINOR <= 13)
 end
