@@ -1,5 +1,5 @@
 ## 7.1.2
-  - Remove EULA doc as MaxMind auto-update retarget to 7.14 [#183](https://github.com/logstash-plugins/logstash-filter-geoip/pull/183)
+  - Remove EULA doc as MaxMind auto-update has been retargeted to a later release [#183](https://github.com/logstash-plugins/logstash-filter-geoip/pull/183)
 
 ## 7.1.1
   - Changed the behaviour of database expiry. Instead of stopping the pipeline, it adds a tag `_geoip_expired_database` [#182](https://github.com/logstash-plugins/logstash-filter-geoip/pull/182)
