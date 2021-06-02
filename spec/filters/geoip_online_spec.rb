@@ -46,7 +46,7 @@ describe LogStash::Filters::GeoIP do
     end
   end if MAJOR >= 8 || (MAJOR == 7 && MINOR >= 13)
 
-  describe "config without database path in LS < 7.13" do
+  describe "config without database path in LS < 7.14" do
     context "should run in offline mode" do
       config <<-CONFIG
       filter {
@@ -61,5 +61,5 @@ describe LogStash::Filters::GeoIP do
         expect(::File.exist?(METADATA_PATH)).to be_falsey
       end
     end
-  end if MAJOR < 7 || (MAJOR == 7 && MINOR <= 12)
+  end if MAJOR < 7 || (MAJOR == 7 && MINOR <= 14)
 end
