@@ -152,13 +152,15 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   # call by DatabaseManager
-  def update_database(database_path)
-    setup_filter(database_path)
-  end
-
-  # call by DatabaseManager
-  def expire_action
-    fail_filter
+  def update_filter(action, *args)
+    case
+    when action == :update
+      setup_filter(*args)
+    when action == :expire
+      fail_filter
+    else
+      @logger.warn("invalid callback", :action => action)
+    end
   end
 
   def fail_filter
@@ -174,7 +176,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def close
-    @database_manager.close unless @database_manager.nil?
+    @database_manager.unsubscribe_database_path(@default_database_type, self)
   end
 
   def select_database_path
