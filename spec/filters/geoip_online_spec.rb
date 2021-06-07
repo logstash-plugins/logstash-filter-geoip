@@ -41,7 +41,7 @@ describe LogStash::Filters::GeoIP do
 
         expect(first_dirname).not_to be_nil
         expect(first_dirname).to eq(second_dirname)
-        expect(::File.exist?(get_file_path(first_dirname))).to be_truthy
+        expect(File).to exist(get_file_path(first_dirname))
       end
     end
   end if MAJOR >= 8 || (MAJOR == 7 && MINOR >= 13)

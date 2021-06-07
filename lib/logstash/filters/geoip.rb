@@ -169,14 +169,8 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
                  :healthy_database => @healthy_database)
   end
 
-  def terminate_filter
-    @logger.info("geoip plugin is terminating")
-    pipeline_id = execution_context.pipeline_id
-    execution_context.agent.stop_pipeline(pipeline_id)
-  end
-
   def close
-    @database_manager.unsubscribe_database_path(@default_database_type, self)
+    @database_manager.unsubscribe_database_path(@default_database_type, self) if @database_manager
   end
 
   def select_database_path
