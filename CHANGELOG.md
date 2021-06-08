@@ -1,6 +1,7 @@
 ## 7.2.0
-  - Support multiple pipelines using the same database [#181](https://github.com/logstash-plugins/logstash-filter-geoip/pull/181)
-    This version is compatible with Logstash 7.14+
+  - Add EULA GeoIP2 Database with auto-update  [#181](https://github.com/logstash-plugins/logstash-filter-geoip/pull/181)
+    Available in Logstash 7.14+
+  - Support multiple pipelines using the same database  
   - Add EULA doc
 
 ## 7.1.2

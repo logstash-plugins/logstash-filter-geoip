@@ -186,7 +186,7 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   def load_database_manager?
     begin
       require_relative ::File.join(LogStash::Environment::LOGSTASH_HOME, "x-pack", "lib", "filters", "geoip", "database_manager")
-      true
+      LogStash::Filters::Geoip::DatabaseManager.respond_to?(:instance)
     rescue LoadError => e
       @logger.info("DatabaseManager is not in classpath", :version => LOGSTASH_VERSION, :exception => e)
       false
