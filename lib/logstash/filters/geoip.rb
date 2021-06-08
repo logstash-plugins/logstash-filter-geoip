@@ -153,10 +153,10 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   # call by DatabaseManager
   def update_filter(action, *args)
-    case
-    when action == :update
+    case action
+    when :update
       setup_filter(*args)
-    when action == :expire
+    when :expire
       fail_filter
     else
       @logger.warn("invalid callback", :action => action)
