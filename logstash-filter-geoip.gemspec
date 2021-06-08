@@ -26,4 +26,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'logstash-devutils'
   s.add_development_dependency 'insist'
   s.add_development_dependency 'benchmark-ips'
+  # only compatible with 7.14+ because of the dependency of DatabaseManager
+  s.add_runtime_dependency "logstash-core", ">= 7.14.0"
 end
