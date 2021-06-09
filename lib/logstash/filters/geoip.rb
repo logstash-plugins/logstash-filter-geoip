@@ -164,9 +164,9 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def fail_filter
-    @healthy_database = false
     @logger.warn("geoip plugin will stop filtering and will tag all events with the '_geoip_expired_database' tag.",
-                 :healthy_database => @healthy_database)
+                 :healthy_database => false) if @healthy_database
+    @healthy_database = false
   end
 
   def close
