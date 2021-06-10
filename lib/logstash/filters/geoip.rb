@@ -145,7 +145,9 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def setup_filter(database_path)
-    @healthy_database = true
+    @healthy_database = !database_path.nil?
+    return if database_path.nil?
+
     @database = database_path
     @logger.info("Using geoip database", :path => @database, :healthy_database => @healthy_database)
     @geoipfilter = org.logstash.filters.geoip.GeoIPFilter.new(@source, @target, @fields, @database, @cache_size, ecs_compatibility.to_s)
