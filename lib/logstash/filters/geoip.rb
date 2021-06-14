@@ -146,10 +146,10 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   def setup_filter(database_path)
     @healthy_database = !database_path.nil?
+    @logger.trace("healthy_database: #{@healthy_database}") if @logger.trace?
     return if database_path.nil?
 
     @database = database_path
-    @logger.info("Using geoip database", :path => @database, :healthy_database => @healthy_database)
     @geoipfilter = org.logstash.filters.geoip.GeoIPFilter.new(@source, @target, @fields, @database, @cache_size, ecs_compatibility.to_s)
   end
 
@@ -166,8 +166,6 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def fail_filter
-    @logger.warn("geoip plugin will stop filtering and will tag all events with the '_geoip_expired_database' tag.",
-                 :healthy_database => false) if @healthy_database
     @healthy_database = false
   end
 
@@ -176,13 +174,17 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def select_database_path
-    if load_database_manager?
-      @database_manager = LogStash::Filters::Geoip::DatabaseManager.instance
-      @database_manager.subscribe_database_path(@default_database_type, @database, self)
-    else
-      vendor_path = ::File.expand_path(::File.join("..", "..", "..", "..", "vendor"), __FILE__)
-      @database.nil? ? ::File.join(vendor_path, "GeoLite2-#{@default_database_type}.mmdb") : @database
-    end
+    path =
+      if load_database_manager?
+        @database_manager = LogStash::Filters::Geoip::DatabaseManager.instance
+        @database_manager.subscribe_database_path(@default_database_type, @database, self)
+      else
+        vendor_path = ::File.expand_path(::File.join("..", "..", "..", "..", "vendor"), __FILE__)
+        @database.nil? ? ::File.join(vendor_path, "GeoLite2-#{@default_database_type}.mmdb") : @database
+      end
+
+    @logger.info("Using geoip database", :path => path)
+    path
   end
 
   def load_database_manager?
