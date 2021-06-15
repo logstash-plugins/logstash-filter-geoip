@@ -195,6 +195,22 @@ describe LogStash::Filters::GeoIP do
       end
     end
 
+    describe "empty database path" do
+      let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message") }
+      let(:event) { LogStash::Event.new("message" => "8.8.8.8") }
+
+      context "when database manager give nil database path" do
+        it "should tag expired database" do
+          expect(plugin).to receive(:select_database_path).and_return(nil)
+
+          plugin.register
+          plugin.filter(event)
+
+          expect(event.get("tags")).to include("_geoip_expired_database")
+        end
+      end
+    end
+
     describe "filter method outcomes" do
       let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message", "add_tag" => "done", "database" => CITYDB) }
       let(:event) { LogStash::Event.new("message" => ipstring) }

@@ -144,54 +144,63 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
                                        "requires a `target` when `source` is not an `ip` sub-field, eg. [client][ip]")
   end
 
-
   def setup_filter(database_path)
-    @healthy_database = true
+    @healthy_database = !database_path.nil?
+    return if database_path.nil?
+
     @database = database_path
-    @logger.info("Using geoip database", :path => @database, :healthy_database => @healthy_database)
     @geoipfilter = org.logstash.filters.geoip.GeoIPFilter.new(@source, @target, @fields, @database, @cache_size, ecs_compatibility.to_s)
   end
 
   # call by DatabaseManager
-  def expire_action
-    fail_filter
+  def update_filter(action, *args)
+    @logger.trace("update filter", :action => action, :args => args) if @logger.trace?
+
+    case action
+    when :update
+      setup_filter(*args)
+    when :expire
+      fail_filter
+    else
+      @logger.warn("invalid action: #{action}")
+    end
   end
 
   def fail_filter
     @healthy_database = false
-    @logger.warn("geoip plugin will stop filtering and will tag all events with the '_geoip_expired_database' tag.",
-                 :healthy_database => @healthy_database)
-  end
-
-  def terminate_filter
-    @logger.info("geoip plugin is terminating")
-    pipeline_id = execution_context.pipeline_id
-    execution_context.agent.stop_pipeline(pipeline_id)
   end
 
   def close
-    @database_manager.close unless @database_manager.nil?
+    @database_manager.unsubscribe_database_path(@default_database_type, self) if @database_manager
   end
 
   def select_database_path
-    vendor_path = ::File.expand_path(::File.join("..", "..", "..", "..", "vendor"), __FILE__)
+    path =
+      if load_database_manager?
+        @database_manager = LogStash::Filters::Geoip::DatabaseManager.instance
+        @database_manager.subscribe_database_path(@default_database_type, @database, self)
+      else
+        vendor_path = ::File.expand_path(::File.join("..", "..", "..", "..", "vendor"), __FILE__)
+        @database.nil? ? ::File.join(vendor_path, "GeoLite2-#{@default_database_type}.mmdb") : @database
+      end
 
-    if load_database_manager?
-      @database_manager = LogStash::Filters::Geoip::DatabaseManager.new(self, @database, @default_database_type, vendor_path)
-      @database_manager.database_path
-    else
-      @database.nil? ? ::File.join(vendor_path, "GeoLite2-#{@default_database_type}.mmdb") : @database
-    end
+    @logger.info("Using geoip database", :path => path)
+    path
   end
 
   def load_database_manager?
     begin
       require_relative ::File.join(LogStash::Environment::LOGSTASH_HOME, "x-pack", "lib", "filters", "geoip", "database_manager")
-      true
+      compatible_logstash_version?
     rescue LoadError => e
       @logger.info("DatabaseManager is not in classpath", :version => LOGSTASH_VERSION, :exception => e)
       false
     end
+  end
+
+  MINIMUM_LOGSTASH_VERSION=">= 7.14.0".freeze
+  def compatible_logstash_version?
+    Gem::Requirement.new(MINIMUM_LOGSTASH_VERSION).satisfied_by?(Gem::Version.new(LOGSTASH_VERSION))
   end
 
 end # class LogStash::Filters::GeoIP

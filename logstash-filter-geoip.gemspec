@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
 
   s.name            = 'logstash-filter-geoip'
-  s.version         = '7.1.3'
+  s.version         = '7.2.0'
   s.licenses        = ['Apache License (2.0)']
   s.summary         = "Adds geographical information about an IP address"
   s.description     = "This gem is a Logstash plugin required to be installed on top of the Logstash core pipeline using $LS_HOME/bin/logstash-plugin install gemname. This gem is not a stand-alone program"
@@ -26,4 +26,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'logstash-devutils'
   s.add_development_dependency 'insist'
   s.add_development_dependency 'benchmark-ips'
+  # only compatible with 7.14+ because of the dependency of DatabaseManager
+  s.add_runtime_dependency "logstash-core", ">= 7.14.0"
 end

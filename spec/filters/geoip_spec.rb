@@ -19,13 +19,13 @@ describe LogStash::Filters::GeoIP do
       end
     end
 
-    describe "> 7.13" do
+    describe ">= 7.14" do
       it "load_database_manager? should be true" do
         expect(plugin.load_database_manager?).to be_truthy
       end
-    end if MAJOR >= 8 || (MAJOR == 7 && MINOR >= 13)
+    end if MAJOR >= 8 || (MAJOR == 7 && MINOR >= 14)
 
-    describe "<= 7.12" do
+    describe "<= 7.13" do
       it "load_database_manager? should be false" do
         expect(plugin.load_database_manager?).to be_falsey
       end
@@ -37,6 +37,6 @@ describe LogStash::Filters::GeoIP do
           expect(plugin.select_database_path).to eql(DEFAULT_CITY_DB_PATH)
         end
       end
-    end if MAJOR < 7 || (MAJOR == 7 && MINOR <= 12)
+    end if MAJOR < 7 || (MAJOR == 7 && MINOR <= 13)
   end
 end

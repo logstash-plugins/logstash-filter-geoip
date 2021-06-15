@@ -1,3 +1,9 @@
+## 7.2.0
+  - Add EULA GeoIP2 Database with auto-update  [#181](https://github.com/logstash-plugins/logstash-filter-geoip/pull/181)
+    Available in Logstash 7.14+
+  - Support multiple pipelines using the same database
+  - Add EULA doc
+
 ## 7.1.3
   - Fixed resolving wrong `fields` name `AUTONOMOUS_SYSTEM_NUMBER` and `AUTONOMOUS_SYSTEM_ORGANIZATION` [#185](https://github.com/logstash-plugins/logstash-filter-geoip/pull/185)
 

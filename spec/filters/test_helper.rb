@@ -1,5 +1,6 @@
 require "logstash-core/logstash-core"
 require "digest"
+require "csv"
 
 def get_vendor_path(filename)
   ::File.join(::File.expand_path("../../vendor/", ::File.dirname(__FILE__)), filename)
@@ -13,8 +14,13 @@ def get_file_path(filename)
   ::File.join(get_data_dir, filename)
 end
 
-def get_metadata_database_name
-  ::File.exist?(METADATA_PATH) ? ::File.read(METADATA_PATH).split(",").last[0..-2] : nil
+def get_metadata_city_database_name
+  if ::File.exist?(METADATA_PATH)
+    city = ::CSV.read(METADATA_PATH, headers: false).select { |row| row[0].eql?("City") }.last
+    city[3]
+  else
+    nil
+  end
 end
 
 METADATA_PATH = get_file_path("metadata.csv")
