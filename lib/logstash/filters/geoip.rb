@@ -146,7 +146,6 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   def setup_filter(database_path)
     @healthy_database = !database_path.nil?
-    @logger.trace("healthy_database: #{@healthy_database}") if @logger.trace?
     return if database_path.nil?
 
     @database = database_path
@@ -155,13 +154,15 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
 
   # call by DatabaseManager
   def update_filter(action, *args)
+    @logger.trace("update filter", :action => action, :args => args) if @logger.trace?
+
     case action
     when :update
       setup_filter(*args)
     when :expire
       fail_filter
     else
-      @logger.warn("invalid callback", :action => action)
+      @logger.warn("invalid action: #{action}")
     end
   end
 
