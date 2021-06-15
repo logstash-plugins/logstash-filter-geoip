@@ -310,4 +310,22 @@ describe LogStash::Filters::GeoIP do
     end
   end
 
+  describe "GeoIP2-ASN database with fields" do
+    config <<-CONFIG
+      filter {
+        geoip {
+          source => "ip"
+          database => "#{ASNDB}"
+          default_database_type => "ASN"
+          fields => [ "AUTONOMOUS_SYSTEM_NUMBER" ]
+        }
+      }
+    CONFIG
+
+    sample("ip" => "8.8.8.8") do
+      expect(subject.get("geoip")).not_to be_empty
+      expect(subject.get("geoip")["asn"]).to eq(15169)
+    end
+  end
+
 end

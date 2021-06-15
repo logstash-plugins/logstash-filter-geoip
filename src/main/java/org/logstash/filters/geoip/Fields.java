@@ -84,7 +84,7 @@ enum Fields {
     static {
       final Map<String,Fields> mapping = new HashMap<>();
       for (Fields value : values()) {
-        mapping.put(value.fieldName().toUpperCase(Locale.ROOT), value);
+        mapping.put(value.name().toUpperCase(Locale.ROOT), value);
     }
     MAPPING = Collections.unmodifiableMap(mapping);
   }
