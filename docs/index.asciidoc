@@ -43,9 +43,7 @@ If you would like to get Autonomous System Number(ASN) information, you can use 
 https://www.maxmind.com[MaxMind] changed from releasing the GeoIP database under
 a Creative Commons (CC) license to a proprietary end-user license agreement
 (EULA).  The MaxMind EULA requires Logstash to update the MaxMind database
-within 30 days of a database update. If Logstash fails to download the database
-for 30 days, the geoip filter will stop enriching events in order to maintain compliance.
-Events will be tagged with `_geoip_expired_database` tag to facilitate the handling of this situation.
+within 30 days of a database update.
 
 The GeoIP filter plugin can manage the database for users running the Logstash default
 distribution, or you can manage
@@ -56,6 +54,74 @@ Otherwise, you are responsible for maintaining compliance.
 
 The Logstash open source distribution uses the MaxMind Creative Commons license
 database by default.
+
+==== Database Auto-update
+
+This plugin embedded with Creative Commons (CC) license databases.
+When Logstash works in air-gapped enviornment, CC license databases can be used indefinitely. 
+Logstash checks database update every day. It downloads the latest and can replace the old database on-the-fly.
+Once it downloads EULA license databases, it will not fallback to CC license databases.
+
+If Logstash fails to download the database for 30 days, 
+the geoip filter will stop enriching events in order to maintain compliance.
+Events will be tagged with `_geoip_expired_database` tag to facilitate the handling of this situation.
+
+NOTE: We recommend you allow Logstash to access internet to download databases
+
+==== Database Metrics
+
+You can monitor database status through https://www.elastic.co/guide/en/logstash/current/node-stats-api.html#node-stats-api[Node Stats API]
+
+The following request returns a JSON document containing database manager stats,
+including:
+
+* the database status and freshness
+** `geoip.database.*.status`
+*** `init` : initial CC database status
+*** `healthy` : using up-to-date EULA database
+*** `to_be_expired` : 25 days without calling service
+*** `expired` : 30 days without calling service
+** `fail_check_in_days` : number of days Logstash fails to call service since the last success
+* info about download successes and failures
+** `geoip.download.successes` number of successful checks and downloads
+** `geoip.download.failures` number of failed check or download
+** `geoip.download.status`
+*** `checking` : check and download at the moment
+*** `succeeded` : last download succeed
+*** `failed` : last download failed
+
+[source,js]
+--------------------------------------------------
+curl -XGET 'localhost:9600/_node/stats/geoip?pretty'
+--------------------------------------------------
+
+Example response:
+
+[source,js]
+--------------------------------------------------
+{
+  "geoip" : {
+    "database" : {
+      "ASN" : {
+        "status" : "healthy",
+        "fail_check_in_days" : 0,
+        "download_at": "2021-06-21T16:06:54+02:00"
+      },
+      "City" : {
+        "status" : "healthy",
+        "fail_check_in_days" : 0,
+        "download_at": "2021-06-21T16:06:54+02:00"
+      }
+    },
+    "download" : {
+      "successes" : 15,
+      "failures" : 1,
+      "last_check_at" : "2021-06-21T16:07:03+02:00",
+      "status" : "succeeded"
+    }
+  }
+}
+--------------------------------------------------
 
 ==== Details
 
