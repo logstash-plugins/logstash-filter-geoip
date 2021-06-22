@@ -55,27 +55,30 @@ Otherwise, you are responsible for maintaining compliance.
 The Logstash open source distribution uses the MaxMind Creative Commons license
 database by default.
 
+[id="plugins-{type}s-{plugin}-database_auto"]
 ==== Database Auto-update
 
-This plugin embedded with Creative Commons (CC) license databases.
-When Logstash works in air-gapped enviornment, CC license databases can be used indefinitely. 
-Logstash checks database update every day. It downloads the latest and can replace the old database on-the-fly.
-Once it downloads EULA license databases, it will not fallback to CC license databases.
+This plugin bundles Creative Commons (CC) license databases.
+In air-gapped environments, Logstash can use CC license databases indefinitely.
+Logstash checks for database updates every day. It downloads the latest and can replace the old database
+while the plugin is running.
+After Logstash downloads EULA license databases, it will not fallback to CC license databases.
 
 If Logstash fails to download the database for 30 days, 
 the geoip filter will stop enriching events in order to maintain compliance.
 Events will be tagged with `_geoip_expired_database` tag to facilitate the handling of this situation.
 
-NOTE: We recommend you allow Logstash to access internet to download databases
+Tip: When possible, allow Logstash to access the internet to download databases so that they are always up-to-date.
 
+[id="plugins-{type}s-{plugin}-metrics"]
 ==== Database Metrics
 
-You can monitor database status through https://www.elastic.co/guide/en/logstash/current/node-stats-api.html#node-stats-api[Node Stats API]
+You can monitor database status through {logstash-ref}/node-stats-api.html#node-stats-api[Node Stats API]
 
 The following request returns a JSON document containing database manager stats,
 including:
 
-* the database status and freshness
+* database status and freshness
 ** `geoip.database.*.status`
 *** `init` : initial CC database status
 *** `healthy` : using up-to-date EULA database
