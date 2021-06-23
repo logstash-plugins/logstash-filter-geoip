@@ -1,5 +1,6 @@
 ## 7.2.2
-  - [DOC] Add documentation for database auto-update behavior and database metrics
+  - [DOC] Add documentation for database auto-update behavior and database metrics [#187](https://github.com/logstash-plugins/logstash-filter-geoip/pull/187)
+
 ## 7.2.1
   - Republish the gem due to missing jars in 7.2.0 [#186](https://github.com/logstash-plugins/logstash-filter-geoip/pull/186)
 
