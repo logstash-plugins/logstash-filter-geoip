@@ -70,6 +70,41 @@ Events will be tagged with `_geoip_expired_database` tag to facilitate the handl
 
 TIP: When possible, allow Logstash to access the internet to download databases so that they are always up-to-date.
 
+[id="plugins-{type}s-{plugin}-manage_update"]
+==== Manage your own database updates
+
+If you work in air-gapped environment and can't update your databases from the Elastic endpoint,
+you can bootstrap the environment as follows.
+
+You can create a service that mimics the Elastic GeoIP endpoint. You can then
+get automatic updates from this service.
+
+. Download your `.mmdb` database files from the
+http://dev.maxmind.com/geoip/geoip2/geolite2[MaxMind site].
+
+. Copy your database files to a single directory.
+
+. Download {es} from https://www.elastic.co/downloads/elasticsearch[Elastic]
+
+. From your {es} directory, run:
++
+[source,sh]
+----
+./bin/elasticsearch-geoip -s my/database/dir
+----
+
+. Serve the static database files from your directory. For example, you can use
+Docker to serve the files from nginx server:
++
+[source,sh]
+----
+docker run -p 8080:80 -v my/database/dir:/usr/share/nginx/html:ro nginx
+----
+
+. Specify the service's endpoint URL
+`xpack.geoip.download.endpoint=http://localhost:8080/overview.json` in `logstash.yml`.
+
+
 [id="plugins-{type}s-{plugin}-metrics"]
 ==== Database Metrics
 
