@@ -1,3 +1,6 @@
+## 7.2.3
+  - [DOC] Add documentation for bootstrapping air-gapped environment for database auto-update [#189](https://github.com/logstash-plugins/logstash-filter-geoip/pull/189)
+
 ## 7.2.2
   - [DOC] Add documentation for database auto-update behavior and database metrics [#187](https://github.com/logstash-plugins/logstash-filter-geoip/pull/187)
 
