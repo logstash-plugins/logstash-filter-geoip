@@ -92,7 +92,7 @@ http://dev.maxmind.com/geoip/geoip2/geolite2[MaxMind site].
 
 . Copy your database files to a single directory.
 
-. Download {es} from https://www.elastic.co/downloads/elasticsearch[Elastic]
+. https://www.elastic.co/downloads/elasticsearch[Download {es}].
 
 . From your {es} directory, run:
 +
