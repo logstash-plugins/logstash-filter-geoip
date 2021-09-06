@@ -109,8 +109,8 @@ Docker to serve the files from nginx server:
 docker run -p 8080:80 -v my/database/dir:/usr/share/nginx/html:ro nginx
 ----
 
-. Specify the service's endpoint URL
-`xpack.geoip.download.endpoint=http://localhost:8080/overview.json` in `logstash.yml`.
+. Specify the service's endpoint URL using the
+`xpack.geoip.download.endpoint=http://localhost:8080/overview.json` setting in `logstash.yml`.
 
 
 [id="plugins-{type}s-{plugin}-metrics"]
