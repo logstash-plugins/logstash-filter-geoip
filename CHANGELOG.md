@@ -1,3 +1,6 @@
+## Unreleased
+  - Fix: update to Gradle 7 [#191](https://github.com/logstash-plugins/logstash-filter-geoip/pull/191)
+
 ## 7.2.3
   - [DOC] Add documentation for bootstrapping air-gapped environment for database auto-update [#189](https://github.com/logstash-plugins/logstash-filter-geoip/pull/189)
 
