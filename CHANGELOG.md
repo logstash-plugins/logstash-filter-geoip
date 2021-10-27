@@ -1,3 +1,6 @@
+## 7.2.4
+  - [DOC] Clarify CC licensed database indefinite use condition and air-gapped environment [#192](https://github.com/logstash-plugins/logstash-filter-geoip/pull/192)
+
 ## 7.2.3
   - [DOC] Add documentation for bootstrapping air-gapped environment for database auto-update [#189](https://github.com/logstash-plugins/logstash-filter-geoip/pull/189)
 
