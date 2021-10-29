@@ -59,7 +59,6 @@ database by default.
 ==== Database Auto-update
 
 This plugin bundles Creative Commons (CC) license databases.
-Logstash can use CC license databases indefinitely if the database has never been updated successfully such as air-gapped environment.
 Logstash checks for database updates every day. It downloads the latest and can replace the old database
 while the plugin is running.
 After Logstash downloads EULA license databases, it will not fallback to CC license databases.
