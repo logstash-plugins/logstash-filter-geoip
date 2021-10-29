@@ -63,7 +63,9 @@ Logstash can use CC license databases indefinitely if the database has never bee
 Logstash checks for database updates every day. It downloads the latest and can replace the old database
 while the plugin is running.
 After Logstash downloads EULA license databases, it will not fallback to CC license databases.
+
 NOTE: If the database has never been updated successfully, as in air-gapped environments, Logstash can use CC license databases indefinitely.
+
 After Logstash has switched to a EULA licensed database, the geoip filter will
 stop enriching events in order to maintain compliance if Logstash fails to
 check for database updates for 30 days.
@@ -80,11 +82,10 @@ If you can't connect directly to the Elastic GeoIP endpoint, consider setting up
 a secure proxy. You can then specify the proxy endpoint URL in the
 `xpack.geoip.download.endpoint` setting in `logstash.yml` file.
 
-**Use a custom endpoint**
+**Use a custom endpoint (air-gapped environments)**
 
 If you work in air-gapped environment and can't update your databases from the Elastic endpoint,
-you can create a service that mimics the Elastic GeoIP endpoint.
-You can then download databases from MaxMind and bootstrap the service as follows.
+You can then download databases from MaxMind and bootstrap the service.
 
 . Download your `.mmdb` database files from the
 http://dev.maxmind.com/geoip/geoip2/geolite2[MaxMind site].
