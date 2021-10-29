@@ -63,7 +63,7 @@ Logstash can use CC license databases indefinitely if the database has never bee
 Logstash checks for database updates every day. It downloads the latest and can replace the old database
 while the plugin is running.
 After Logstash downloads EULA license databases, it will not fallback to CC license databases.
-
+NOTE: If the database has never been updated successfully, as in air-gapped environments, Logstash can use CC license databases indefinitely.
 Once Logstash switch to EULA license database and it fails to check update for 30 days,
 the geoip filter will stop enriching events in order to maintain compliance.
 Events will be tagged with `_geoip_expired_database` tag to facilitate the handling of this situation.
