@@ -14,7 +14,7 @@ describe LogStash::Filters::GeoIP do
   describe "simple ip filter", :aggregate_failures do
 
     context "when specifying the target", :ecs_compatibility_support do
-      ecs_compatibility_matrix(:disabled, :v1) do |ecs_select|
+      ecs_compatibility_matrix(:disabled, :v1, :v8 => :v1) do |ecs_select|
 
         let(:ip) { "8.8.8.8" }
         let(:event) { LogStash::Event.new("message" => ip) }

@@ -32,7 +32,7 @@ require "logstash/plugin_mixins/ecs_compatibility_support"
 # --
 
 class LogStash::Filters::GeoIP < LogStash::Filters::Base
-  include LogStash::PluginMixins::ECSCompatibilitySupport(:disabled, :v1)
+  include LogStash::PluginMixins::ECSCompatibilitySupport(:disabled, :v1, :v8 => :v1)
 
   config_name "geoip"
 
