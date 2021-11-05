@@ -1,5 +1,5 @@
 ## 7.2.5
-  - Added preview of ECS-v8 support with existing ECS-v1 implementation.
+  - Added preview of ECS-v8 support with existing ECS-v1 implementation [#193](https://github.com/logstash-plugins/logstash-filter-geoip/pull/193)
 
 ## 7.2.4
   - Fix: update to Gradle 7 [#191](https://github.com/logstash-plugins/logstash-filter-geoip/pull/191)
