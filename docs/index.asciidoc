@@ -284,7 +284,7 @@ For the built-in GeoLite2 City database, the following are available:
 * Value type is <<string,string>>
 * Supported values are:
 ** `disabled`: unstructured geo data added at root level
-** `v1`: uses fields that are compatible with Elastic Common Schema (for example, `[client][geo][country_name]`)
+** `v1`, `v8`: uses fields that are compatible with Elastic Common Schema (for example, `[client][geo][country_name]`)
 * Default value depends on which version of Logstash is running:
 ** When Logstash provides a `pipeline.ecs_compatibility` setting, its value is used as the default
 ** Otherwise, the default value is `disabled`.

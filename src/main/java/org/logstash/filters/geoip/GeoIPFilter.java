@@ -76,6 +76,7 @@ public class GeoIPFilter {
         this.fieldReferenceExtractor = Fields::getFieldReferenceLegacy;
         break;
       case "v1":
+      case "v8":
         this.fieldReferenceExtractor = Fields::getFieldReferenceECSv1;
         break;
       default:

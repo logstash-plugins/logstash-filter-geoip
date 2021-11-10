@@ -1,3 +1,6 @@
+## 7.2.5
+  - Added preview of ECS-v8 support with existing ECS-v1 implementation [#193](https://github.com/logstash-plugins/logstash-filter-geoip/pull/193)
+
 ## 7.2.4
   - Fix: update to Gradle 7 [#191](https://github.com/logstash-plugins/logstash-filter-geoip/pull/191)
   - [DOC] Clarify CC licensed database indefinite use condition and air-gapped environment [#192](https://github.com/logstash-plugins/logstash-filter-geoip/pull/192)
