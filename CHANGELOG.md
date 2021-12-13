@@ -1,5 +1,5 @@
 ## 7.2.7
-  - Ensure java 8 compatibility
+  - Ensure java 8 compatibility [#197](https://github.com/logstash-plugins/logstash-filter-geoip/pull/197)
 
 ## 7.2.6
   - Update Log4J dependencies [#196](https://github.com/logstash-plugins/logstash-filter-geoip/pull/196)
