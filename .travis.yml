@@ -15,4 +15,4 @@ matrix:
   fast_finish: true
 install: true
 script: ci/build.sh
-jdk: oraclejdk8
+jdk: openjdk8
