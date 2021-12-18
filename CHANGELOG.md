@@ -1,5 +1,5 @@
 ## 5.0.4
- - Updated Log4j dependency to 2.16.0
+ - Updated Log4j dependency to 2.17.0
 
 ## 5.0.3
  - Skip lookup operation if source field contains an empty string 
