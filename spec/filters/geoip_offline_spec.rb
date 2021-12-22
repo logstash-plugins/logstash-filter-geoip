@@ -24,7 +24,7 @@ describe LogStash::Filters::GeoIP do
 
   let(:target) { "server" }
 
-  describe "edge cases" do
+  describe "invalid IP" do
     let(:ip) { "173.9.34.107" }
     let(:event) { LogStash::Event.new("client" => { "ip" => ip } ) }
     let(:plugin) {
@@ -78,18 +78,13 @@ describe LogStash::Filters::GeoIP do
       it_behaves_like "invalid string IP"
     end
 
-    context "when ip is not found in the DB" do
-      let(:ip) { "0.0.0.0" }
-      it_behaves_like "invalid string IP"
-    end
-
     context "when ip is IPv6 format for localhost" do
       let(:ip) { "::1" }
       it_behaves_like "invalid string IP"
     end
   end
 
-  describe "empty database path" do
+  describe "database path is empty" do
     let(:plugin) { LogStash::Filters::GeoIP.new("source" => "message", "target" => target) }
     let(:event) { LogStash::Event.new("message" => "8.8.8.8") }
 
@@ -105,7 +100,7 @@ describe LogStash::Filters::GeoIP do
     end
   end
 
-  describe "an invalid database" do
+  describe "database path is an invalid database file" do
     config <<-CONFIG
           filter {
             geoip {
