@@ -48,7 +48,6 @@ describe LogStash::Filters::GeoIP do
           end
         end
 
-
         context "with ASN database" do
           let(:options) { common_options.merge({"database" => ASNDB}) }
 
@@ -80,7 +79,7 @@ describe LogStash::Filters::GeoIP do
             let(:fields) { ["continent_name", "timezone"] }
             let(:options) { common_options.merge({"fields" => fields}) }
 
-            it "should return fields" do
+            it "should return fields in UTF8" do
               plugin.filter(event)
 
               expect( event.get ecs_select[disabled: "[#{target}][ip]", v1: "[#{target}][ip]"] ).to be_nil
@@ -90,27 +89,42 @@ describe LogStash::Filters::GeoIP do
               expect( event.get ecs_select[disabled: "[#{target}][location][lat]", v1: "[#{target}][geo][location][lat]"] ).to be_nil
               expect( event.get ecs_select[disabled: "[#{target}][location][lon]", v1: "[#{target}][geo][location][lon]"] ).to be_nil
 
-              expect( event.get ecs_select[disabled: "[#{target}][continent_name]", v1: "[#{target}][geo][continent_name]"] ).to eq "North America"
-              expect( event.get ecs_select[disabled: "[#{target}][timezone]", v1: "[#{target}][geo][timezone]"] ).to eq "America/Chicago"
+              continent_name = event.get ecs_select[disabled: "[#{target}][continent_name]", v1: "[#{target}][geo][continent_name]"]
+              timezone = event.get ecs_select[disabled: "[#{target}][timezone]", v1: "[#{target}][geo][timezone]"]
+              expect( continent_name ).to eq "North America"
+              expect( timezone ).to eq "America/Chicago"
+              expect( continent_name.encoding ).to eq Encoding::UTF_8
+              expect( timezone.encoding ).to eq Encoding::UTF_8
             end
           end
 
-          context "location and longitude" do
-            let(:fields) { ["location", "longitude"] }
-            let(:options) { common_options.merge({"fields" => fields}) }
+          context "location" do
+            shared_examples "provide location, lat and lon" do
+              it "should return location, lat and lon" do
+                plugin.filter(event)
 
-            it "should return location, lat and lon" do
-              plugin.filter(event)
+                expect( event.get ecs_select[disabled: "[#{target}][ip]", v1: "[#{target}][ip]"] ).to be_nil
+                expect( event.get ecs_select[disabled: "[#{target}][country_code2]", v1: "[#{target}][geo][country_iso_code]"] ).to be_nil
+                expect( event.get ecs_select[disabled: "[#{target}][country_name]", v1: "[#{target}][geo][country_name]"] ).to be_nil
+                expect( event.get ecs_select[disabled: "[#{target}][continent_code]", v1: "[#{target}][geo][continent_code]"] ).to be_nil
+                expect( event.get ecs_select[disabled: "[#{target}][continent_name]", v1: "[#{target}][geo][continent_name]"] ).to be_nil
+                expect( event.get ecs_select[disabled: "[#{target}][timezone]", v1: "[#{target}][geo][timezone]"] ).to be_nil
 
-              expect( event.get ecs_select[disabled: "[#{target}][ip]", v1: "[#{target}][ip]"] ).to be_nil
-              expect( event.get ecs_select[disabled: "[#{target}][country_code2]", v1: "[#{target}][geo][country_iso_code]"] ).to be_nil
-              expect( event.get ecs_select[disabled: "[#{target}][country_name]", v1: "[#{target}][geo][country_name]"] ).to be_nil
-              expect( event.get ecs_select[disabled: "[#{target}][continent_code]", v1: "[#{target}][geo][continent_code]"] ).to be_nil
-              expect( event.get ecs_select[disabled: "[#{target}][location][lat]", v1: "[#{target}][geo][location][lat]"] ).not_to be_nil
-              expect( event.get ecs_select[disabled: "[#{target}][location][lon]", v1: "[#{target}][geo][location][lon]"] ).not_to be_nil
+                expect( event.get ecs_select[disabled: "[#{target}][location][lat]", v1: "[#{target}][geo][location][lat]"] ).not_to be_nil
+                expect( event.get ecs_select[disabled: "[#{target}][location][lon]", v1: "[#{target}][geo][location][lon]"] ).not_to be_nil
+              end
+            end
 
-              expect( event.get ecs_select[disabled: "[#{target}][continent_name]", v1: "[#{target}][geo][continent_name]"] ).to be_nil
-              expect( event.get ecs_select[disabled: "[#{target}][timezone]", v1: "[#{target}][geo][timezone]"] ).to be_nil
+            context "location and longitude" do
+              let(:fields) { ["location", "longitude"] }
+              let(:options) { common_options.merge({"fields" => fields}) }
+              it_behaves_like "provide location, lat and lon"
+            end
+
+            context "location and latitude" do
+              let(:fields) { ["location", "latitude"] }
+              let(:options) { common_options.merge({"fields" => fields}) }
+              it_behaves_like "provide location, lat and lon"
             end
           end
 
