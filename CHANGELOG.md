@@ -1,3 +1,6 @@
+## 5.0.5
+ - Update log4j dependency to 2.17.1
+
 ## 5.0.4
  - Updated Log4j dependency to 2.17.0
 
