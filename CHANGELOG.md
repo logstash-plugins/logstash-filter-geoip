@@ -1,5 +1,6 @@
-## Unreleased
+## 7.2.9
   - Fix: red CI in Logstash 8.0 [#201](https://github.com/logstash-plugins/logstash-filter-geoip/pull/201)
+  - Update Log4j dependency to 2.17.1
 
 ## 7.2.8
   - Update Log4j dependency to 2.17.0
