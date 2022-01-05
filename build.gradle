@@ -24,7 +24,7 @@ apply plugin: "idea"
 
 // TODO(sissel): Move this to a file shared by the gemspec.
 group "org.logstash.filters"
-version "5.0.4"
+version "5.0.5"
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
