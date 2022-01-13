@@ -89,7 +89,7 @@ You can then download databases from MaxMind and bootstrap the service.
 . Download both `GeoLite2-ASN.mmdb` and `GeoLite2-City.mmdb` database files from the
 http://dev.maxmind.com/geoip/geoip2/geolite2[MaxMind site].
 
-. Copy your database files to a single directory.
+. Copy both database files to a single directory.
 
 . https://www.elastic.co/downloads/elasticsearch[Download {es}].
 
