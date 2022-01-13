@@ -1,3 +1,6 @@
+## 7.2.10
+  - [DOC] air-gapped environment requires both ASN and City databases [#204](https://github.com/logstash-plugins/logstash-filter-geoip/pull/204)
+
 ## 7.2.9
   - Fix: red CI in Logstash 8.0 [#201](https://github.com/logstash-plugins/logstash-filter-geoip/pull/201)
   - Update Log4j dependency to 2.17.1
