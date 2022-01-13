@@ -38,7 +38,7 @@ enum Fields {
   POSTAL_CODE("geo.postal_code", "postal_code"),
   DMA_CODE("mmdb.dma_code", "dma_code"),
   REGION_NAME("geo.region_name", "region_name"),
-  REGION_CODE("geo.region_code", "region_code"),
+  REGION_CODE("geo.region_iso_code", "region_code"),
   TIMEZONE("geo.timezone", "timezone"),
   LOCATION("geo.location", "location"),
   LATITUDE("geo.location.lat", "latitude"),
