@@ -195,6 +195,7 @@ When this plugin is run _without_ <<plugins-{type}s-{plugin}-ecs_compatibility>>
 | `postal_code`      | `[geo][postal_code]`       | `98106`
 | `region_name`      | `[geo][region_name]`       | `Washington`
 | `region_code`      | `[geo][region_code]`       | `WA`
+| `region_iso_code`* | `[geo][region_iso_code]`   | `US-WA`
 | `timezone`         | `[geo][timezone]`          | `America/Los_Angeles`
 | `location`*        | `[geo][location]`          | `{"lat": 47.6062, "lon": -122.3321}"`
 | `latitude`         | `[geo][location][lat]`     | `47.6062`
