@@ -172,7 +172,8 @@ Example response:
 [id="plugins-{type}s-{plugin}-field-mapping"]
 ==== Field mapping
 
-When this plugin is run _without_ <<plugins-{type}s-{plugin}-ecs_compatibility>>, the MaxMind DB's fields are added directly to the <<plugins-{type}s-{plugin}-target>>, but when ECS compatibility is enabled, the fields are structured to fit into an ECS shape.
+When this plugin is run with <<plugins-{type}s-{plugin}-ecs_compatibility>> disabled, the MaxMind DB's fields are added directly to the <<plugins-{type}s-{plugin}-target>>.
+When ECS compatibility is enabled, the fields are structured to fit into an ECS shape.
 
 [cols="3,5,3"]
 |===========================
@@ -217,8 +218,8 @@ NOTE: `*` indicates a composite field, which is only populated if GeoIP lookup r
 
 When using a City database, the enrichment is aborted if no latitude/longitude pair is available.
 
-The `location` field combines the latitude and longitude into a structure called http://geojson.org/geojson-spec.html[GeoJSON].
-When using a default <<plugins-{type}s-{plugin}-target>>, the templates provided by the {logstash-ref}/plugins-outputs-elasticsearch.html[elasticsearch output] maps the field to an {ref}/geo-point.html[Elasticsearch Geo_point datatype].
+The `location` field combines the latitude and longitude into a structure called https://datatracker.ietf.org/doc/html/rfc7946[GeoJSON].
+When you are using a default <<plugins-{type}s-{plugin}-target>>, the templates provided by the {logstash-ref}/plugins-outputs-elasticsearch.html[elasticsearch output] map the field to an {ref}/geo-point.html[Elasticsearch Geo_point datatype].
 
 As this field is a `geo_point` _and_ it is still valid GeoJSON, you get
 the awesomeness of Elasticsearch's geospatial query, facet and filter functions
@@ -291,8 +292,8 @@ The default database is `GeoLite2-City`.
 This plugin supports several free databases (`GeoLite2-City`, `GeoLite2-Country`, `GeoLite2-ASN`)
 and a selection of commercially-licensed databases (`GeoIP2-City`, `GeoIP2-ISP`, `GeoIP2-Country`).
 
-Database auto-update applies to default distribution.
-When `database` points to user's database path, auto-update will be disabled.
+Database auto-update applies to the default distribution.
+When `database` points to user's database path, auto-update is disabled.
 See <<plugins-{type}s-{plugin}-database_license,Database License>> for more information.
 
 [id="plugins-{type}s-{plugin}-default_database_type"]
@@ -323,7 +324,7 @@ For a complete list of available fields and how they map to an event's structure
 * Value type is <<string,string>>
 * Supported values are:
 ** `disabled`: unstructured geo data added at root level
-** `v1`, `v8`: uses fields that are compatible with Elastic Common Schema (for example, `[client][geo][country_name]`; see <<plugins-{type}s-{plugin}-field-mapping,field mapping>>)
+** `v1`, `v8`: use fields that are compatible with Elastic Common Schema. Example: `[client][geo][country_name]`. See <<plugins-{type}s-{plugin}-field-mapping,field mapping>> for more info. 
 * Default value depends on which version of Logstash is running:
 ** When Logstash provides a `pipeline.ecs_compatibility` setting, its value is used as the default
 ** Otherwise, the default value is `disabled`.
