@@ -91,7 +91,7 @@ public class GeoIPFilter {
     } catch (IOException e) {
       throw new IllegalArgumentException("The database provided was not found in the path", e);
     }
-    this.desiredFields = createDesiredFields(fields);
+    this.desiredFields = createDesiredFields(fields, !ecsCompatibility.equals("disabled"));
   }
 
   public static boolean isDatabaseValid(String databasePath) {
@@ -107,7 +107,7 @@ public class GeoIPFilter {
     return false;
   }
 
-  private Set<Fields> createDesiredFields(List<String> fields) {
+  private Set<Fields> createDesiredFields(List<String> fields, final boolean ecsCompatibilityEnabled) {
     Set<Fields> desiredFields = EnumSet.noneOf(Fields.class);
     if (fields == null || fields.isEmpty()) {
       switch (databaseReader.getMetadata().getDatabaseType()) {
@@ -118,7 +118,7 @@ public class GeoIPFilter {
         case CITY_EUROPE_DB_TYPE:
         case CITY_NORTH_AMERICA_DB_TYPE:
         case CITY_SOUTH_AMERICA_DB_TYPE:
-          desiredFields = Fields.DEFAULT_CITY_FIELDS;
+          desiredFields = ecsCompatibilityEnabled ? Fields.DEFAULT_ECS_CITY_FIELDS : Fields.DEFAULT_CITY_FIELDS;
           break;
         case COUNTRY_LITE_DB_TYPE:
         case COUNTRY_DB_TYPE:
@@ -309,6 +309,13 @@ public class GeoIPFilter {
           String subdivisionCode = subdivision.getIsoCode();
           if (subdivisionCode != null) {
             geoData.put(Fields.REGION_CODE, subdivisionCode);
+          }
+          break;
+        case REGION_ISO_CODE:
+          String countryCodeForRegion = country.getIsoCode();
+          String regionCode2 = subdivision.getIsoCode();
+          if (countryCodeForRegion != null && regionCode2 != null) {
+            geoData.put(Fields.REGION_ISO_CODE, String.format("%s-%s", countryCodeForRegion, regionCode2));
           }
           break;
         case TIMEZONE:

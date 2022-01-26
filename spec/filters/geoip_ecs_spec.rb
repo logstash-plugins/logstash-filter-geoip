@@ -27,6 +27,10 @@ describe LogStash::Filters::GeoIP do
         end
 
         context "with city database" do
+          # example.com, has been static for 10+ years
+          # and has city-level details
+          let(:ip) { "93.184.216.34" }
+
           let(:options) { common_options }
 
           it "should return geo in target" do
@@ -36,15 +40,23 @@ describe LogStash::Filters::GeoIP do
             expect( event.get ecs_select[disabled: "[#{target}][country_code2]", v1: "[#{target}][geo][country_iso_code]"] ).to eq 'US'
             expect( event.get ecs_select[disabled: "[#{target}][country_name]", v1: "[#{target}][geo][country_name]"] ).to eq 'United States'
             expect( event.get ecs_select[disabled: "[#{target}][continent_code]", v1: "[#{target}][geo][continent_code]"] ).to eq 'NA'
-            expect( event.get ecs_select[disabled: "[#{target}][location][lat]", v1: "[#{target}][geo][location][lat]"] ).to eq 37.751
-            expect( event.get ecs_select[disabled: "[#{target}][location][lon]", v1: "[#{target}][geo][location][lon]"] ).to eq -97.822
+            expect( event.get ecs_select[disabled: "[#{target}][location][lat]", v1: "[#{target}][geo][location][lat]"] ).to eq 42.1596
+            expect( event.get ecs_select[disabled: "[#{target}][location][lon]", v1: "[#{target}][geo][location][lon]"] ).to eq -70.8217
+            expect( event.get ecs_select[disabled: "[#{target}][city_name]", v1: "[#{target}][geo][city_name]"] ).to eq 'Norwell'
+            expect( event.get ecs_select[disabled: "[#{target}][dma_code]", v1: "[#{target}][mmdb][dma_code]"] ).to eq 506
+            expect( event.get ecs_select[disabled: "[#{target}][region_name]", v1: "[#{target}][geo][region_name]"] ).to eq 'Massachusetts'
 
             if ecs_select.active_mode == :disabled
               expect( event.get "[#{target}][country_code3]" ).to eq 'US'
+              expect( event.get "[#{target}][region_code]" ).to eq 'MA'
+              expect( event.get "[#{target}][region_iso_code]" ).to be_nil
             else
               expect( event.get "[#{target}][geo][country_code3]" ).to be_nil
               expect( event.get "[#{target}][country_code3]" ).to be_nil
+              expect( event.get "[#{target}][geo][region_iso_code]" ).to eq 'US-MA'
+              expect( event.get "[#{target}][region_code]" ).to be_nil
             end
+            puts event.to_hash.inspect
           end
         end
 

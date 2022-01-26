@@ -39,6 +39,7 @@ enum Fields {
   DMA_CODE("mmdb.dma_code", "dma_code"),
   REGION_NAME("geo.region_name", "region_name"),
   REGION_CODE("geo.region_code", "region_code"),
+  REGION_ISO_CODE("geo.region_iso_code", "region_iso_code"),
   TIMEZONE("geo.timezone", "timezone"),
   LOCATION("geo.location", "location"),
   LATITUDE("geo.location.lat", "latitude"),
@@ -95,6 +96,14 @@ enum Fields {
       Fields.CONTINENT_CODE, Fields.COUNTRY_NAME, Fields.COUNTRY_CODE2,
       Fields.COUNTRY_CODE3, Fields.IP, Fields.POSTAL_CODE, Fields.DMA_CODE, Fields.REGION_NAME,
       Fields.REGION_CODE, Fields.TIMEZONE, Fields.LOCATION, Fields.LATITUDE, Fields.LONGITUDE);
+
+  // When ECS is enabled, the composite REGION_ISO_CODE field is preferred to separate REGION_CODE
+  static final EnumSet<Fields> DEFAULT_ECS_CITY_FIELDS;
+  static {
+    DEFAULT_ECS_CITY_FIELDS = EnumSet.copyOf(DEFAULT_CITY_FIELDS);
+    DEFAULT_ECS_CITY_FIELDS.remove(REGION_CODE);
+    DEFAULT_ECS_CITY_FIELDS.add(REGION_ISO_CODE);
+  }
 
   static final EnumSet<Fields> DEFAULT_COUNTRY_FIELDS = EnumSet.of(Fields.IP, Fields.COUNTRY_CODE2,
       Fields.IP, Fields.COUNTRY_NAME, Fields.CONTINENT_NAME);

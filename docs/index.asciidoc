@@ -169,14 +169,57 @@ Example response:
 }
 --------------------------------------------------
 
+[id="plugins-{type}s-{plugin}-field-mapping"]
+==== Field mapping
+
+When this plugin is run with <<plugins-{type}s-{plugin}-ecs_compatibility>> disabled, the MaxMind DB's fields are added directly to the <<plugins-{type}s-{plugin}-target>>.
+When ECS compatibility is enabled, the fields are structured to fit into an ECS shape.
+
+[cols="3,5,3"]
+|===========================
+| Database Field Name | ECS Field | Example
+
+| `ip`               | `[ip]`                     | `12.34.56.78`
+
+| `city_name`        | `[geo][city_name]`         | `Seattle`
+| `country_name`     | `[geo][country_name]`      | `United States`
+| `continent_code`   | `[geo][continent_code]`    | `NA`
+| `continent_name`   | `[geo][continent_name]`    | `North America`
+| `country_code2`    | `[geo][country_iso_code]`  | `US`
+| `country_code3`    | _N/A_                      | `US`
+
+                                                    _maintained for legacy
+                                                    support, but populated
+                                                    with 2-character country
+                                                    code_
+
+| `postal_code`      | `[geo][postal_code]`       | `98106`
+| `region_name`      | `[geo][region_name]`       | `Washington`
+| `region_code`      | `[geo][region_code]`       | `WA`
+| `region_iso_code`* | `[geo][region_iso_code]`   | `US-WA`
+| `timezone`         | `[geo][timezone]`          | `America/Los_Angeles`
+| `location`*        | `[geo][location]`          | `{"lat": 47.6062, "lon": -122.3321}"`
+| `latitude`         | `[geo][location][lat]`     | `47.6062`
+| `longitude`        | `[geo][location][lon]`     | `-122.3321`
+
+| `domain`           | `[domain]`                 | `example.com`
+
+| `asn`              | `[as][number]`             | `98765`
+| `as_org`           | `[as][organization][name]` | `Elastic, NV`
+
+| `isp`              | `[mmdb][isp]`              | `InterLink Supra LLC`
+| `dma_code`         | `[mmdb][dma_code]`         | `819`
+| `organization`     | `[mmdb][organization]`     | `Elastic, NV`
+|===========================
+
+NOTE: `*` indicates a composite field, which is only populated if GeoIP lookup result contains all components.
+
 ==== Details
 
-A `[geoip][location]` field is created if
-the GeoIP lookup returns a latitude and longitude. The field is stored in
-http://geojson.org/geojson-spec.html[GeoJSON] format. Additionally,
-the default Elasticsearch template provided with the
-{logstash-ref}/plugins-outputs-elasticsearch.html[elasticsearch output] maps
-the `[geoip][location]` field to an {ref}/geo-point.html[Elasticsearch Geo_point datatype].
+When using a City database, the enrichment is aborted if no latitude/longitude pair is available.
+
+The `location` field combines the latitude and longitude into a structure called https://datatracker.ietf.org/doc/html/rfc7946[GeoJSON].
+When you are using a default <<plugins-{type}s-{plugin}-target>>, the templates provided by the {logstash-ref}/plugins-outputs-elasticsearch.html[elasticsearch output] map the field to an {ref}/geo-point.html[Elasticsearch Geo_point datatype].
 
 As this field is a `geo_point` _and_ it is still valid GeoJSON, you get
 the awesomeness of Elasticsearch's geospatial query, facet and filter functions
@@ -242,16 +285,16 @@ number of cache misses and waste memory.
 ===== `database`
 
   * Value type is <<path,path>>
-  * If not specified, the database defaults to the GeoLite2 City database that ships with Logstash.
+  * If not specified, the database defaults to the `GeoLite2 City` database that ships with Logstash.
 
-The path to MaxMind's database file that Logstash should use. The default database is GeoLite2-City.
-GeoLite2-City, GeoLite2-Country, GeoLite2-ASN are the free databases from MaxMind that are supported.
-GeoIP2-City, GeoIP2-ISP, GeoIP2-Country are the commercial databases from MaxMind that are supported.
+The path to MaxMind's database file that Logstash should use.
+The default database is `GeoLite2-City`.
+This plugin supports several free databases (`GeoLite2-City`, `GeoLite2-Country`, `GeoLite2-ASN`)
+and a selection of commercially-licensed databases (`GeoIP2-City`, `GeoIP2-ISP`, `GeoIP2-Country`).
 
-Database auto-update applies to default distribution. When `database` points to user's database path,
-auto-update will be disabled.
-See
-<<plugins-{type}s-{plugin}-database_license,Database License>> for more information.
+Database auto-update applies to the default distribution.
+When `database` points to user's database path, auto-update is disabled.
+See <<plugins-{type}s-{plugin}-database_license,Database License>> for more information.
 
 [id="plugins-{type}s-{plugin}-default_database_type"]
 ===== `default_database_type`
@@ -270,13 +313,10 @@ This plugin now includes both the GeoLite2-City and GeoLite2-ASN databases.  If 
 
 An array of geoip fields to be included in the event.
 
-Possible fields depend on the database type. By default, all geoip fields
-are included in the event.
+Possible fields depend on the database type.
+By default, all geoip fields from the relevant database are included in the event.
 
-For the built-in GeoLite2 City database, the following are available:
-`city_name`, `continent_code`, `country_code2`, `country_code3`, `country_name`,
-`dma_code`, `ip`, `latitude`, `location`, `longitude`, `postal_code`, `region_code`,
-`region_name` and `timezone`.
+For a complete list of available fields and how they map to an event's structure, see <<plugins-{type}s-{plugin}-field-mapping,field mapping>>.
 
 [id="plugins-{type}s-{plugin}-ecs_compatibility"]
 ===== `ecs_compatibility`
@@ -284,7 +324,7 @@ For the built-in GeoLite2 City database, the following are available:
 * Value type is <<string,string>>
 * Supported values are:
 ** `disabled`: unstructured geo data added at root level
-** `v1`, `v8`: uses fields that are compatible with Elastic Common Schema (for example, `[client][geo][country_name]`)
+** `v1`, `v8`: use fields that are compatible with Elastic Common Schema. Example: `[client][geo][country_name]`. See <<plugins-{type}s-{plugin}-field-mapping,field mapping>> for more info. 
 * Default value depends on which version of Logstash is running:
 ** When Logstash provides a `pipeline.ecs_compatibility` setting, its value is used as the default
 ** Otherwise, the default value is `disabled`.

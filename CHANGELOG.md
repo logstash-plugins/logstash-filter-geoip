@@ -1,3 +1,8 @@
+## 7.2.11
+ - Improved compatibility with the Elastic Common Schema [#206](https://github.com/logstash-plugins/logstash-filter-geoip/pull/206)
+   - Added support for ECS's composite `region_iso_code` (`US-WA`), which _replaces_ the non-ECS `region_code` (`WA`) as a default field with City databases. To get the stand-alone `region_code` in ECS mode, you must include it in the `fields` directive. 
+   - [DOC] Improve ECS-related documentation
+
 ## 7.2.10
   - [DOC] Air-gapped environment requires both ASN and City databases [#204](https://github.com/logstash-plugins/logstash-filter-geoip/pull/204)
 
