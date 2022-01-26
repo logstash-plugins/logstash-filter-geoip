@@ -317,6 +317,7 @@ public class GeoIPFilter {
           if (countryCodeForRegion != null && regionCode2 != null) {
             geoData.put(Fields.REGION_ISO_CODE, String.format("%s-%s", countryCodeForRegion, regionCode2));
           }
+          break;
         case TIMEZONE:
           String locationTimeZone = location.getTimeZone();
           if (locationTimeZone != null) {
