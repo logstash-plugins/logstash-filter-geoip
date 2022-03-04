@@ -1,5 +1,5 @@
 ## 7.2.12
-  - [DOC] Add `http_proxy` environment variable for GeoIP service endpoint [#207](https://github.com/logstash-plugins/logstash-filter-geoip/pull/207) 
+  - [DOC] Add `http_proxy` environment variable for GeoIP service endpoint. This feature requires Logstash 7.17.2 [#207](https://github.com/logstash-plugins/logstash-filter-geoip/pull/207) 
 
 ## 7.2.11
   - Improved compatibility with the Elastic Common Schema [#206](https://github.com/logstash-plugins/logstash-filter-geoip/pull/206)
