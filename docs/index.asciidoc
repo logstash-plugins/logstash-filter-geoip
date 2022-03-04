@@ -1,4 +1,4 @@
-**:**plugin: geoip
+:plugin: geoip
 :type: filter
 
 ///////////////////////////////////////////
