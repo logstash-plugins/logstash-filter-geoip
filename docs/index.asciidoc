@@ -75,7 +75,7 @@ TIP: When possible, allow Logstash to access the internet to download databases 
 [id="plugins-{type}s-{plugin}-manage_update"]
 ==== Manage your own database updates
 
-**Use a HTTP proxy**
+**Use an HTTP proxy**
 
 If you can't connect directly to the Elastic GeoIP endpoint, consider setting up
 a HTTP proxy server. You can then specify the proxy with `http_proxy` environment variable.
