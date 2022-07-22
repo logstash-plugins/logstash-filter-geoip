@@ -25,17 +25,15 @@ based on data from the MaxMind GeoLite2 databases.
 
 ==== Supported Databases
 
-This plugin is bundled with https://dev.maxmind.com/geoip/geoip2/geolite2[GeoLite2] City database out of the box. From MaxMind's description --
+This plugin is bundled with https://dev.maxmind.com/geoip/geoip2/geolite2[GeoLite2] ASN and City databases out of the box. From MaxMind's description --
 "GeoLite2 databases are free IP geolocation databases comparable to, but less accurate than, MaxMind’s
 GeoIP2 databases". Please see GeoIP Lite2 license for more details.
 
-https://www.maxmind.com/en/geoip2-databases[Commercial databases] from MaxMind are also supported in this plugin.
+https://www.maxmind.com/en/geoip2-databases[Commercial databases] Country, City, City Database by continent, ISP and Domain from MaxMind are also supported in this plugin.
 
-If you need to use databases other than the bundled GeoLite2 City, you can download them directly
+If you need to use databases other than the bundled GeoLite2, you can download them directly
 from MaxMind's website and use the `database` option to specify their location. The GeoLite2 databases
 can be https://dev.maxmind.com/geoip/geoip2/geolite2[downloaded from here].
-
-If you would like to get Autonomous System Number(ASN) information, you can use the GeoLite2-ASN database.
 
 [id="plugins-{type}s-{plugin}-database_license"]
 ==== Database License
@@ -58,7 +56,7 @@ database by default.
 [id="plugins-{type}s-{plugin}-database_auto"]
 ==== Database Auto-update
 
-This plugin bundles Creative Commons (CC) license databases.
+This plugin bundles Creative Commons (CC) license databases `GeoLite2-ASN.mmdb` and `GeoLite2-City.mmdb`.
 Logstash checks for database updates every day. It downloads the latest and can replace the old database
 while the plugin is running.
 After Logstash downloads EULA license databases, it will not fallback to CC license databases.
