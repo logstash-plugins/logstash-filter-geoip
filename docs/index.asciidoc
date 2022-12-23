@@ -72,6 +72,13 @@ Events will be tagged with `_geoip_expired_database` tag to facilitate the handl
 
 TIP: When possible, allow Logstash to access the internet to download databases so that they are always up-to-date.
 
+**Disable the auto-update feature**
+
+If you work in air-gapped environment, and want to disable the auto-update feature from Logstash, you can do so by setting the `xpack.geoip.db.auto_update`
+configuration to `false` in `logstash.yml`.
+
+When disabled, a valid `database` location is required, and you are responsible for <<plugins-{type}s-{plugin}-manage_update,manage your own database updates>> and <<plugins-{type}s-{plugin}-database_license,maintaining compliance>>.
+
 [id="plugins-{type}s-{plugin}-manage_update"]
 ==== Manage your own database updates
 
