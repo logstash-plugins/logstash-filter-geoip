@@ -47,10 +47,9 @@ within 30 days of a database update.
 
 The GeoIP filter plugin can manage the database for users running the Logstash default
 distribution, or you can manage
-database updates on your own. The behavior is controlled by the `database` setting.
-When you use the default `database` setting, the auto-update feature ensures that the plugin is
+the updates on your own, becoming also responsible for maintaining compliance. The behavior is controlled by the `database` setting.
+When you use the default `database` setting, and the auto-update feature is enabled, Logstash ensures that the plugin is
 using the latest version of the database.
-Otherwise, you are responsible for maintaining compliance.
 
 The Logstash open source distribution uses the MaxMind Creative Commons license
 database by default.
@@ -59,11 +58,8 @@ database by default.
 ==== Database Auto-update
 
 This plugin bundles Creative Commons (CC) license databases.
-Logstash checks for database updates every day. It downloads the latest and can replace the old database
+By default, Logstash checks for database updates every day and upgrades from the CC database licence to the EULA version automatically. It downloads the latest version and replaces old databases
 while the plugin is running.
-After Logstash downloads EULA license databases, it will not fallback to CC license databases.
-
-NOTE: If the database has never been updated successfully, as in air-gapped environments, Logstash can use CC license databases indefinitely.
 
 After Logstash has switched to a EULA licensed database, the geoip filter will
 stop enriching events in order to maintain compliance if Logstash fails to
@@ -74,10 +70,9 @@ TIP: When possible, allow Logstash to access the internet to download databases 
 
 **Disable the auto-update feature**
 
-If you work in air-gapped environment, and want to disable the auto-update feature from Logstash, you can do so by setting the `xpack.geoip.db.auto_update`
-configuration to `false` in `logstash.yml`.
+If you work in air-gapped environment and want to disable the database auto-update feature, set the `xpack.geoip.downloader.enabled` value to `false` in `logstash.yml`.
 
-When disabled, a valid `database` location is required, and you are responsible for <<plugins-{type}s-{plugin}-manage_update,manage your own database updates>> and <<plugins-{type}s-{plugin}-database_license,maintaining compliance>>.
+When disabled, Logstash uses the Creative Commons (CC) license databases indefinitely, and any previously downloaded version of the EULA databases will be deleted.
 
 [id="plugins-{type}s-{plugin}-manage_update"]
 ==== Manage your own database updates
