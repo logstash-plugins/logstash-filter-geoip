@@ -47,9 +47,10 @@ within 30 days of a database update.
 
 The GeoIP filter plugin can manage the database for users running the Logstash default
 distribution, or you can manage
-the updates on your own, becoming also responsible for maintaining compliance. The behavior is controlled by the `database` setting.
-When you use the default `database` setting, and the auto-update feature is enabled, Logstash ensures that the plugin is
+database updates on your own. The behavior is controlled by the `database` setting and by the auto-update feature.
+When you use the default `database` setting and the auto-update feature is enabled, Logstash ensures that the plugin is
 using the latest version of the database.
+Otherwise, you are responsible for maintaining compliance.
 
 The Logstash open source distribution uses the MaxMind Creative Commons license
 database by default.
@@ -58,13 +59,17 @@ database by default.
 ==== Database Auto-update
 
 This plugin bundles Creative Commons (CC) license databases.
-By default, Logstash checks for database updates every day and upgrades from the CC database licence to the EULA version automatically. It downloads the latest version and replaces old databases
+If the auto-update feature is enabled, Logstash checks for database updates every day. It downloads the latest and can replace the old database
 while the plugin is running.
+
+NOTE: If the auto-update feature is disabled or the database has never been updated successfully, as in air-gapped environments, Logstash can use CC license databases indefinitely.
 
 After Logstash has switched to a EULA licensed database, the geoip filter will
 stop enriching events in order to maintain compliance if Logstash fails to
 check for database updates for 30 days.
 Events will be tagged with `_geoip_expired_database` tag to facilitate the handling of this situation.
+
+NOTE: If the auto-update feature is enabled, Logstash upgrades from the CC database license to the EULA version on the first download.
 
 TIP: When possible, allow Logstash to access the internet to download databases so that they are always up-to-date.
 
