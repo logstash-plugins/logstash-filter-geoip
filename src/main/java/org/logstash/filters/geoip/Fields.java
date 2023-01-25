@@ -44,7 +44,8 @@ enum Fields {
   LOCATION("geo.location", "location"),
   LATITUDE("geo.location.lat", "latitude"),
   LONGITUDE("geo.location.lon", "longitude"),
-  ORGANIZATION("mmdb.organization", "organization");
+  ORGANIZATION("mmdb.organization", "organization"),
+  CONNECTION_TYPE("mmdb.connection_type", "connection_type");
 
   private final String fieldName;
   private final String ecsFieldName;

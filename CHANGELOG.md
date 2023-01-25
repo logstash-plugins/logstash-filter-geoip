@@ -1,9 +1,12 @@
+## 7.2.13
+  - Added support for DB-IP Location+ISP (Enterprise) databases, [#174](https://github.com/logstash-plugins/logstash-filter-geoip/issues/174) and . It is recommended to explicitly configure fields in case of enabled ECS.
+
 ## 7.2.12
-  - [DOC] Add `http_proxy` environment variable for GeoIP service endpoint. The feature is included in 8.1.0, and was back-ported to 7.17.2 [#207](https://github.com/logstash-plugins/logstash-filter-geoip/pull/207) 
+  - [DOC] Add `http_proxy` environment variable for GeoIP service endpoint. The feature is included in 8.1.0, and was back-ported to 7.17.2 [#207](https://github.com/logstash-plugins/logstash-filter-geoip/pull/207)
 
 ## 7.2.11
   - Improved compatibility with the Elastic Common Schema [#206](https://github.com/logstash-plugins/logstash-filter-geoip/pull/206)
-    - Added support for ECS's composite `region_iso_code` (`US-WA`), which _replaces_ the non-ECS `region_code` (`WA`) as a default field with City databases. To get the stand-alone `region_code` in ECS mode, you must include it in the `fields` directive. 
+    - Added support for ECS's composite `region_iso_code` (`US-WA`), which _replaces_ the non-ECS `region_code` (`WA`) as a default field with City databases. To get the stand-alone `region_code` in ECS mode, you must include it in the `fields` directive.
     - [DOC] Improve ECS-related documentation
 
 ## 7.2.10
@@ -77,14 +80,14 @@
   - Update of GeoLite2 DB [#157](https://github.com/logstash-plugins/logstash-filter-geoip/pull/157)
 
 ## 6.0.1
-  - Fixed deeplink to Elasticsearch Reference 
+  - Fixed deeplink to Elasticsearch Reference
   [#151](https://github.com/logstash-plugins/logstash-filter-geoip/pull/151)
 
 ## 6.0.0
   - Removed obsolete lru_cache_size field
 
 ## 5.0.3
- - Skip lookup operation if source field contains an empty string 
+ - Skip lookup operation if source field contains an empty string
  - Update of the GeoIP2 DB
 
 ## 5.0.2
@@ -109,7 +112,7 @@
   - Add ASN data support via GeoIP2-ISP database.
   
 ## 4.1.0
-  - Removed from RubyGems.org since it was missing the default GeoIP2 database.  
+  - Removed from RubyGems.org since it was missing the default GeoIP2 database.
 
 ## 4.0.6
   - Docs: Remove patch classes from the main plugin file
