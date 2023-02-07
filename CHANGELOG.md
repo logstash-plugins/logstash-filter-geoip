@@ -1,3 +1,6 @@
+## 7.2.13
+  - [DOC] Add documentation for database auto-update configuration [#210](https://github.com/logstash-plugins/logstash-filter-geoip/pull/210)
+
 ## 7.2.12
   - [DOC] Add `http_proxy` environment variable for GeoIP service endpoint. The feature is included in 8.1.0, and was back-ported to 7.17.2 [#207](https://github.com/logstash-plugins/logstash-filter-geoip/pull/207) 
 
