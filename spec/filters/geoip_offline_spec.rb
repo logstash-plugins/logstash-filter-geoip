@@ -112,7 +112,7 @@ describe LogStash::Filters::GeoIP do
         CONFIG
 
     context "should return the correct sourcefield in the logging message" do
-      sample("ip" => "8.8.8.8") do
+      sample({"ip" => "8.8.8.8"}) do
         expect { subject }.to raise_error(java.lang.IllegalArgumentException, "The database provided is invalid or corrupted.")
       end
     end
