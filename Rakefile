@@ -21,7 +21,9 @@ end
 def delete_create_gradle_properties
   root_dir = File.dirname(__FILE__)
   gradle_properties_file = "#{root_dir}/gradle.properties"
-  lsc_path = `bundle show logstash-core`
+  # Use same JRuby that launched this Rake
+  current_ruby_path = RbConfig::CONFIG['prefix']
+  lsc_path = `#{current_ruby_path}/bin/jruby -S bundle show logstash-core`
   lsce_path = `bundle show logstash-core-event`
   FileUtils.rm_f(gradle_properties_file)
   File.open(gradle_properties_file, "w") do |f|
