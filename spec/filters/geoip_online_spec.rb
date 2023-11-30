@@ -1,67 +1,97 @@
 # encoding: utf-8
+require 'pathname'
 require "logstash/devutils/rspec/spec_helper"
 require "insist"
 require "logstash/filters/geoip"
 require_relative 'test_helper'
 
 describe LogStash::Filters::GeoIP do
+  context "when no database_path is given" do
 
-  before(:each) do
-    ::File.delete(METADATA_PATH) if ::File.exist?(METADATA_PATH)
-  end
-
-  describe "config without database path in LS >= 7.14", :aggregate_failures do
-    before(:each) do
-      dir_path = Stud::Temporary.directory
-      File.open(dir_path + '/uuid', 'w') { |f| f.write(SecureRandom.uuid) }
-      allow(LogStash::SETTINGS).to receive(:get).and_call_original
-      allow(LogStash::SETTINGS).to receive(:get).with("xpack.geoip.downloader.enabled").and_return(true)
-      allow(LogStash::SETTINGS).to receive(:get).with("xpack.geoip.download.endpoint").and_return(nil)
-      allow(LogStash::SETTINGS).to receive(:get).with("path.data").and_return(dir_path)
+    let(:last_db_path_recorder) do
+      Module.new do
+        attr_reader :last_db_path
+        def setup_filter(db_path)
+          @last_db_path = db_path
+          super
+        end
+      end
     end
 
-    let(:plugin) { LogStash::Filters::GeoIP.new("source" => "[target][ip]") }
+    let(:plugin_config) { Hash["source" => "[source][ip]", "target" => "[target]"] }
+    let(:plugin) { described_class.new(plugin_config).extend(last_db_path_recorder) }
+    let(:event) { LogStash::Event.new("source" => { "ip" => "173.9.34.107" }) }
 
-    context "restart the plugin" do
-      let(:event) { LogStash::Event.new("target" => { "ip" => "173.9.34.107" }) }
-      let(:event2) { LogStash::Event.new("target" => { "ip" => "55.159.212.43" }) }
-
-      it "should use the same database" do
-        unless plugin.load_database_manager?
-          logstash_path = ENV['LOGSTASH_PATH'] || '/usr/share/logstash' # docker logstash home
-          stub_const('LogStash::Environment::LOGSTASH_HOME', logstash_path)
-        end
-
+    shared_examples "event enrichment" do
+      it 'enriches events' do
         plugin.register
         plugin.filter(event)
-        plugin.close
-        first_dirname = get_metadata_city_database_name
-        plugin.register
-        plugin.filter(event2)
-        plugin.close
-        second_dirname = get_metadata_city_database_name
 
-        expect(first_dirname).not_to be_nil
-        expect(first_dirname).to eq(second_dirname)
-        expect(File).to exist(get_file_path(first_dirname))
+        expect(event.get("target")).to include('ip')
       end
     end
-  end if MAJOR >= 8 || (MAJOR == 7 && MINOR >= 14)
 
-  describe "config without database path in LS < 7.14" do
-    context "should run in offline mode" do
-      config <<-CONFIG
-      filter {
-        geoip {
-          source => "ip"
-        }
-      }
-      CONFIG
+    database_management_available = (MAJOR >= 8 || (MAJOR == 7 && MINOR >= 14)) && !LogStash::OSS
+    if database_management_available
+      context "when geoip database management is available" do
 
-      sample("ip" => "173.9.34.107") do
-        insist { subject.get("geoip") }.include?("ip")
-        expect(::File.exist?(METADATA_PATH)).to be_falsey
+        let(:mock_manager) do
+          double('LogStash::Filters::Geoip::DatabaseManager').tap do |m|
+            allow(m).to receive(:subscribe_database_path) do |db_type, explicit_path, plugin_instance|
+              explicit_path || mock_managed[db_type]
+            end
+            allow(m).to receive(:unsubscribe_database_path).with(any_args)
+          end
+        end
+
+        # The extension to this plugin that lives in Logstash core will _always_ provide a valid
+        # database path, and how it does so is not the concern of this plugin. We emulate this
+        # behaviour here by copying the vendored CC-licensed db's into a temporary path
+        let(:mock_managed) do
+          managed_path = Pathname.new(temp_data_path).join("managed", Time.now.to_i.to_s).tap(&:mkpath)
+
+          managed_city_db_path = Pathname.new(DEFAULT_CITY_DB_PATH).basename.expand_path(managed_path).to_path
+          FileUtils.cp(DEFAULT_CITY_DB_PATH, managed_city_db_path)
+
+          managed_asn_db_path = Pathname.new(DEFAULT_ASN_DB_PATH).basename.expand_path(managed_path).to_path
+          FileUtils.cp(DEFAULT_ASN_DB_PATH, managed_asn_db_path)
+
+          {
+            'City' => managed_city_db_path,
+            'ASN' => managed_asn_db_path,
+          }
+        end
+
+        before(:each) do
+          allow_any_instance_of(described_class).to receive(:load_database_manager?).and_return(true)
+          stub_const("LogStash::Filters::Geoip::DatabaseManager", double("DatabaseManager.Class", :instance => mock_manager))
+        end
+
+        let(:temp_data_path) { Stud::Temporary.directory }
+        after(:each) do
+          FileUtils.rm_rf(temp_data_path) if File.exist?(temp_data_path)
+        end
+
+        it "uses a managed database" do
+          plugin.register
+          plugin.filter(event)
+          expect(plugin.last_db_path).to_not be_nil
+          expect(plugin.last_db_path).to start_with(temp_data_path)
+        end
+
+        include_examples "event enrichment"
+      end
+    else
+      context "when geoip database management is not available" do
+
+        include_examples "event enrichment"
+
+        it "uses a plugin-vendored database" do
+          plugin.register
+          expect(plugin.last_db_path).to_not be_nil
+          expect(plugin.last_db_path).to include("/vendor/")
+        end
       end
     end
-  end if MAJOR < 7 || (MAJOR == 7 && MINOR < 14)
+  end
 end
