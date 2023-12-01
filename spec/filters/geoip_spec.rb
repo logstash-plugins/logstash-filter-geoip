@@ -19,13 +19,13 @@ describe LogStash::Filters::GeoIP do
       end
     end
 
-    describe ">= 7.14" do
+    shared_examples "with database manager" do
       it "load_database_manager? should be true" do
         expect(plugin.load_database_manager?).to be_truthy
       end
-    end if MAJOR >= 8 || (MAJOR == 7 && MINOR >= 14)
+    end
 
-    describe "<= 7.13" do
+    shared_examples "without database manager" do
       it "load_database_manager? should be false" do
         expect(plugin.load_database_manager?).to be_falsey
       end
@@ -37,6 +37,24 @@ describe LogStash::Filters::GeoIP do
           expect(plugin.select_database_path).to eql(DEFAULT_CITY_DB_PATH)
         end
       end
-    end if MAJOR < 7 || (MAJOR == 7 && MINOR <= 13)
+    end
+
+    if MAJOR >= 8 || (MAJOR == 7 && MINOR >= 14)
+      context "Logstash >= 7.14" do
+        if LogStash::OSS
+          context "OSS-only" do
+            include_examples "without database manager"
+          end
+        else
+          context "default distro" do
+            include_examples "with database manager"
+          end
+        end
+      end
+    else
+      describe "Logstash < 7.14" do
+        include_examples "without database manager"
+      end
+    end
   end
 end
