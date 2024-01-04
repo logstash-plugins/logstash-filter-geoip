@@ -120,7 +120,7 @@ docker run -p 8080:80 -v my/database/dir:/usr/share/nginx/html:ro nginx
 ----
 
 . Specify the service's endpoint URL using the
-`xpack.geoip.download.endpoint=http://localhost:8080/overview.json` setting in `logstash.yml`.
+`xpack.geoip.download.endpoint: http://localhost:8080/overview.json` setting in `logstash.yml`.
 
 Logstash gets automatic updates from this service.
 
