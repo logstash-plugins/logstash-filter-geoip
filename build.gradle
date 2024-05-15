@@ -22,13 +22,19 @@ apply plugin: "java"
 apply plugin: "distribution"
 apply plugin: "idea"
 
-// TODO(sissel): Move this to a file shared by the gemspec.
 group "org.logstash.filters"
-version "6.0.0"
+version "${new File("VERSION").text.trim()}"
 project.archivesBaseName = "logstash-filter-geoip"
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+String junitVersion = '5.9.2'
+String maxmindGeoip2Version = '4.2.0'
+String maxmindDbVersion = '3.1.0'
+String log4jVersion = '2.17.1'
+String jrubyCompleteVersion = '9.1.13.0'
+String mockitoVersion = '5.9.0'
+
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
 
 import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING
@@ -53,27 +59,36 @@ configurations {
 }
 
 dependencies {
-  compileOnly group: "org.apache.logging.log4j", name: "log4j-api", version: "2.17.1"
-  compileOnly group: "org.apache.logging.log4j", name: "log4j-core", version: "2.17.1"
-  compileOnly group: "com.maxmind.geoip2", name: "geoip2", version: "2.9.0"
-  compileOnly group: "com.maxmind.db", name: "maxmind-db", version: "1.2.2"
-  compileOnly group: 'org.jruby', name: 'jruby-complete', version: "1.7.26"
+  compileOnly group: "org.apache.logging.log4j", name: "log4j-api", version: log4jVersion
+  compileOnly group: "org.apache.logging.log4j", name: "log4j-core", version: log4jVersion
+  compileOnly group: 'org.jruby', name: 'jruby-complete', version: jrubyCompleteVersion
   compileOnly fileTree(dir: logstashCoreGemPath, include: '**/*.jar')
 
-  runtimeOnly group: "com.maxmind.geoip2", name: "geoip2", version: "2.9.0"
-  runtimeOnly group: "com.maxmind.db", name: "maxmind-db", version: "1.2.2"
+  implementation group: "com.maxmind.geoip2", name: "geoip2", version: maxmindGeoip2Version
+  implementation group: "com.maxmind.db", name: "maxmind-db", version: maxmindDbVersion
 
-  testImplementation group: 'junit', name: 'junit', version: '4.12'
-  testImplementation group: "org.apache.logging.log4j", name: "log4j-api", version: "2.17.1"
-  testImplementation group: "org.apache.logging.log4j", name: "log4j-core", version: "2.17.1"
-  testImplementation group: 'org.jruby', name: 'jruby-complete', version: "1.7.26"
-  testImplementation group: "com.maxmind.geoip2", name: "geoip2", version: "2.9.0"
-  testImplementation group: "com.maxmind.db", name: "maxmind-db", version: "1.2.2"
-  testImplementation fileTree(dir: logstashCoreGemPath, include: '**/*.jar')
+  testImplementation group: "org.junit.jupiter", name: "junit-jupiter-api", version: junitVersion
+  testImplementation group: "org.junit.jupiter", name: "junit-jupiter-params", version: junitVersion
+  testRuntimeOnly group: "org.junit.jupiter", name: "junit-jupiter-engine", version: junitVersion
+  testImplementation group: "org.apache.logging.log4j", name: "log4j-api", version: log4jVersion
+  testImplementation group: 'org.jruby', name: 'jruby-complete', version: jrubyCompleteVersion
+  testImplementation group: "org.mockito", name: "mockito-core", version: mockitoVersion
 
   geolite2('org.elasticsearch:geolite2-databases:20191119') {
     transitive = false
   }
+}
+
+test {
+  useJUnitPlatform()
+
+  testLogging {
+    events "started", "passed", "skipped", "failed", "standard_out", "standard_error"
+  }
+}
+
+configurations {
+  testImplementation.extendsFrom compileOnly
 }
 
 task generateGemJarRequiresFile {

@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 enum Fields {
+
   AUTONOMOUS_SYSTEM_NUMBER("as.number", "asn"),
   AUTONOMOUS_SYSTEM_ORGANIZATION("as.organization.name", "as_org"),
   CITY_NAME("geo.city_name", "city_name"),
@@ -44,7 +45,14 @@ enum Fields {
   LOCATION("geo.location", "location"),
   LATITUDE("geo.location.lat", "latitude"),
   LONGITUDE("geo.location.lon", "longitude"),
-  ORGANIZATION("mmdb.organization", "organization");
+  ORGANIZATION("mmdb.organization", "organization"),
+  NETWORK("traits.network", "network"),
+  HOSTING_PROVIDER("traits.hosting_provider", "hosting_provider"),
+  TOR_EXIT_NODE("traits.tor_exit_node", "tor_exit_node"),
+  ANONYMOUS_VPN("traits.anonymous_vpn", "anonymous_vpn"),
+  ANONYMOUS("traits.anonymous", "anonymous"),
+  PUBLIC_PROXY("traits.public_proxy", "public_proxy"),
+  RESIDENTIAL_PROXY("traits.residential_proxy", "residential_proxy");
 
   private final String fieldName;
   private final String ecsFieldName;
@@ -81,56 +89,22 @@ enum Fields {
     return this.fieldReferenceECSv1;
   }
 
-  private static final Map<String,Fields> MAPPING;
-    static {
-      final Map<String,Fields> mapping = new HashMap<>();
-      for (Fields value : values()) {
-        mapping.put(value.name().toUpperCase(Locale.ROOT), value);
-    }
-    MAPPING = Collections.unmodifiableMap(mapping);
-  }
-
-  static final EnumSet<Fields> ALL_FIELDS = EnumSet.allOf(Fields.class);
-
-  static final EnumSet<Fields> DEFAULT_CITY_FIELDS = EnumSet.of(Fields.IP, Fields.CITY_NAME,
-      Fields.CONTINENT_CODE, Fields.COUNTRY_NAME, Fields.COUNTRY_CODE2,
-      Fields.COUNTRY_CODE3, Fields.IP, Fields.POSTAL_CODE, Fields.DMA_CODE, Fields.REGION_NAME,
-      Fields.REGION_CODE, Fields.TIMEZONE, Fields.LOCATION, Fields.LATITUDE, Fields.LONGITUDE);
-
-  // When ECS is enabled, the composite REGION_ISO_CODE field is preferred to separate REGION_CODE
-  static final EnumSet<Fields> DEFAULT_ECS_CITY_FIELDS;
-  static {
-    DEFAULT_ECS_CITY_FIELDS = EnumSet.copyOf(DEFAULT_CITY_FIELDS);
-    DEFAULT_ECS_CITY_FIELDS.remove(REGION_CODE);
-    DEFAULT_ECS_CITY_FIELDS.add(REGION_ISO_CODE);
-  }
-
-  static final EnumSet<Fields> DEFAULT_COUNTRY_FIELDS = EnumSet.of(Fields.IP, Fields.COUNTRY_CODE2,
-      Fields.IP, Fields.COUNTRY_NAME, Fields.CONTINENT_NAME);
-
-  static final EnumSet<Fields> DEFAULT_ISP_FIELDS = EnumSet.of(Fields.IP, Fields.AUTONOMOUS_SYSTEM_NUMBER,
-      Fields.AUTONOMOUS_SYSTEM_ORGANIZATION, Fields.ISP, Fields.ORGANIZATION);
-
-  static final EnumSet<Fields> DEFAULT_ASN_LITE_FIELDS = EnumSet.of(Fields.IP, Fields.AUTONOMOUS_SYSTEM_NUMBER,
-      Fields.AUTONOMOUS_SYSTEM_ORGANIZATION);
-
-  static final EnumSet<Fields> DEFAULT_DOMAIN_FIELDS = EnumSet.of(Fields.DOMAIN);
-
   public static Fields parseField(String value) {
-    final Fields fields = MAPPING.get(value.toUpperCase(Locale.ROOT));
-    if (fields == null) {
+    final String candidate = value.toUpperCase(Locale.ROOT);
+    try {
+      return Fields.valueOf(candidate);
+    } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException("illegal field value " + value + ". valid values are " +
-              Arrays.toString(ALL_FIELDS.toArray()));
+              Arrays.toString(Fields.values()));
     }
-    return fields;
   }
 
   /**
    * Normalizes a dot-separated field path into a bracket-notation Logstash Field Reference
    * @param fieldName: a dot-separated field path (e.g., `geo.location.lat`)
-   * @return: a bracket-notation Field Reference (e.g., `[geo][location][lat]`)
+   * @return a bracket-notation Field Reference (e.g., `[geo][location][lat]`)
    */
-  private static String normalizeFieldReferenceFragment(final String fieldName) {
+  static String normalizeFieldReferenceFragment(final String fieldName) {
     return  Stream.of(fieldName.split("\\."))
             .map((f) -> "[" + f + "]")
             .collect(Collectors.joining());
