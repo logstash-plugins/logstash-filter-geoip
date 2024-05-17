@@ -23,7 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-enum Fields {
+enum Field {
 
   AUTONOMOUS_SYSTEM_NUMBER("as.number", "asn"),
   AUTONOMOUS_SYSTEM_ORGANIZATION("as.organization.name", "as_org"),
@@ -61,11 +61,11 @@ enum Fields {
   private final String fieldReferenceECSv1;
 
   @Deprecated
-  Fields(String fieldName) {
+  Field(String fieldName) {
     this(fieldName, fieldName);
   }
 
-  Fields(final String ecsFieldName, final String legacyFieldName) {
+  Field(final String ecsFieldName, final String legacyFieldName) {
     this.ecsFieldName = ecsFieldName;
     this.fieldName = legacyFieldName;
 
@@ -89,13 +89,13 @@ enum Fields {
     return this.fieldReferenceECSv1;
   }
 
-  public static Fields parseField(String value) {
+  public static Field parseField(String value) {
     final String candidate = value.toUpperCase(Locale.ROOT);
     try {
-      return Fields.valueOf(candidate);
+      return Field.valueOf(candidate);
     } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException("illegal field value " + value + ". valid values are " +
-              Arrays.toString(Fields.values()));
+              Arrays.toString(Field.values()));
     }
   }
 
