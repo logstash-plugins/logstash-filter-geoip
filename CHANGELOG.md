@@ -1,5 +1,5 @@
 ## 7.3.0
-  - Added support for MaxMind GeoIP2 Enterprise and Anonymous-IP databases ([#TBD](https://github.com/logstash-plugins/logstash-filter-geoip/pull/TBD))
+  - Added support for MaxMind GeoIP2 Enterprise and Anonymous-IP databases ([#223](https://github.com/logstash-plugins/logstash-filter-geoip/pull/223))
   - Updated MaxMind dependencies and Java's source/target compatibility to 11.
   - Added tests for the Java classes.
 
