@@ -6,15 +6,17 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.logstash.Event;
 
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.logstash.RubyUtil.RUBY;
 import static org.logstash.ext.JrubyEventExtLibrary.RubyEvent;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 
 class GeoIPFilterTest {
@@ -25,7 +27,7 @@ class GeoIPFilterTest {
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     void handleEventWithGeoIp2CityDatabaseShouldProperlyCreateEvent(boolean ecsEnabled) {
-        final List<Field> supportedFields = List.of(
+        final List<Field> supportedFields = Arrays.asList(
                 Field.IP,
                 Field.CITY_NAME,
                 Field.CONTINENT_CODE,
@@ -45,7 +47,7 @@ class GeoIPFilterTest {
         );
 
         try (final GeoIPFilter filter = createFilter(MaxMindDatabases.GEOIP2_CITY, ecsEnabled, supportedFields)) {
-            final RubyEvent rubyEvent = mockRubyEvent("216.160.83.58");
+            final RubyEvent rubyEvent = createRubyEvent("216.160.83.58");
             assertTrue(filter.handleEvent(rubyEvent));
 
             final Event event = rubyEvent.getEvent();
@@ -61,7 +63,7 @@ class GeoIPFilterTest {
             assertEquals("WA", getField(event, Field.REGION_CODE, ecsEnabled));
             assertEquals("US-WA", getField(event, Field.REGION_ISO_CODE, ecsEnabled));
             assertEquals("America/Los_Angeles", getField(event, Field.TIMEZONE, ecsEnabled));
-            assertEquals(Map.of("lat", 47.2513, "lon", -122.3149), getField(event, Field.LOCATION, ecsEnabled));
+            assertEquals(createLocationMap(47.2513, -122.3149), getField(event, Field.LOCATION, ecsEnabled));
             assertEquals(47.2513, getField(event, Field.LATITUDE, ecsEnabled));
             assertEquals(-122.3149, getField(event, Field.LONGITUDE, ecsEnabled));
 
@@ -74,8 +76,8 @@ class GeoIPFilterTest {
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     void handleEventWithNoCustomFieldsShouldProperlyAddCityFields(boolean ecsEnabled) {
-        try (final GeoIPFilter filter = createFilter(MaxMindDatabases.GEOIP2_CITY, ecsEnabled, List.of())) {
-            final RubyEvent rubyEvent = mockRubyEvent("216.160.83.58");
+        try (final GeoIPFilter filter = createFilter(MaxMindDatabases.GEOIP2_CITY, ecsEnabled, Collections.emptyList())) {
+            final RubyEvent rubyEvent = createRubyEvent("216.160.83.58");
             assertTrue(filter.handleEvent(rubyEvent));
 
             final Event event = rubyEvent.getEvent();
@@ -87,7 +89,7 @@ class GeoIPFilterTest {
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     void handleEventWithGeoIp2CountryDatabaseShouldProperlyCreateEvent(boolean ecsEnabled) {
-        final List<Field> supportedFields = List.of(
+        final List<Field> supportedFields = Arrays.asList(
                 Field.IP,
                 Field.COUNTRY_CODE2,
                 Field.COUNTRY_NAME,
@@ -95,7 +97,7 @@ class GeoIPFilterTest {
         );
 
         try (final GeoIPFilter filter = createFilter(MaxMindDatabases.GEOIP2_COUNTRY, ecsEnabled, supportedFields)) {
-            final RubyEvent rubyEvent = mockRubyEvent("2a02:d5c0:0:0:0:0:0:0");
+            final RubyEvent rubyEvent = createRubyEvent("2a02:d5c0:0:0:0:0:0:0");
             assertTrue(filter.handleEvent(rubyEvent));
 
             final Event event = rubyEvent.getEvent();
@@ -109,7 +111,7 @@ class GeoIPFilterTest {
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     void handleEventWithGeoIp2IspDatabaseShouldProperlyCreateEvent(boolean ecsEnabled) {
-        final List<Field> supportedFields = List.of(
+        final List<Field> supportedFields = Arrays.asList(
                 Field.IP,
                 Field.AUTONOMOUS_SYSTEM_NUMBER,
                 Field.AUTONOMOUS_SYSTEM_ORGANIZATION,
@@ -118,7 +120,7 @@ class GeoIPFilterTest {
         );
 
         try (final GeoIPFilter filter = createFilter(MaxMindDatabases.GEOIP2_ISP, ecsEnabled, supportedFields)) {
-            final RubyEvent rubyEvent = mockRubyEvent("1.128.0.1");
+            final RubyEvent rubyEvent = createRubyEvent("1.128.0.1");
             assertTrue(filter.handleEvent(rubyEvent));
 
             final Event event = rubyEvent.getEvent();
@@ -133,7 +135,7 @@ class GeoIPFilterTest {
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     void handleEventWithGeoLite2AsnDatabaseShouldProperlyCreateEvent(boolean ecsEnabled) {
-        final List<Field> supportedFields = List.of(
+        final List<Field> supportedFields =  Arrays.asList(
                 Field.IP,
                 Field.AUTONOMOUS_SYSTEM_NUMBER,
                 Field.AUTONOMOUS_SYSTEM_ORGANIZATION,
@@ -141,7 +143,7 @@ class GeoIPFilterTest {
         );
 
         try (final GeoIPFilter filter = createFilter(MaxMindDatabases.GEOLITE2_ASN, ecsEnabled, supportedFields)) {
-            final RubyEvent rubyEvent = mockRubyEvent("12.81.92.1");
+            final RubyEvent rubyEvent = createRubyEvent("12.81.92.1");
             assertTrue(filter.handleEvent(rubyEvent));
 
             final Event event = rubyEvent.getEvent();
@@ -155,9 +157,9 @@ class GeoIPFilterTest {
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     void handleEventWithGeoIp2DomainDatabaseShouldProperlyCreateEvent(boolean ecsEnabled) {
-        final List<Field> supportedFields = List.of(Field.DOMAIN);
+        final List<Field> supportedFields = Arrays.asList(Field.DOMAIN);
         try (final GeoIPFilter filter = createFilter(MaxMindDatabases.GEOIP2_DOMAIN, ecsEnabled, supportedFields)) {
-            final RubyEvent rubyEvent = mockRubyEvent("1.2.0.1");
+            final RubyEvent rubyEvent = createRubyEvent("1.2.0.1");
             assertTrue(filter.handleEvent(rubyEvent));
 
             final Event event = rubyEvent.getEvent();
@@ -168,7 +170,7 @@ class GeoIPFilterTest {
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     void handleEventWithGeoIp2EnterpriseDatabaseShouldProperlyCreateEvent(boolean ecsEnabled) {
-        final List<Field> supportedFields = List.of(
+        final List<Field> supportedFields = Arrays.asList(
                 Field.IP,
                 Field.COUNTRY_CODE2,
                 Field.COUNTRY_NAME,
@@ -190,7 +192,7 @@ class GeoIPFilterTest {
         );
 
         try (final GeoIPFilter filter = createFilter(MaxMindDatabases.GEOIP2_ENTERPRISE, ecsEnabled, supportedFields)) {
-            final RubyEvent rubyEvent = mockRubyEvent("74.209.24.1");
+            final RubyEvent rubyEvent = createRubyEvent("74.209.24.1");
             assertTrue(filter.handleEvent(rubyEvent));
 
             final Event event = rubyEvent.getEvent();
@@ -202,7 +204,7 @@ class GeoIPFilterTest {
             assertEquals("New York", getField(event, Field.REGION_NAME, ecsEnabled));
             assertEquals("Chatham", getField(event, Field.CITY_NAME, ecsEnabled));
             assertEquals("America/New_York", getField(event, Field.TIMEZONE, ecsEnabled));
-            assertEquals(Map.of("lat", 42.3478, "lon", -73.5549), getField(event, Field.LOCATION, ecsEnabled));
+            assertEquals(createLocationMap(42.3478, -73.5549), getField(event, Field.LOCATION, ecsEnabled));
             assertEquals(14671L, getField(event, Field.AUTONOMOUS_SYSTEM_NUMBER, ecsEnabled));
             assertEquals("FairPoint Communications", getField(event, Field.AUTONOMOUS_SYSTEM_ORGANIZATION, ecsEnabled));
             assertEquals("74.209.16.0/20", getField(event, Field.NETWORK, ecsEnabled));
@@ -218,7 +220,7 @@ class GeoIPFilterTest {
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     void handleEventWithGeoIp2AnonymousIpDatabaseShouldProperlyCreateEvent(boolean ecsEnabled) {
-        final List<Field> supportedFields = List.of(
+        final List<Field> supportedFields = Arrays.asList(
                 Field.IP,
                 Field.HOSTING_PROVIDER,
                 Field.TOR_EXIT_NODE,
@@ -229,7 +231,7 @@ class GeoIPFilterTest {
         );
 
         try (final GeoIPFilter filter = createFilter(MaxMindDatabases.GEOIP2_ANONYMOUS_IP, ecsEnabled, supportedFields)) {
-            final RubyEvent rubyEvent = mockRubyEvent("81.2.69.1");
+            final RubyEvent rubyEvent = createRubyEvent("81.2.69.1");
             assertTrue(filter.handleEvent(rubyEvent));
 
             final Event event = rubyEvent.getEvent();
@@ -245,8 +247,8 @@ class GeoIPFilterTest {
 
     @Test
     void handleEventWithNoCustomFieldsShouldUseDatabasesDefaultFields() {
-        try (final GeoIPFilter filter = createFilter(MaxMindDatabases.GEOIP2_COUNTRY, true, List.of())) {
-            final RubyEvent rubyEvent = mockRubyEvent("216.160.83.58");
+        try (final GeoIPFilter filter = createFilter(MaxMindDatabases.GEOIP2_COUNTRY, true, Collections.emptyList())) {
+            final RubyEvent rubyEvent = createRubyEvent("216.160.83.58");
             assertTrue(filter.handleEvent(rubyEvent));
 
             final Event event = rubyEvent.getEvent();
@@ -265,14 +267,21 @@ class GeoIPFilterTest {
 
     @Test
     void handleEventWithListSourceFieldShouldParseFirstIp() {
-        try (final GeoIPFilter filter = createFilter(MaxMindDatabases.GEOIP2_COUNTRY, true, List.of())) {
-            final RubyEvent rubyEvent = mockRubyEvent(new Event(Map.of(SOURCE_FIELD, List.of("216.160.83.58", "127.0.0.1"))));
+        try (final GeoIPFilter filter = createFilter(MaxMindDatabases.GEOIP2_COUNTRY, true, Collections.emptyList())) {
+            final RubyEvent rubyEvent = createRubyEvent(new Event(Collections.singletonMap(SOURCE_FIELD, Arrays.asList("216.160.83.58", "127.0.0.1"))));
 
             assertTrue(filter.handleEvent(rubyEvent));
 
             final Event event = rubyEvent.getEvent();
             assertEquals("216.160.83.58", getField(event, Field.IP, true));
         }
+    }
+
+    private Map<String, Double> createLocationMap(Double lat, Double lon) {
+        final Map<String, Double> map = new HashMap<>(2);
+        map.put("lat", lat);
+        map.put("lon", lon);
+        return map;
     }
 
     private Object getField(Event event, Field field, boolean ecsEnabled) {
@@ -284,14 +293,12 @@ class GeoIPFilterTest {
         return String.format("[%s]%s", TARGET_FIELD, fieldReference);
     }
 
-    private RubyEvent mockRubyEvent(String ipAddress) {
-        return mockRubyEvent(new Event(Map.of(SOURCE_FIELD, ipAddress)));
+    private RubyEvent createRubyEvent(String ipAddress) {
+        return createRubyEvent(new Event(Collections.singletonMap(SOURCE_FIELD, ipAddress)));
     }
 
-    private RubyEvent mockRubyEvent(Event event) {
-        final RubyEvent rubyEvent = mock(RubyEvent.class);
-        when(rubyEvent.getEvent()).thenReturn(event);
-        return rubyEvent;
+    private RubyEvent createRubyEvent(Event event) {
+        return RubyEvent.newRubyEvent(RUBY, event);
     }
 
     private GeoIPFilter createFilter(Path databasePath, boolean ecsEnabled, List<Field> fields) {

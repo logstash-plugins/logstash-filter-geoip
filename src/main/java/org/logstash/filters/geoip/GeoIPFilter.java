@@ -381,7 +381,7 @@ public class GeoIPFilter implements Closeable {
           geoData.put(Field.IP, ipAddress.getHostAddress());
           break;
         case AUTONOMOUS_SYSTEM_NUMBER:
-          Long asn = response.getAutonomousSystemNumber();
+          Integer asn = response.getAutonomousSystemNumber();
           if (asn != null) {
             geoData.put(desiredField, asn);
           }
@@ -421,7 +421,7 @@ public class GeoIPFilter implements Closeable {
           geoData.put(Field.IP, ipAddress.getHostAddress());
           break;
         case AUTONOMOUS_SYSTEM_NUMBER:
-          Long asn = response.getAutonomousSystemNumber();
+          Integer asn = response.getAutonomousSystemNumber();
           if (asn != null) {
             geoData.put(Field.AUTONOMOUS_SYSTEM_NUMBER, asn);
           }
@@ -468,7 +468,7 @@ public class GeoIPFilter implements Closeable {
     Continent continent = response.getContinent();
     Subdivision subdivision = response.getMostSpecificSubdivision();
 
-    Long asn = response.getTraits().getAutonomousSystemNumber();
+    Integer asn = response.getTraits().getAutonomousSystemNumber();
     String organizationName = response.getTraits().getAutonomousSystemOrganization();
     Network network = response.getTraits().getNetwork();
 

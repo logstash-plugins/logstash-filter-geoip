@@ -7,7 +7,10 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,16 +18,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class DatabaseTest {
 
-    private static final Map<Database, List<Path>> DATABASES_TO_MAXMIND_FILES = Map.of(
-            Database.CITY, List.of(MaxMindDatabases.GEOIP2_CITY, MaxMindDatabases.GEOLITE2_CITY),
-            Database.COUNTRY, List.of(MaxMindDatabases.GEOIP2_COUNTRY, MaxMindDatabases.GEOLITE2_COUNTRY),
-            Database.DOMAIN, List.of(MaxMindDatabases.GEOIP2_DOMAIN),
-            Database.ASN, List.of(MaxMindDatabases.GEOLITE2_ASN),
-            Database.ANONYMOUS_IP, List.of(MaxMindDatabases.GEOIP2_ANONYMOUS_IP),
-            Database.ISP, List.of(MaxMindDatabases.GEOIP2_ISP),
-            Database.ENTERPRISE, List.of(MaxMindDatabases.GEOIP2_ENTERPRISE),
-            Database.UNKNOWN, List.of()
-    );
+    private static final Map<Database, List<Path>> DATABASES_TO_MAXMIND_FILES = new HashMap<Database, List<Path>>() {
+        {
+            put(Database.CITY, Arrays.asList(MaxMindDatabases.GEOIP2_CITY, MaxMindDatabases.GEOLITE2_CITY));
+            put(Database.COUNTRY, Arrays.asList(MaxMindDatabases.GEOIP2_COUNTRY, MaxMindDatabases.GEOLITE2_COUNTRY));
+            put(Database.DOMAIN, Collections.singletonList(MaxMindDatabases.GEOIP2_DOMAIN));
+            put(Database.ASN, Collections.singletonList(MaxMindDatabases.GEOLITE2_ASN));
+            put(Database.ANONYMOUS_IP, Collections.singletonList(MaxMindDatabases.GEOIP2_ANONYMOUS_IP));
+            put(Database.ISP, Collections.singletonList(MaxMindDatabases.GEOIP2_ISP));
+            put(Database.ENTERPRISE, Collections.singletonList(MaxMindDatabases.GEOIP2_ENTERPRISE));
+            put(Database.UNKNOWN, Collections.emptyList());
+        }
+    };
 
     @Test
     void testCityDefaultFields() {

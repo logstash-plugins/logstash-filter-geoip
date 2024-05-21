@@ -27,14 +27,14 @@ version "${new File("VERSION").text.trim()}"
 project.archivesBaseName = "logstash-filter-geoip"
 
 String junitVersion = '5.9.2'
-String maxmindGeoip2Version = '4.2.0'
-String maxmindDbVersion = '3.1.0'
+String maxmindGeoip2Version = '2.17.0'
+String maxmindDbVersion = '2.1.0'
 String log4jVersion = '2.17.1'
 String jrubyCompleteVersion = '9.1.13.0'
-String mockitoVersion = '5.9.0'
+String mockitoVersion = '4.11.0'
 
-sourceCompatibility = JavaVersion.VERSION_11
-targetCompatibility = JavaVersion.VERSION_11
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
 
 import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING
