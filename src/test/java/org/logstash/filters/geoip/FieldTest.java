@@ -46,13 +46,13 @@ class FieldTest {
         assertFieldNames(Field.LATITUDE, "geo.location.lat", "latitude");
         assertFieldNames(Field.LONGITUDE, "geo.location.lon", "longitude");
         assertFieldNames(Field.ORGANIZATION, "mmdb.organization", "organization");
-        assertFieldNames(Field.NETWORK, "traits.network", "network");
-        assertFieldNames(Field.HOSTING_PROVIDER, "traits.hosting_provider", "hosting_provider");
-        assertFieldNames(Field.TOR_EXIT_NODE, "traits.tor_exit_node", "tor_exit_node");
-        assertFieldNames(Field.ANONYMOUS_VPN, "traits.anonymous_vpn", "anonymous_vpn");
-        assertFieldNames(Field.ANONYMOUS, "traits.anonymous", "anonymous");
-        assertFieldNames(Field.PUBLIC_PROXY, "traits.public_proxy", "public_proxy");
-        assertFieldNames(Field.RESIDENTIAL_PROXY, "traits.residential_proxy", "residential_proxy");
+        assertFieldNames(Field.NETWORK, "ip_traits.network", "network");
+        assertFieldNames(Field.HOSTING_PROVIDER, "ip_traits.hosting_provider", "hosting_provider");
+        assertFieldNames(Field.TOR_EXIT_NODE, "ip_traits.tor_exit_node", "tor_exit_node");
+        assertFieldNames(Field.ANONYMOUS_VPN, "ip_traits.anonymous_vpn", "anonymous_vpn");
+        assertFieldNames(Field.ANONYMOUS, "ip_traits.anonymous", "anonymous");
+        assertFieldNames(Field.PUBLIC_PROXY, "ip_traits.public_proxy", "public_proxy");
+        assertFieldNames(Field.RESIDENTIAL_PROXY, "ip_traits.residential_proxy", "residential_proxy");
     }
 
     void assertFieldNames(Field field, String expectedEcsFieldName, String expectedFieldName) {

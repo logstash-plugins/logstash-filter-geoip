@@ -46,13 +46,13 @@ enum Field {
   LATITUDE("geo.location.lat", "latitude"),
   LONGITUDE("geo.location.lon", "longitude"),
   ORGANIZATION("mmdb.organization", "organization"),
-  NETWORK("traits.network", "network"),
-  HOSTING_PROVIDER("traits.hosting_provider", "hosting_provider"),
-  TOR_EXIT_NODE("traits.tor_exit_node", "tor_exit_node"),
-  ANONYMOUS_VPN("traits.anonymous_vpn", "anonymous_vpn"),
-  ANONYMOUS("traits.anonymous", "anonymous"),
-  PUBLIC_PROXY("traits.public_proxy", "public_proxy"),
-  RESIDENTIAL_PROXY("traits.residential_proxy", "residential_proxy");
+  NETWORK("ip_traits.network", "network"),
+  HOSTING_PROVIDER("ip_traits.hosting_provider", "hosting_provider"),
+  TOR_EXIT_NODE("ip_traits.tor_exit_node", "tor_exit_node"),
+  ANONYMOUS_VPN("ip_traits.anonymous_vpn", "anonymous_vpn"),
+  ANONYMOUS("ip_traits.anonymous", "anonymous"),
+  PUBLIC_PROXY("ip_traits.public_proxy", "public_proxy"),
+  RESIDENTIAL_PROXY("ip_traits.residential_proxy", "residential_proxy");
 
   private final String fieldName;
   private final String ecsFieldName;
