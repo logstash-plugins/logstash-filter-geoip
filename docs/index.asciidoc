@@ -190,37 +190,44 @@ When ECS compatibility is enabled, the fields are structured to fit into an ECS 
 |===========================
 | Database Field Name | ECS Field | Example
 
-| `ip`               | `[ip]`                     | `12.34.56.78`
+| `ip`                | `[ip]`                           | `12.34.56.78`
+| `anonymous`         | `[ip_traits][anonymous]`         | `false`
+| `anonymous_vpn`     | `[ip_traits][anonymous_vpn]`     | `false`
+| `hosting_provider`  | `[ip_traits][hosting_provider]`  | `true`
+| `network`           | `[ip_traits][network]`           | `12.34.56.78/20`
+| `public_proxy`      | `[ip_traits][public_proxy]`      | `true`
+| `residential_proxy` | `[ip_traits][residential_proxy]` | `false`
+| `tor_exit_node`     | `[ip_traits][tor_exit_node]`     | `true`
 
-| `city_name`        | `[geo][city_name]`         | `Seattle`
-| `country_name`     | `[geo][country_name]`      | `United States`
-| `continent_code`   | `[geo][continent_code]`    | `NA`
-| `continent_name`   | `[geo][continent_name]`    | `North America`
-| `country_code2`    | `[geo][country_iso_code]`  | `US`
-| `country_code3`    | _N/A_                      | `US`
+| `city_name`         | `[geo][city_name]`               | `Seattle`
+| `country_name`      | `[geo][country_name]`            | `United States`
+| `continent_code`    | `[geo][continent_code]`          | `NA`
+| `continent_name`    | `[geo][continent_name]`          | `North America`
+| `country_code2`     | `[geo][country_iso_code]`        | `US`
+| `country_code3`     | _N/A_                            | `US`
 
-                                                    _maintained for legacy
-                                                    support, but populated
-                                                    with 2-character country
-                                                    code_
+                                                           _maintained for legacy
+                                                           support, but populated
+                                                           with 2-character country
+                                                           code_
 
-| `postal_code`      | `[geo][postal_code]`       | `98106`
-| `region_name`      | `[geo][region_name]`       | `Washington`
-| `region_code`      | `[geo][region_code]`       | `WA`
-| `region_iso_code`* | `[geo][region_iso_code]`   | `US-WA`
-| `timezone`         | `[geo][timezone]`          | `America/Los_Angeles`
-| `location`*        | `[geo][location]`          | `{"lat": 47.6062, "lon": -122.3321}"`
-| `latitude`         | `[geo][location][lat]`     | `47.6062`
-| `longitude`        | `[geo][location][lon]`     | `-122.3321`
+| `postal_code`       | `[geo][postal_code]`             | `98106`
+| `region_name`       | `[geo][region_name]`             | `Washington`
+| `region_code`       | `[geo][region_code]`             | `WA`
+| `region_iso_code`*  | `[geo][region_iso_code]`         | `US-WA`
+| `timezone`          | `[geo][timezone]`                | `America/Los_Angeles`
+| `location`*         | `[geo][location]`                | `{"lat": 47.6062, "lon": -122.3321}"`
+| `latitude`          | `[geo][location][lat]`           | `47.6062`
+| `longitude`         | `[geo][location][lon]`           | `-122.3321`
 
-| `domain`           | `[domain]`                 | `example.com`
+| `domain`            | `[domain]`                       | `example.com`
 
-| `asn`              | `[as][number]`             | `98765`
-| `as_org`           | `[as][organization][name]` | `Elastic, NV`
+| `asn`               | `[as][number]`                   | `98765`
+| `as_org`            | `[as][organization][name]`       | `Elastic, NV`
 
-| `isp`              | `[mmdb][isp]`              | `InterLink Supra LLC`
-| `dma_code`         | `[mmdb][dma_code]`         | `819`
-| `organization`     | `[mmdb][organization]`     | `Elastic, NV`
+| `isp`               | `[mmdb][isp]`                    | `InterLink Supra LLC`
+| `dma_code`          | `[mmdb][dma_code]`               | `819`
+| `organization`      | `[mmdb][organization]`           | `Elastic, NV`
 |===========================
 
 NOTE: `*` indicates a composite field, which is only populated if GeoIP lookup result contains all components.
@@ -301,7 +308,7 @@ number of cache misses and waste memory.
 The path to MaxMind's database file that Logstash should use.
 The default database is `GeoLite2-City`.
 This plugin supports several free databases (`GeoLite2-City`, `GeoLite2-Country`, `GeoLite2-ASN`)
-and a selection of commercially-licensed databases (`GeoIP2-City`, `GeoIP2-ISP`, `GeoIP2-Country`).
+and a selection of commercially-licensed databases (`GeoIP2-City`, `GeoIP2-ISP`, `GeoIP2-Country`, `GeoIP2-Domain`, `GeoIP2-Enterprise`, `GeoIP2-Anonymous-IP`).
 
 Database auto-update applies to the default distribution.
 When `database` points to user's database path, auto-update is disabled.

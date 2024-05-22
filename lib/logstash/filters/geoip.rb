@@ -171,7 +171,17 @@ class LogStash::Filters::GeoIP < LogStash::Filters::Base
   end
 
   def close
-    @database_manager.unsubscribe_database_path(@default_database_type, self) if @database_manager
+    begin
+      @database_manager.unsubscribe_database_path(@default_database_type, self) if @database_manager
+    rescue => e
+      @logger.error("Error unsubscribing geoip database path", :path => @database, :exception => e)
+    end
+
+    begin
+      @geoipfilter.close if @geoipfilter
+    rescue => e
+      @logger.error("Error closing GeoIPFilter",  :exception => e)
+    end
   end
 
   def select_database_path
