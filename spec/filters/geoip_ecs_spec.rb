@@ -22,7 +22,7 @@ describe LogStash::Filters::GeoIP do
         let(:common_options) { {"source" => "message", "database" => CITYDB, "target" => target} }
 
         before(:each) do
-          allow_any_instance_of(described_class).to receive(:ecs_compatibility).and_return(ecs_compatibility)
+          allow(plugin).to receive(:ecs_compatibility).and_return(ecs_compatibility)
           plugin.register
         end
 
@@ -170,7 +170,7 @@ describe LogStash::Filters::GeoIP do
 
       context "ECS disabled" do
         before do
-          allow_any_instance_of(described_class).to receive(:ecs_compatibility).and_return(:disabled)
+          allow(plugin).to receive(:ecs_compatibility).and_return(:disabled)
           plugin.register
           plugin.filter(event)
         end
@@ -193,7 +193,7 @@ describe LogStash::Filters::GeoIP do
 
       context "ECS mode" do
         before do
-          allow_any_instance_of(described_class).to receive(:ecs_compatibility).and_return(:v1)
+          allow(plugin).to receive(:ecs_compatibility).and_return(:v1)
         end
 
         context "`target` is unset" do
