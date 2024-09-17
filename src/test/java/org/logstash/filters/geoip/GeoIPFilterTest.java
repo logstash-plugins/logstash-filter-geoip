@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.logstash.RubyUtil.RUBY;
 import static org.logstash.ext.JrubyEventExtLibrary.RubyEvent;
 
@@ -266,22 +267,10 @@ class GeoIPFilterTest {
     }
 
     @Test
-    void givenDatabaseWithCustomizedFieldWhenItsAccessedTheCustomizedIPShouldntThrowAnyError() {
+    void givenDatabaseWithCustomizedFieldWhenItsAccessedTheCustomizedIPShouldntThrowAnyErrorAndReportTheLookupAsFailure() {
         try (final GeoIPFilter filter = createFilter(MaxMindDatabases.GEOIP2_COUNTRY, true, Collections.emptyList())) {
             final RubyEvent rubyEvent = createRubyEvent("216.160.83.60");
-            assertTrue(filter.handleEvent(rubyEvent));
-
-            final Event event = rubyEvent.getEvent();
-            for (final Field defaultField : Database.COUNTRY.getDefaultFields()) {
-                final String fieldReference = getFieldReference(defaultField, true);
-
-                assertTrue(event.includes(fieldReference), () -> String.format(
-                        "Default field %s (Fields.%s) not found on the Logstash event: %s",
-                        fieldReference,
-                        defaultField,
-                        event.toMap()
-                ));
-            }
+            assertFalse(filter.handleEvent(rubyEvent), "Lookup of data point with invalid custom fields should report as failed");
         }
     }
 
