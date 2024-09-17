@@ -266,6 +266,26 @@ class GeoIPFilterTest {
     }
 
     @Test
+    void givenDatabaseWithCustomizedFieldWhenItsAccessedTheCustomizedIPShouldntThrowAnyError() {
+        try (final GeoIPFilter filter = createFilter(MaxMindDatabases.GEOIP2_COUNTRY, true, Collections.emptyList())) {
+            final RubyEvent rubyEvent = createRubyEvent("216.160.83.60");
+            assertTrue(filter.handleEvent(rubyEvent));
+
+            final Event event = rubyEvent.getEvent();
+            for (final Field defaultField : Database.COUNTRY.getDefaultFields()) {
+                final String fieldReference = getFieldReference(defaultField, true);
+
+                assertTrue(event.includes(fieldReference), () -> String.format(
+                        "Default field %s (Fields.%s) not found on the Logstash event: %s",
+                        fieldReference,
+                        defaultField,
+                        event.toMap()
+                ));
+            }
+        }
+    }
+
+    @Test
     void handleEventWithListSourceFieldShouldParseFirstIp() {
         try (final GeoIPFilter filter = createFilter(MaxMindDatabases.GEOIP2_COUNTRY, true, Collections.emptyList())) {
             final RubyEvent rubyEvent = createRubyEvent(new Event(Collections.singletonMap(SOURCE_FIELD, Arrays.asList("216.160.83.58", "127.0.0.1"))));
