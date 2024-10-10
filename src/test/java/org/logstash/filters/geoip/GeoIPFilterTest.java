@@ -2,6 +2,7 @@ package org.logstash.filters.geoip;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.FieldSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.logstash.Event;
 
@@ -24,6 +25,12 @@ class GeoIPFilterTest {
 
     private static final String SOURCE_FIELD = "ip";
     private static final String TARGET_FIELD = "data";
+
+    // used as parameters of givenDatabaseWithCustomizedFieldWhenItsAccessedTheCustomizedIPShouldntThrowAnyErrorAndReportTheLookupAsFailure
+    @SuppressWarnings("unused")
+    static Path[] GEO_DATABASES = {MaxMindDatabases.GEOIP2_COUNTRY, MaxMindDatabases.GEOIP2_ANONYMOUS_IP,
+            MaxMindDatabases.GEOIP2_ENTERPRISE, MaxMindDatabases.GEOIP2_ISP,
+            MaxMindDatabases.GEOLITE2_ASN};
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
@@ -266,11 +273,19 @@ class GeoIPFilterTest {
         }
     }
 
-    @Test
-    void givenDatabaseWithCustomizedFieldWhenItsAccessedTheCustomizedIPShouldntThrowAnyErrorAndReportTheLookupAsFailure() {
-        try (final GeoIPFilter filter = createFilter(MaxMindDatabases.GEOIP2_COUNTRY, true, Collections.emptyList())) {
+    @ParameterizedTest
+    @FieldSource("GEO_DATABASES")
+    void givenDatabaseWithCustomizedFieldWhenItsAccessedTheCustomizedIPShouldntThrowAnyErrorAndReportTheLookupAsFailure(Path geoDatabase) {
+        try (final GeoIPFilter filter = createFilter(geoDatabase, true, Collections.emptyList())) {
             final RubyEvent rubyEvent = createRubyEvent("216.160.83.60");
             assertFalse(filter.handleEvent(rubyEvent), "Lookup of data point with invalid custom fields should report as failed");
+        }
+    }
+    @Test
+    void givenDomainDatabaseWithCustomizedFieldWhenItsAccessedTheCustomizedIPShouldntThrowAnyErrorAndReportTheLookupAsFailure() {
+        try (final GeoIPFilter filter = createFilter(MaxMindDatabases.GEOIP2_DOMAIN, true, Collections.emptyList())) {
+            final RubyEvent rubyEvent = createRubyEvent("216.160.83.60");
+            assertTrue(filter.handleEvent(rubyEvent), "Lookup of data point with invalid custom fields should report as failed");
         }
     }
 

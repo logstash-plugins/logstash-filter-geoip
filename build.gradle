@@ -40,7 +40,7 @@ plugins {
 group "org.logstash.filters"
 version "${new File("VERSION").text.trim()}"
 
-String junitVersion = '5.9.2'
+String junitVersion = '5.11.2' // at least 5.11 is needed to use @FieldSource with @ParameterizedTest
 String maxmindGeoip2Version = '2.17.0'
 String maxmindDbVersion = '2.1.0'
 String log4jVersion = '2.17.1'
