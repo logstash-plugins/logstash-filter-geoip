@@ -191,9 +191,6 @@ public class GeoIPFilter implements Closeable {
       logger.debug("IP not found! exception={}, field={}, event={}", e, sourceField, event);
     } catch (GeoIp2Exception | IOException e) {
       logger.debug("GeoIP2 Exception. exception={}, field={}, event={}", e, sourceField, event);
-    } catch (IllegalArgumentException e) {
-      logger.warn("GeoIP2 Exception in accessing custom field. exception={}, field={}, event={}", e, sourceField, event);
-      return false;
     }
 
     return applyGeoData(geoData, event);
@@ -227,7 +224,14 @@ public class GeoIPFilter implements Closeable {
   }
 
   private Map<Field,Object> retrieveCityGeoData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
-    CityResponse response = databaseReader.city(ipAddress);
+    CityResponse response;
+    try {
+      response = databaseReader.city(ipAddress);
+    } catch (NullPointerException e) {
+      // this exception could raise during the processing of datapoint with custom fields, check out
+      // for more details https://github.com/logstash-plugins/logstash-filter-geoip/issues/226
+      throw new GeoIp2Exception("invalid custom field");
+    }
     Country country = response.getCountry();
     City city = response.getCity();
     Location location = response.getLocation();
@@ -342,11 +346,11 @@ public class GeoIPFilter implements Closeable {
   private Map<Field,Object> retrieveCountryGeoData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
     CountryResponse response;
     try {
-        response = databaseReader.country(ipAddress);
+      response = databaseReader.country(ipAddress);
     } catch (NullPointerException e) {
       // this exception could raise during the processing of datapoint with custom fields, check out
       // for more details https://github.com/logstash-plugins/logstash-filter-geoip/issues/226
-      throw new IllegalArgumentException("invalid custom field");
+      throw new GeoIp2Exception("invalid custom field");
     }
     Country country = response.getCountry();
     Continent continent = response.getContinent();
@@ -382,7 +386,14 @@ public class GeoIPFilter implements Closeable {
   }
 
   private Map<Field, Object> retrieveIspGeoData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
-    IspResponse response = databaseReader.isp(ipAddress);
+    IspResponse response;
+    try {
+      response = databaseReader.isp(ipAddress);
+    } catch (NullPointerException e) {
+      // this exception could raise during the processing of datapoint with custom fields, check out
+      // for more details https://github.com/logstash-plugins/logstash-filter-geoip/issues/226
+      throw new GeoIp2Exception("invalid custom field");
+    }
 
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
     for (Field desiredField : this.desiredFields) {
@@ -421,7 +432,14 @@ public class GeoIPFilter implements Closeable {
   }
 
   private Map<Field, Object> retrieveAsnGeoData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
-    AsnResponse response = databaseReader.asn(ipAddress);
+    AsnResponse response;
+    try {
+      response = databaseReader.asn(ipAddress);
+    } catch (NullPointerException e) {
+      // this exception could raise during the processing of datapoint with custom fields, check out
+      // for more details https://github.com/logstash-plugins/logstash-filter-geoip/issues/226
+      throw new GeoIp2Exception("invalid custom field");
+    }
     Network network = response.getNetwork();
 
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
@@ -454,7 +472,14 @@ public class GeoIPFilter implements Closeable {
   }
 
   private Map<Field, Object> retrieveDomainGeoData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
-    DomainResponse response = databaseReader.domain(ipAddress);
+    DomainResponse response;
+    try {
+      response = databaseReader.domain(ipAddress);
+    } catch (NullPointerException e) {
+      // this exception could raise during the processing of datapoint with custom fields, check out
+      // for more details https://github.com/logstash-plugins/logstash-filter-geoip/issues/226
+      throw new GeoIp2Exception("invalid custom field");
+    }
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
     for (Field desiredField : this.desiredFields) {
       switch (desiredField) {
@@ -469,7 +494,14 @@ public class GeoIPFilter implements Closeable {
   }
 
   private Map<Field, Object> retrieveEnterpriseGeoData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
-    EnterpriseResponse response = databaseReader.enterprise(ipAddress);
+    EnterpriseResponse response;
+    try {
+      response = databaseReader.enterprise(ipAddress);
+    } catch (NullPointerException e) {
+      // this exception could raise during the processing of datapoint with custom fields, check out
+      // for more details https://github.com/logstash-plugins/logstash-filter-geoip/issues/226
+      throw new GeoIp2Exception("invalid custom field");
+    }
 
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
     Country country = response.getCountry();
@@ -577,7 +609,14 @@ public class GeoIPFilter implements Closeable {
   }
 
   private Map<Field, Object> retrieveAnonymousIpGeoData(final InetAddress ipAddress) throws GeoIp2Exception, IOException {
-    AnonymousIpResponse response = databaseReader.anonymousIp(ipAddress);
+    AnonymousIpResponse response;
+    try {
+      response = databaseReader.anonymousIp(ipAddress);
+    } catch (NullPointerException e) {
+      // this exception could raise during the processing of datapoint with custom fields, check out
+      // for more details https://github.com/logstash-plugins/logstash-filter-geoip/issues/226
+      throw new GeoIp2Exception("invalid custom field");
+    }
 
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
     boolean isHostingProvider = response.isHostingProvider();
