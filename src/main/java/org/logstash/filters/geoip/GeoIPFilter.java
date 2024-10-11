@@ -48,6 +48,15 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class GeoIPFilter implements Closeable {
+
+  // This exception could raise during the processing of datapoint with custom fields, check out
+  // for more details https://github.com/logstash-plugins/logstash-filter-geoip/issues/226
+  static class GeoIp2InvalidCustomFieldException extends GeoIp2Exception {
+    public GeoIp2InvalidCustomFieldException(Throwable cause) {
+      super("invalid custom field", cause);
+    }
+  }
+
   private static final Logger logger = LogManager.getLogger();
   private final String sourceField;
   private final String targetField;
@@ -152,7 +161,7 @@ public class GeoIPFilter implements Closeable {
       throw new IllegalArgumentException("Expected input field value to be String or List type");
     }
 
-    if (ip.trim().isEmpty()){
+    if (ip.trim().isEmpty()) {
       return false;
     }
 
@@ -224,7 +233,12 @@ public class GeoIPFilter implements Closeable {
   }
 
   private Map<Field,Object> retrieveCityGeoData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
-    CityResponse response = databaseReader.city(ipAddress);
+    CityResponse response;
+    try {
+      response = databaseReader.city(ipAddress);
+    } catch (NullPointerException e) {
+      throw new GeoIp2InvalidCustomFieldException(e);
+    }
     Country country = response.getCountry();
     City city = response.getCity();
     Location location = response.getLocation();
@@ -337,7 +351,12 @@ public class GeoIPFilter implements Closeable {
   }
 
   private Map<Field,Object> retrieveCountryGeoData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
-    CountryResponse response = databaseReader.country(ipAddress);
+    CountryResponse response;
+    try {
+      response = databaseReader.country(ipAddress);
+    } catch (NullPointerException e) {
+      throw new GeoIp2InvalidCustomFieldException(e);
+    }
     Country country = response.getCountry();
     Continent continent = response.getContinent();
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
@@ -372,7 +391,12 @@ public class GeoIPFilter implements Closeable {
   }
 
   private Map<Field, Object> retrieveIspGeoData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
-    IspResponse response = databaseReader.isp(ipAddress);
+    IspResponse response;
+    try {
+      response = databaseReader.isp(ipAddress);
+    } catch (NullPointerException e) {
+      throw new GeoIp2InvalidCustomFieldException(e);
+    }
 
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
     for (Field desiredField : this.desiredFields) {
@@ -411,7 +435,12 @@ public class GeoIPFilter implements Closeable {
   }
 
   private Map<Field, Object> retrieveAsnGeoData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
-    AsnResponse response = databaseReader.asn(ipAddress);
+    AsnResponse response;
+    try {
+      response = databaseReader.asn(ipAddress);
+    } catch (NullPointerException e) {
+      throw new GeoIp2InvalidCustomFieldException(e);
+    }
     Network network = response.getNetwork();
 
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
@@ -444,7 +473,12 @@ public class GeoIPFilter implements Closeable {
   }
 
   private Map<Field, Object> retrieveDomainGeoData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
-    DomainResponse response = databaseReader.domain(ipAddress);
+    DomainResponse response;
+    try {
+      response = databaseReader.domain(ipAddress);
+    } catch (NullPointerException e) {
+      throw new GeoIp2InvalidCustomFieldException(e);
+    }
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
     for (Field desiredField : this.desiredFields) {
       switch (desiredField) {
@@ -459,7 +493,12 @@ public class GeoIPFilter implements Closeable {
   }
 
   private Map<Field, Object> retrieveEnterpriseGeoData(InetAddress ipAddress) throws GeoIp2Exception, IOException {
-    EnterpriseResponse response = databaseReader.enterprise(ipAddress);
+    EnterpriseResponse response;
+    try {
+      response = databaseReader.enterprise(ipAddress);
+    } catch (NullPointerException e) {
+      throw new GeoIp2InvalidCustomFieldException(e);
+    }
 
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
     Country country = response.getCountry();
@@ -567,7 +606,12 @@ public class GeoIPFilter implements Closeable {
   }
 
   private Map<Field, Object> retrieveAnonymousIpGeoData(final InetAddress ipAddress) throws GeoIp2Exception, IOException {
-    AnonymousIpResponse response = databaseReader.anonymousIp(ipAddress);
+    AnonymousIpResponse response;
+    try {
+      response = databaseReader.anonymousIp(ipAddress);
+    } catch (NullPointerException e) {
+      throw new GeoIp2InvalidCustomFieldException(e);
+    }
 
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
     boolean isHostingProvider = response.isHostingProvider();

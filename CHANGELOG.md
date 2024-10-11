@@ -1,3 +1,6 @@
+## 7.3.1
+  - Avoid to crash pipelines when lookup a database with customised fields. [#225](https://github.com/logstash-plugins/logstash-filter-geoip/pull/225)
+
 ## 7.3.0
   - Added support for MaxMind GeoIP2 Enterprise and Anonymous-IP databases ([#223](https://github.com/logstash-plugins/logstash-filter-geoip/pull/223))
   - Updated MaxMind dependencies.

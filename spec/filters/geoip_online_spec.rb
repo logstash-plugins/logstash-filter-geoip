@@ -63,7 +63,7 @@ describe LogStash::Filters::GeoIP do
         end
 
         before(:each) do
-          allow_any_instance_of(described_class).to receive(:load_database_manager?).and_return(true)
+          allow(plugin).to receive(:load_database_manager?).and_return(true)
           stub_const("LogStash::Filters::Geoip::DatabaseManager", double("DatabaseManager.Class", :instance => mock_manager))
         end
 
