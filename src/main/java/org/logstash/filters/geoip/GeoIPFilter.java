@@ -48,6 +48,15 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class GeoIPFilter implements Closeable {
+
+  // This exception could raise during the processing of datapoint with custom fields, check out
+  // for more details https://github.com/logstash-plugins/logstash-filter-geoip/issues/226
+  static class GeoIp2InvalidCustomFieldException extends GeoIp2Exception {
+    public GeoIp2InvalidCustomFieldException(Throwable cause) {
+      super("invalid custom field", cause);
+    }
+  }
+
   private static final Logger logger = LogManager.getLogger();
   private final String sourceField;
   private final String targetField;
@@ -348,9 +357,7 @@ public class GeoIPFilter implements Closeable {
     try {
       response = databaseReader.country(ipAddress);
     } catch (NullPointerException e) {
-      // this exception could raise during the processing of datapoint with custom fields, check out
-      // for more details https://github.com/logstash-plugins/logstash-filter-geoip/issues/226
-      throw new GeoIp2Exception("invalid custom field");
+      throw new GeoIp2InvalidCustomFieldException(e);
     }
     Country country = response.getCountry();
     Continent continent = response.getContinent();
