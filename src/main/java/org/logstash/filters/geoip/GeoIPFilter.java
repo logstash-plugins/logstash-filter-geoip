@@ -246,6 +246,7 @@ public class GeoIPFilter implements Closeable {
     Postal postal = response.getPostal();
     Subdivision subdivision = response.getMostSpecificSubdivision();
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
+    Network network = response.getTraits().getNetwork();
 
     // if location is empty, there is no point populating geo data
     // and most likely all other fields are empty as well
@@ -344,6 +345,11 @@ public class GeoIPFilter implements Closeable {
             geoData.put(Field.LONGITUDE, lon);
           }
           break;
+        case NETWORK:
+          if (network != null) {
+            geoData.put(Field.NETWORK, network.toString());
+          }
+          break;
       }
     }
 
@@ -397,6 +403,7 @@ public class GeoIPFilter implements Closeable {
     } catch (NullPointerException e) {
       throw new GeoIp2InvalidCustomFieldException(e);
     }
+    Network network = response.getNetwork();
 
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
     for (Field desiredField : this.desiredFields) {
@@ -405,7 +412,7 @@ public class GeoIPFilter implements Closeable {
           geoData.put(Field.IP, ipAddress.getHostAddress());
           break;
         case AUTONOMOUS_SYSTEM_NUMBER:
-          Integer asn = response.getAutonomousSystemNumber();
+          Long asn = response.getAutonomousSystemNumber();
           if (asn != null) {
             geoData.put(desiredField, asn);
           }
@@ -426,6 +433,11 @@ public class GeoIPFilter implements Closeable {
           String org = response.getOrganization();
           if (org != null) {
             geoData.put(Field.ORGANIZATION, org);
+          }
+          break;
+        case NETWORK:
+          if (network != null) {
+            geoData.put(Field.NETWORK, network.toString());
           }
           break;
       }
@@ -450,7 +462,7 @@ public class GeoIPFilter implements Closeable {
           geoData.put(Field.IP, ipAddress.getHostAddress());
           break;
         case AUTONOMOUS_SYSTEM_NUMBER:
-          Integer asn = response.getAutonomousSystemNumber();
+          Long asn = response.getAutonomousSystemNumber();
           if (asn != null) {
             geoData.put(Field.AUTONOMOUS_SYSTEM_NUMBER, asn);
           }
@@ -507,7 +519,7 @@ public class GeoIPFilter implements Closeable {
     Continent continent = response.getContinent();
     Subdivision subdivision = response.getMostSpecificSubdivision();
 
-    Integer asn = response.getTraits().getAutonomousSystemNumber();
+    Long asn = response.getTraits().getAutonomousSystemNumber();
     String organizationName = response.getTraits().getAutonomousSystemOrganization();
     Network network = response.getTraits().getNetwork();
 
@@ -620,6 +632,7 @@ public class GeoIPFilter implements Closeable {
     boolean isAnonymous = response.isAnonymous();
     boolean isPublicProxy = response.isPublicProxy();
     boolean isResidentialProxy = response.isResidentialProxy();
+    Network network = response.getNetwork();
 
     for (Field desiredField : this.desiredFields) {
       switch (desiredField) {
@@ -643,6 +656,11 @@ public class GeoIPFilter implements Closeable {
           break;
         case RESIDENTIAL_PROXY:
           geoData.put(desiredField, isResidentialProxy);
+          break;
+        case NETWORK:
+          if (network != null) {
+            geoData.put(Field.NETWORK, network.toString());
+          }
           break;
       }
     }

@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib", "vendor/jar-dependencies"]
 
   # Files
-  s.files = Dir['lib/**/*','spec/**/*','vendor/**/*', 'vendor/jar-dependencies/**/*.jar', '*.gemspec','*.md','CONTRIBUTORS','Gemfile','LICENSE','NOTICE.TXT', 'maxmind-db-NOTICE.txt', 'docs/**/*']
+  s.files = Dir['lib/**/*','spec/**/*','vendor/**/*', 'vendor/jar-dependencies/**/*.jar', '*.gemspec','*.md','CONTRIBUTORS','Gemfile','LICENSE','NOTICE.TXT', 'maxmind-db-NOTICE.txt', 'docs/**/*', 'VERSION']
 
   # Tests
   s.test_files = s.files.grep(%r{^(test|spec|features)/})
