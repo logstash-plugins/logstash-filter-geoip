@@ -22,7 +22,8 @@ enum Database {
                     Field.TIMEZONE,
                     Field.LOCATION,
                     Field.LATITUDE,
-                    Field.LONGITUDE
+                    Field.LONGITUDE,
+                    Field.NETWORK
             )
     ),
     COUNTRY(
@@ -31,7 +32,8 @@ enum Database {
                     Field.IP,
                     Field.COUNTRY_CODE2,
                     Field.COUNTRY_NAME,
-                    Field.CONTINENT_NAME
+                    Field.CONTINENT_NAME,
+                    Field.NETWORK
             )
     ),
     DOMAIN(
@@ -55,7 +57,8 @@ enum Database {
                     Field.AUTONOMOUS_SYSTEM_NUMBER,
                     Field.AUTONOMOUS_SYSTEM_ORGANIZATION,
                     Field.ISP,
-                    Field.ORGANIZATION
+                    Field.ORGANIZATION,
+                    Field.NETWORK
             )
     ),
     ANONYMOUS_IP(
@@ -66,7 +69,8 @@ enum Database {
                     Field.ANONYMOUS_VPN,
                     Field.ANONYMOUS,
                     Field.PUBLIC_PROXY,
-                    Field.RESIDENTIAL_PROXY
+                    Field.RESIDENTIAL_PROXY,
+                    Field.NETWORK
             )
     ),
     ENTERPRISE(

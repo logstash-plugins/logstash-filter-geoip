@@ -41,8 +41,8 @@ group "org.logstash.filters"
 version "${new File("VERSION").text.trim()}"
 
 String junitVersion = '5.11.2' // at least 5.11 is needed to use @FieldSource with @ParameterizedTest
-String maxmindGeoip2Version = '2.17.0'
-String maxmindDbVersion = '2.1.0'
+String maxmindGeoip2Version = '4.2.0'
+String maxmindDbVersion = '3.1.1'
 String log4jVersion = '2.17.1'
 String jrubyCompleteVersion = '9.1.13.0'
 String mockitoVersion = '4.11.0'
