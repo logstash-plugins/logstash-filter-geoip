@@ -4,9 +4,11 @@ import:
 jobs:
   include:
     - stage: OSS Distribution Tests
-      env: DISTRIBUTION=oss ELASTIC_STACK_VERSION=8.previous
-    - env: DISTRIBUTION=oss ELASTIC_STACK_VERSION=8.current
-    - env: DISTRIBUTION=oss SNAPSHOT=true ELASTIC_STACK_VERSION=8.previous
+      env: DISTRIBUTION=oss ELASTIC_STACK_VERSION=8.current
+    - env: DISTRIBUTION=oss ELASTIC_STACK_VERSION=9.previous
+    - env: DISTRIBUTION=oss ELASTIC_STACK_VERSION=9.current
     - env: DISTRIBUTION=oss SNAPSHOT=true ELASTIC_STACK_VERSION=8.current
-    - env: DISTRIBUTION=oss SNAPSHOT=true ELASTIC_STACK_VERSION=8.next
-    - env: DISTRIBUTION=oss SNAPSHOT=true ELASTIC_STACK_VERSION=8.future
+    - env: DISTRIBUTION=oss SNAPSHOT=true ELASTIC_STACK_VERSION=9.previous
+    - env: DISTRIBUTION=oss SNAPSHOT=true ELASTIC_STACK_VERSION=9.current
+    - env: DISTRIBUTION=oss SNAPSHOT=true ELASTIC_STACK_VERSION=9.next
+    - env: DISTRIBUTION=oss SNAPSHOT=true ELASTIC_STACK_VERSION=main
