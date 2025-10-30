@@ -53,9 +53,7 @@ public class GeoIPFilter implements Closeable {
   // for more details https://github.com/logstash-plugins/logstash-filter-geoip/issues/226
   static class GeoIp2InvalidCustomFieldException extends GeoIp2Exception {
     public GeoIp2InvalidCustomFieldException(Throwable cause) {
-        super(cause.getMessage().equals("Cannot invoke \"Object.getClass()\" because \"parameters[index]\" is null") ?
-                "The database contains custom fields causing argument type mismatch." :
-                cause.getMessage(), cause);
+        super("The database contains custom fields causing argument type mismatch.", cause);
     }
   }
 
