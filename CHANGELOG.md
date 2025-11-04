@@ -1,3 +1,6 @@
+## 7.3.2
+  - Add logs when MaxMind databases fail to deserialize custom field [#235](https://github.com/logstash-plugins/logstash-filter-geoip/pull/235)
+
 ## 7.3.1
   - Avoid to crash pipelines when lookup a database with customised fields. [#225](https://github.com/logstash-plugins/logstash-filter-geoip/pull/225)
 

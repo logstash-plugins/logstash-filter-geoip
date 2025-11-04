@@ -53,7 +53,7 @@ public class GeoIPFilter implements Closeable {
   // for more details https://github.com/logstash-plugins/logstash-filter-geoip/issues/226
   static class GeoIp2InvalidCustomFieldException extends GeoIp2Exception {
     public GeoIp2InvalidCustomFieldException(Throwable cause) {
-      super("invalid custom field", cause);
+      super("The database contains invalid custom field, which caused deserialization to fail.", cause);
     }
   }
 
@@ -199,7 +199,7 @@ public class GeoIPFilter implements Closeable {
     } catch (AddressNotFoundException e) {
       logger.debug("IP not found! exception={}, field={}, event={}", e, sourceField, event);
     } catch (GeoIp2Exception | IOException e) {
-      logger.debug("GeoIP2 Exception. exception={}, field={}, event={}", e, sourceField, event);
+      logger.error("Error from GeoIP database. field={}, value={}", sourceField, ip, e);
     }
 
     return applyGeoData(geoData, event);
