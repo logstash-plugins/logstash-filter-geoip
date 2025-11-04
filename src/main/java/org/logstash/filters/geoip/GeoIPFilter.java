@@ -53,7 +53,7 @@ public class GeoIPFilter implements Closeable {
   // for more details https://github.com/logstash-plugins/logstash-filter-geoip/issues/226
   static class GeoIp2InvalidCustomFieldException extends GeoIp2Exception {
     public GeoIp2InvalidCustomFieldException(Throwable cause) {
-        super("The database contains invalid custom field, which caused deserialization to fail.", cause);
+      super("The database contains invalid custom field, which caused deserialization to fail.", cause);
     }
   }
 
