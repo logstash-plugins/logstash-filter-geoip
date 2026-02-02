@@ -1,3 +1,6 @@
+## 7.3.3
+  - Re-packaging the plugin [#236](https://github.com/logstash-plugins/logstash-filter-geoip/pull/236)
+
 ## 7.3.2
   - Add logs when MaxMind databases fail to deserialize custom field [#235](https://github.com/logstash-plugins/logstash-filter-geoip/pull/235)
 
