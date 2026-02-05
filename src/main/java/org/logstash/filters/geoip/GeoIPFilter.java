@@ -51,7 +51,8 @@ public class GeoIPFilter implements Closeable {
 
   // This exception could raise during the processing of datapoint with custom fields, check out
   // for more details https://github.com/logstash-plugins/logstash-filter-geoip/issues/226
-  static class GeoIp2InvalidCustomFieldException extends GeoIp2Exception {
+  // Note: In GeoIP2 5.x, GeoIp2Exception is sealed, so we extend RuntimeException instead.
+  static class GeoIp2InvalidCustomFieldException extends RuntimeException {
     public GeoIp2InvalidCustomFieldException(Throwable cause) {
       super("The database contains invalid custom field, which caused deserialization to fail.", cause);
     }
@@ -95,7 +96,7 @@ public class GeoIPFilter implements Closeable {
   }
 
   private static Database getDatabase(DatabaseReader reader) {
-    final String databaseType = reader.getMetadata().getDatabaseType();
+    final String databaseType = reader.metadata().databaseType();
     final Database database = Database.fromDatabaseType(databaseType);
 
     if (database == Database.UNKNOWN) {
@@ -192,7 +193,7 @@ public class GeoIPFilter implements Closeable {
           geoData = retrieveAnonymousIpGeoData(ipAddress);
           break;
         default:
-          throw new IllegalStateException("Unsupported database type " + databaseReader.getMetadata().getDatabaseType() + "");
+          throw new IllegalStateException("Unsupported database type " + databaseReader.metadata().databaseType() + "");
       }
     } catch (UnknownHostException e) {
       logger.debug("IP Field contained invalid IP address or hostname. exception={}, field={}, event={}", e, sourceField, event);
@@ -239,54 +240,54 @@ public class GeoIPFilter implements Closeable {
     } catch (NullPointerException e) {
       throw new GeoIp2InvalidCustomFieldException(e);
     }
-    Country country = response.getCountry();
-    City city = response.getCity();
-    Location location = response.getLocation();
-    Continent continent = response.getContinent();
-    Postal postal = response.getPostal();
-    Subdivision subdivision = response.getMostSpecificSubdivision();
+    Country country = response.country();
+    City city = response.city();
+    Location location = response.location();
+    Continent continent = response.continent();
+    Postal postal = response.postal();
+    Subdivision subdivision = response.mostSpecificSubdivision();
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
 
     // if location is empty, there is no point populating geo data
     // and most likely all other fields are empty as well
-    if (location.getLatitude() == null && location.getLongitude() == null) {
+    if (location.latitude() == null && location.longitude() == null) {
       return geoData;
     }
 
     for (Field desiredField : this.desiredFields) {
       switch (desiredField) {
         case CITY_NAME:
-          String cityName = city.getName();
+          String cityName = city.name();
           if (cityName != null) {
             geoData.put(Field.CITY_NAME, cityName);
           }
           break;
         case CONTINENT_CODE:
-          String continentCode = continent.getCode();
+          String continentCode = continent.code();
           if (continentCode != null) {
             geoData.put(Field.CONTINENT_CODE, continentCode);
           }
           break;
         case CONTINENT_NAME:
-          String continentName = continent.getName();
+          String continentName = continent.name();
           if (continentName != null) {
             geoData.put(Field.CONTINENT_NAME, continentName);
           }
           break;
         case COUNTRY_NAME:
-          String countryName = country.getName();
+          String countryName = country.name();
           if (countryName != null) {
             geoData.put(Field.COUNTRY_NAME, countryName);
           }
           break;
         case COUNTRY_CODE2:
-          String countryCode2 = country.getIsoCode();
+          String countryCode2 = country.isoCode();
           if (countryCode2 != null) {
             geoData.put(Field.COUNTRY_CODE2, countryCode2);
           }
           break;
         case COUNTRY_CODE3:
-          String countryCode3 = country.getIsoCode();
+          String countryCode3 = country.isoCode();
           if (countryCode3 != null) {
             geoData.put(Field.COUNTRY_CODE3, countryCode3);
           }
@@ -295,25 +296,23 @@ public class GeoIPFilter implements Closeable {
           geoData.put(Field.IP, ipAddress.getHostAddress());
           break;
         case POSTAL_CODE:
-          String postalCode = postal.getCode();
+          String postalCode = postal.code();
           if (postalCode != null) {
             geoData.put(Field.POSTAL_CODE, postalCode);
           }
           break;
         case DMA_CODE:
-          Integer dmaCode = location.getMetroCode();
-          if (dmaCode != null) {
-            geoData.put(Field.DMA_CODE, dmaCode);
-          }
+          // Metro code (DMA_CODE) was removed in MaxMind GeoIP2 5.x
+          // This field is no longer available in the database
           break;
         case REGION_NAME:
-          String subdivisionName = subdivision.getName();
+          String subdivisionName = subdivision.name();
           if (subdivisionName != null) {
             geoData.put(Field.REGION_NAME, subdivisionName);
           }
           break;
         case REGION_CODE:
-          String subdivisionCode = subdivision.getIsoCode();
+          String subdivisionCode = subdivision.isoCode();
           if (subdivisionCode != null) {
             geoData.put(Field.REGION_CODE, subdivisionCode);
           }
@@ -323,7 +322,7 @@ public class GeoIPFilter implements Closeable {
                   .ifPresent(data -> geoData.put(Field.REGION_ISO_CODE, data));
           break;
         case TIMEZONE:
-          String locationTimeZone = location.getTimeZone();
+          String locationTimeZone = location.timeZone();
           if (locationTimeZone != null) {
             geoData.put(Field.TIMEZONE, locationTimeZone);
           }
@@ -333,13 +332,13 @@ public class GeoIPFilter implements Closeable {
                   .ifPresent(data -> geoData.put(Field.LOCATION, data));
           break;
         case LATITUDE:
-          Double lat = location.getLatitude();
+          Double lat = location.latitude();
           if (lat != null) {
             geoData.put(Field.LATITUDE, lat);
           }
           break;
         case LONGITUDE:
-          Double lon = location.getLongitude();
+          Double lon = location.longitude();
           if (lon != null) {
             geoData.put(Field.LONGITUDE, lon);
           }
@@ -357,8 +356,8 @@ public class GeoIPFilter implements Closeable {
     } catch (NullPointerException e) {
       throw new GeoIp2InvalidCustomFieldException(e);
     }
-    Country country = response.getCountry();
-    Continent continent = response.getContinent();
+    Country country = response.country();
+    Continent continent = response.continent();
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
 
     for (Field desiredField : this.desiredFields) {
@@ -367,19 +366,19 @@ public class GeoIPFilter implements Closeable {
           geoData.put(Field.IP, ipAddress.getHostAddress());
           break;
         case COUNTRY_CODE2:
-          String countryCode2 = country.getIsoCode();
+          String countryCode2 = country.isoCode();
           if (countryCode2 != null) {
             geoData.put(Field.COUNTRY_CODE2, countryCode2);
           }
           break;
         case COUNTRY_NAME:
-          String countryName = country.getName();
+          String countryName = country.name();
           if (countryName != null) {
             geoData.put(Field.COUNTRY_NAME, countryName);
           }
           break;
         case CONTINENT_NAME:
-          String continentName = continent.getName();
+          String continentName = continent.name();
           if (continentName != null) {
             geoData.put(Field.CONTINENT_NAME, continentName);
           }
@@ -405,25 +404,25 @@ public class GeoIPFilter implements Closeable {
           geoData.put(Field.IP, ipAddress.getHostAddress());
           break;
         case AUTONOMOUS_SYSTEM_NUMBER:
-          Integer asn = response.getAutonomousSystemNumber();
+          final Long asn = response.autonomousSystemNumber();
           if (asn != null) {
             geoData.put(desiredField, asn);
           }
           break;
         case AUTONOMOUS_SYSTEM_ORGANIZATION:
-          String aso = response.getAutonomousSystemOrganization();
+          String aso = response.autonomousSystemOrganization();
           if (aso != null) {
             geoData.put(desiredField, aso);
           }
           break;
         case ISP:
-          String isp = response.getIsp();
+          String isp = response.isp();
           if (isp != null) {
             geoData.put(Field.ISP, isp);
           }
           break;
         case ORGANIZATION:
-          String org = response.getOrganization();
+          String org = response.organization();
           if (org != null) {
             geoData.put(Field.ORGANIZATION, org);
           }
@@ -441,7 +440,7 @@ public class GeoIPFilter implements Closeable {
     } catch (NullPointerException e) {
       throw new GeoIp2InvalidCustomFieldException(e);
     }
-    Network network = response.getNetwork();
+    Network network = response.network();
 
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
     for (Field desiredField : this.desiredFields) {
@@ -450,13 +449,13 @@ public class GeoIPFilter implements Closeable {
           geoData.put(Field.IP, ipAddress.getHostAddress());
           break;
         case AUTONOMOUS_SYSTEM_NUMBER:
-          Integer asn = response.getAutonomousSystemNumber();
+          final Long asn = response.autonomousSystemNumber();
           if (asn != null) {
             geoData.put(Field.AUTONOMOUS_SYSTEM_NUMBER, asn);
           }
           break;
         case AUTONOMOUS_SYSTEM_ORGANIZATION:
-          String aso = response.getAutonomousSystemOrganization();
+          String aso = response.autonomousSystemOrganization();
           if (aso != null) {
             geoData.put(Field.AUTONOMOUS_SYSTEM_ORGANIZATION, aso);
           }
@@ -483,7 +482,7 @@ public class GeoIPFilter implements Closeable {
     for (Field desiredField : this.desiredFields) {
       switch (desiredField) {
         case DOMAIN:
-          String domain = response.getDomain();
+          String domain = response.domain();
           geoData.put(Field.DOMAIN, domain);
           break;
       }
@@ -501,22 +500,22 @@ public class GeoIPFilter implements Closeable {
     }
 
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
-    Country country = response.getCountry();
-    City city = response.getCity();
-    Location location = response.getLocation();
-    Continent continent = response.getContinent();
-    Subdivision subdivision = response.getMostSpecificSubdivision();
+    Country country = response.country();
+    City city = response.city();
+    Location location = response.location();
+    Continent continent = response.continent();
+    Subdivision subdivision = response.mostSpecificSubdivision();
 
-    Integer asn = response.getTraits().getAutonomousSystemNumber();
-    String organizationName = response.getTraits().getAutonomousSystemOrganization();
-    Network network = response.getTraits().getNetwork();
+    Long asn = response.traits().autonomousSystemNumber();
+    String organizationName = response.traits().autonomousSystemOrganization();
+    Network network = response.traits().network();
 
-    boolean isHostingProvider = response.getTraits().isHostingProvider();
-    boolean isTorExitNode = response.getTraits().isTorExitNode();
-    boolean isAnonymousVpn = response.getTraits().isAnonymousVpn();
-    boolean isAnonymous = response.getTraits().isAnonymous();
-    boolean isPublicProxy = response.getTraits().isPublicProxy();
-    boolean isResidentialProxy = response.getTraits().isResidentialProxy();
+    boolean isHostingProvider = response.traits().isHostingProvider();
+    boolean isTorExitNode = response.traits().isTorExitNode();
+    boolean isAnonymousVpn = response.traits().isAnonymousVpn();
+    boolean isAnonymous = response.traits().isAnonymous();
+    boolean isPublicProxy = response.traits().isPublicProxy();
+    boolean isResidentialProxy = response.traits().isResidentialProxy();
 
     for (Field desiredField : this.desiredFields) {
       switch (desiredField) {
@@ -524,19 +523,19 @@ public class GeoIPFilter implements Closeable {
           geoData.put(Field.IP, ipAddress.getHostAddress());
           break;
         case COUNTRY_CODE2:
-          String countryIsoCode = country.getIsoCode();
+          String countryIsoCode = country.isoCode();
           if (countryIsoCode != null) {
             geoData.put(desiredField, countryIsoCode);
           }
           break;
         case COUNTRY_NAME:
-          String countryName = country.getName();
+          String countryName = country.name();
           if (countryName != null) {
             geoData.put(desiredField, countryName);
           }
           break;
         case CONTINENT_NAME:
-          String continentName = continent.getName();
+          String continentName = continent.name();
           if (continentName != null) {
             geoData.put(desiredField, continentName);
           }
@@ -546,19 +545,19 @@ public class GeoIPFilter implements Closeable {
                   .ifPresent(data -> geoData.put(desiredField, data));
           break;
         case REGION_NAME:
-          String subdivisionName = subdivision.getName();
+          String subdivisionName = subdivision.name();
           if (subdivisionName != null) {
             geoData.put(desiredField, subdivisionName);
           }
           break;
         case CITY_NAME:
-          String cityName = city.getName();
+          String cityName = city.name();
           if (cityName != null) {
             geoData.put(desiredField, cityName);
           }
           break;
         case TIMEZONE:
-          String locationTimeZone = location.getTimeZone();
+          String locationTimeZone = location.timeZone();
           if (locationTimeZone != null) {
             geoData.put(desiredField, locationTimeZone);
           }
@@ -650,8 +649,8 @@ public class GeoIPFilter implements Closeable {
   }
 
   private Optional<Map<String, Object>> parseLocationField(Location location) {
-    Double latitude = location.getLatitude();
-    Double longitude = location.getLongitude();
+    Double latitude = location.latitude();
+    Double longitude = location.longitude();
     if (latitude != null && longitude != null) {
       Map<String, Object> locationObject = new HashMap<>();
       locationObject.put("lat", latitude);
@@ -663,8 +662,8 @@ public class GeoIPFilter implements Closeable {
   }
 
   private Optional<String> parseRegionIsoCodeField(final Country country, final Subdivision subdivision) {
-    String countryCodeForRegion = country.getIsoCode();
-    String regionCode2 = subdivision.getIsoCode();
+    String countryCodeForRegion = country.isoCode();
+    String regionCode2 = subdivision.isoCode();
     if (countryCodeForRegion != null && regionCode2 != null) {
       return Optional.of(String.format("%s-%s", countryCodeForRegion, regionCode2));
     }

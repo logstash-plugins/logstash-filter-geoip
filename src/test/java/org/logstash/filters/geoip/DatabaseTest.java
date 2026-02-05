@@ -134,7 +134,7 @@ class DatabaseTest {
                     .Builder(path.toFile())
                     .build()) {
 
-                final String fileDatabaseType = reader.getMetadata().getDatabaseType();
+                final String fileDatabaseType = reader.metadata().databaseType();
                 final Database parseDatabase = Database.fromDatabaseType(fileDatabaseType);
                 final String message = String.format("File '%s' was parsed as %s database instead of %s", path, parseDatabase, expectedDatabase);
 

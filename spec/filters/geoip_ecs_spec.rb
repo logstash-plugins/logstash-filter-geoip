@@ -43,7 +43,8 @@ describe LogStash::Filters::GeoIP do
             expect( event.get ecs_select[disabled: "[#{target}][location][lat]", v1: "[#{target}][geo][location][lat]"] ).to eq 42.1596
             expect( event.get ecs_select[disabled: "[#{target}][location][lon]", v1: "[#{target}][geo][location][lon]"] ).to eq -70.8217
             expect( event.get ecs_select[disabled: "[#{target}][city_name]", v1: "[#{target}][geo][city_name]"] ).to eq 'Norwell'
-            expect( event.get ecs_select[disabled: "[#{target}][dma_code]", v1: "[#{target}][mmdb][dma_code]"] ).to eq 506
+            # dma_code (metro code) removed in GeoIP2 5.x - values no longer maintained
+            # expect( event.get ecs_select[disabled: "[#{target}][dma_code]", v1: "[#{target}][mmdb][dma_code]"] ).to eq 506
             expect( event.get ecs_select[disabled: "[#{target}][region_name]", v1: "[#{target}][geo][region_name]"] ).to eq 'Massachusetts'
 
             if ecs_select.active_mode == :disabled
