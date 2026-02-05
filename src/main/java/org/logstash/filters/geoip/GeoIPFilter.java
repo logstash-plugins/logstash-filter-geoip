@@ -19,6 +19,7 @@
 package org.logstash.filters.geoip;
 
 import com.maxmind.db.CHMCache;
+import com.maxmind.db.DeserializationException;
 import com.maxmind.db.InvalidDatabaseException;
 import com.maxmind.db.Network;
 import com.maxmind.geoip2.exception.AddressNotFoundException;
@@ -236,7 +237,7 @@ public class GeoIPFilter implements Closeable {
     CityResponse response;
     try {
       response = databaseReader.city(ipAddress);
-    } catch (NullPointerException e) {
+    } catch (NullPointerException | DeserializationException e) {
       throw new GeoIp2InvalidCustomFieldException(e);
     }
     Country country = response.getCountry();
@@ -354,7 +355,7 @@ public class GeoIPFilter implements Closeable {
     CountryResponse response;
     try {
       response = databaseReader.country(ipAddress);
-    } catch (NullPointerException e) {
+    } catch (NullPointerException | DeserializationException e) {
       throw new GeoIp2InvalidCustomFieldException(e);
     }
     Country country = response.getCountry();
@@ -394,7 +395,7 @@ public class GeoIPFilter implements Closeable {
     IspResponse response;
     try {
       response = databaseReader.isp(ipAddress);
-    } catch (NullPointerException e) {
+    } catch (NullPointerException | DeserializationException e) {
       throw new GeoIp2InvalidCustomFieldException(e);
     }
 
@@ -405,7 +406,7 @@ public class GeoIPFilter implements Closeable {
           geoData.put(Field.IP, ipAddress.getHostAddress());
           break;
         case AUTONOMOUS_SYSTEM_NUMBER:
-          Integer asn = response.getAutonomousSystemNumber();
+          final Long asn = response.getAutonomousSystemNumber();
           if (asn != null) {
             geoData.put(desiredField, asn);
           }
@@ -438,7 +439,7 @@ public class GeoIPFilter implements Closeable {
     AsnResponse response;
     try {
       response = databaseReader.asn(ipAddress);
-    } catch (NullPointerException e) {
+    } catch (NullPointerException | DeserializationException e) {
       throw new GeoIp2InvalidCustomFieldException(e);
     }
     Network network = response.getNetwork();
@@ -450,7 +451,7 @@ public class GeoIPFilter implements Closeable {
           geoData.put(Field.IP, ipAddress.getHostAddress());
           break;
         case AUTONOMOUS_SYSTEM_NUMBER:
-          Integer asn = response.getAutonomousSystemNumber();
+          final Long asn = response.getAutonomousSystemNumber();
           if (asn != null) {
             geoData.put(Field.AUTONOMOUS_SYSTEM_NUMBER, asn);
           }
@@ -476,7 +477,7 @@ public class GeoIPFilter implements Closeable {
     DomainResponse response;
     try {
       response = databaseReader.domain(ipAddress);
-    } catch (NullPointerException e) {
+    } catch (NullPointerException | DeserializationException e) {
       throw new GeoIp2InvalidCustomFieldException(e);
     }
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
@@ -496,7 +497,7 @@ public class GeoIPFilter implements Closeable {
     EnterpriseResponse response;
     try {
       response = databaseReader.enterprise(ipAddress);
-    } catch (NullPointerException e) {
+    } catch (NullPointerException | DeserializationException e) {
       throw new GeoIp2InvalidCustomFieldException(e);
     }
 
@@ -507,7 +508,7 @@ public class GeoIPFilter implements Closeable {
     Continent continent = response.getContinent();
     Subdivision subdivision = response.getMostSpecificSubdivision();
 
-    Integer asn = response.getTraits().getAutonomousSystemNumber();
+    Long asn = response.getTraits().getAutonomousSystemNumber();
     String organizationName = response.getTraits().getAutonomousSystemOrganization();
     Network network = response.getTraits().getNetwork();
 
@@ -609,7 +610,7 @@ public class GeoIPFilter implements Closeable {
     AnonymousIpResponse response;
     try {
       response = databaseReader.anonymousIp(ipAddress);
-    } catch (NullPointerException e) {
+    } catch (NullPointerException | DeserializationException e) {
       throw new GeoIp2InvalidCustomFieldException(e);
     }
 
