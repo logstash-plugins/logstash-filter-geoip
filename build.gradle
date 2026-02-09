@@ -45,7 +45,7 @@ String maxmindDbVersion = '3.1.1'
 String jrubyCompleteVersion = '9.4.9.0'
 
 String log4jVersion = '2.17.1'
-String junitVersion = '5.11.2' // at least 5.11 is needed to use @FieldSource with @ParameterizedTest
+String junitVersion = '5.11.2'
 String mockitoVersion = '4.11.0'
 
 var pluginName = "logstash-filter-geoip"
