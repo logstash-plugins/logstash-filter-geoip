@@ -1,3 +1,6 @@
+## 7.4.0
+  - Upgrade maxmind `geoip2` to 4.4.0 and `maxmind-db` to 3.1.1 versions [#238](https://github.com/logstash-plugins/logstash-filter-geoip/pull/238)
+
 ## 7.3.4
   - Fix: replace deprecated `File.exists?` with `File.exist?` for Ruby 3.4 (JRuby 10) compatibility [#239](https://github.com/logstash-plugins/logstash-filter-geoip/pull/239)
 
