@@ -41,7 +41,6 @@ group "org.logstash.filters"
 version "${new File("VERSION").text.trim()}"
 
 String maxmindGeoip2Version = '4.4.0'
-String maxmindDbVersion = '3.1.1'
 String jrubyCompleteVersion = '9.4.9.0'
 
 String log4jVersion = '2.17.1'
@@ -77,14 +76,10 @@ dependencies {
 
   // Exclude dependencies provided by Logstash core (in build.gradle of logstash-core package)
   implementation(group: "com.maxmind.geoip2", name: "geoip2", version: maxmindGeoip2Version) {
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
     exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
     exclude group: 'com.fasterxml.jackson.core', module: 'jackson-annotations'
-    exclude group: 'org.apache.httpcomponents', module: 'httpclient'
-    exclude group: 'org.apache.httpcomponents', module: 'httpcore'
-    exclude group: 'commons-codec', module: 'commons-codec'
   }
-
-  implementation group: "com.maxmind.db", name: "maxmind-db", version: maxmindDbVersion
 
   testImplementation group: "org.junit.jupiter", name: "junit-jupiter-api", version: junitVersion
   testImplementation group: "org.junit.jupiter", name: "junit-jupiter-params", version: junitVersion
