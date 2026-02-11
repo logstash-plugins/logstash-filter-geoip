@@ -1,3 +1,6 @@
+## 7.3.4
+  - Fix: replace deprecated `File.exists?` with `File.exist?` for Ruby 3.4 (JRuby 10) compatibility [#239](https://github.com/logstash-plugins/logstash-filter-geoip/pull/239)
+
 ## 7.3.3
   - Re-packaging the plugin [#236](https://github.com/logstash-plugins/logstash-filter-geoip/pull/236)
 
