@@ -88,7 +88,7 @@ dependencies {
   testImplementation group: 'org.jruby', name: 'jruby-complete', version: jrubyCompleteVersion
   testImplementation group: "org.mockito", name: "mockito-core", version: mockitoVersion
   // Jackson dependencies required by GeoIP2 4.x for JSON serialization (excluded above, needed for tests)
-  testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.17.2'
+  // testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.17.2'
 
   geolite2('org.elasticsearch:geolite2-databases:20191119') {
     transitive = false
