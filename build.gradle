@@ -40,20 +40,21 @@ plugins {
 group "org.logstash.filters"
 version "${new File("VERSION").text.trim()}"
 
-String junitVersion = '5.11.2' // at least 5.11 is needed to use @FieldSource with @ParameterizedTest
-String maxmindGeoip2Version = '2.17.0'
-String maxmindDbVersion = '2.1.0'
+String maxmindGeoip2Version = '4.4.0'
+String jrubyCompleteVersion = '9.4.9.0'
+
 String log4jVersion = '2.17.1'
-String jrubyCompleteVersion = '9.1.13.0'
+String junitVersion = '5.11.2'
 String mockitoVersion = '4.11.0'
+
 var pluginName = "logstash-filter-geoip"
 base {
   archivesName = pluginName
 }
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_1_8
-  targetCompatibility = JavaVersion.VERSION_1_8
+  sourceCompatibility = JavaVersion.VERSION_11
+  targetCompatibility = JavaVersion.VERSION_11
 }
 
 import java.nio.file.Files
@@ -75,14 +76,10 @@ dependencies {
 
   // Exclude dependencies provided by Logstash core (in build.gradle of logstash-core package)
   implementation(group: "com.maxmind.geoip2", name: "geoip2", version: maxmindGeoip2Version) {
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
     exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
     exclude group: 'com.fasterxml.jackson.core', module: 'jackson-annotations'
-    exclude group: 'org.apache.httpcomponents', module: 'httpclient'
-    exclude group: 'org.apache.httpcomponents', module: 'httpcore'
-    exclude group: 'commons-codec', module: 'commons-codec'
   }
-
-  implementation group: "com.maxmind.db", name: "maxmind-db", version: maxmindDbVersion
 
   testImplementation group: "org.junit.jupiter", name: "junit-jupiter-api", version: junitVersion
   testImplementation group: "org.junit.jupiter", name: "junit-jupiter-params", version: junitVersion

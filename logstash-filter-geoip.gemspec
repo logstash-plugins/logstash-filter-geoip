@@ -28,6 +28,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'logstash-devutils'
   s.add_development_dependency 'insist'
   s.add_development_dependency 'benchmark-ips'
-  # only compatible with 7.14+ because of the dependency of DatabaseManager
-  s.add_runtime_dependency "logstash-core", ">= 7.14.0"
+  # only compatible with 8.0+ because GeoIP2 4.x requires Java 11
+  s.add_runtime_dependency "logstash-core", ">= 8.0.0"
 end

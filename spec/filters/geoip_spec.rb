@@ -39,21 +39,13 @@ describe LogStash::Filters::GeoIP do
       end
     end
 
-    if MAJOR >= 8 || (MAJOR == 7 && MINOR >= 14)
-      context "Logstash >= 7.14" do
-        if LogStash::OSS
-          context "OSS-only" do
-            include_examples "without database manager"
-          end
-        else
-          context "default distro" do
-            include_examples "with database manager"
-          end
-        end
+    if LogStash::OSS
+      context "OSS-only" do
+        include_examples "without database manager"
       end
     else
-      describe "Logstash < 7.14" do
-        include_examples "without database manager"
+      context "default distro" do
+        include_examples "with database manager"
       end
     end
   end
