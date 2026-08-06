@@ -71,7 +71,11 @@ configurations {
 dependencies {
   compileOnly group: "org.apache.logging.log4j", name: "log4j-api", version: log4jVersion
   compileOnly group: "org.apache.logging.log4j", name: "log4j-core", version: log4jVersion
-  compileOnly group: 'org.jruby', name: 'jruby-complete', version: jrubyCompleteVersion
+  // Use the JRuby that ships with the Logstash under test rather than pinning a
+  // jruby-complete version, so the JRuby matches logstash-core (8.x -> JRuby 9.x,
+  // 9.4+ -> JRuby 10.x). A pinned pre-10 version lacked JRuby 10 classes
+  // (org.jruby.api.Define) needed by logstash-core 9.4+.
+  compileOnly fileTree(dir: "${logstashCoreGemPath}/../vendor/jruby/lib", include: 'jruby.jar')
   compileOnly fileTree(dir: logstashCoreGemPath, include: '**/*.jar')
 
   // Exclude dependencies provided by Logstash core (in build.gradle of logstash-core package)
@@ -85,7 +89,8 @@ dependencies {
   testImplementation group: "org.junit.jupiter", name: "junit-jupiter-params", version: junitVersion
   testRuntimeOnly group: "org.junit.jupiter", name: "junit-jupiter-engine", version: junitVersion
   testImplementation group: "org.apache.logging.log4j", name: "log4j-api", version: log4jVersion
-  testImplementation group: 'org.jruby', name: 'jruby-complete', version: jrubyCompleteVersion
+  testImplementation fileTree(dir: "${logstashCoreGemPath}/../vendor/jruby/lib", include: 'jruby.jar')
+  testImplementation fileTree(dir: logstashCoreGemPath, include: '**/*.jar')
   testImplementation group: "org.mockito", name: "mockito-core", version: mockitoVersion
 
   geolite2('org.elasticsearch:geolite2-databases:20191119') {
