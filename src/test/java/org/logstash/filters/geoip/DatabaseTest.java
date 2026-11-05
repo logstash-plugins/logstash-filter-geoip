@@ -27,9 +27,15 @@ class DatabaseTest {
             put(Database.ANONYMOUS_IP, Collections.singletonList(MaxMindDatabases.GEOIP2_ANONYMOUS_IP));
             put(Database.ISP, Collections.singletonList(MaxMindDatabases.GEOIP2_ISP));
             put(Database.ENTERPRISE, Collections.singletonList(MaxMindDatabases.GEOIP2_ENTERPRISE));
+            put(Database.DBIP_LOCATION_ISP, Collections.emptyList()); // no MaxMind file for DB-IP
             put(Database.UNKNOWN, Collections.emptyList());
         }
     };
+
+    @Test
+    void testDbIpLocationIspTypeIsNotMistakenForIspOrEnterprise() {
+        assertEquals(Database.DBIP_LOCATION_ISP, Database.fromDatabaseType("DBIP-Location-ISP (compat=Enterprise)"));
+    }
 
     @Test
     void testCityDefaultFields() {

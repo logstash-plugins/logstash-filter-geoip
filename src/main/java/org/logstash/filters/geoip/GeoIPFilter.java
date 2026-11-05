@@ -28,6 +28,7 @@ import com.maxmind.geoip2.model.AnonymousIpResponse;
 import com.maxmind.geoip2.model.AsnResponse;
 import com.maxmind.geoip2.model.CityResponse;
 import com.maxmind.geoip2.model.CountryResponse;
+import com.maxmind.geoip2.model.ConnectionTypeResponse.ConnectionType;
 import com.maxmind.geoip2.model.DomainResponse;
 import com.maxmind.geoip2.model.EnterpriseResponse;
 import com.maxmind.geoip2.model.IspResponse;
@@ -187,6 +188,7 @@ public class GeoIPFilter implements Closeable {
           geoData = retrieveDomainGeoData(ipAddress);
           break;
         case ENTERPRISE:
+        case DBIP_LOCATION_ISP:
           geoData = retrieveEnterpriseGeoData(ipAddress);
           break;
         case ANONYMOUS_IP:
@@ -521,6 +523,66 @@ public class GeoIPFilter implements Closeable {
 
     for (Field desiredField : this.desiredFields) {
       switch (desiredField) {
+        case CONTINENT_CODE:
+          String continentCode = continent.getCode();
+          if (continentCode != null) {
+            geoData.put(desiredField, continentCode);
+          }
+          break;
+        case COUNTRY_CODE3:
+          String countryCode3 = country.getIsoCode();
+          if (countryCode3 != null) {
+            geoData.put(desiredField, countryCode3);
+          }
+          break;
+        case POSTAL_CODE:
+          String postalCode = response.getPostal().getCode();
+          if (postalCode != null) {
+            geoData.put(desiredField, postalCode);
+          }
+          break;
+        case DMA_CODE:
+          Integer dmaCode = location.getMetroCode();
+          if (dmaCode != null) {
+            geoData.put(desiredField, dmaCode);
+          }
+          break;
+        case REGION_CODE:
+          String subdivisionCode = subdivision.getIsoCode();
+          if (subdivisionCode != null) {
+            geoData.put(desiredField, subdivisionCode);
+          }
+          break;
+        case LATITUDE:
+          Double lat = location.getLatitude();
+          if (lat != null) {
+            geoData.put(desiredField, lat);
+          }
+          break;
+        case LONGITUDE:
+          Double lon = location.getLongitude();
+          if (lon != null) {
+            geoData.put(desiredField, lon);
+          }
+          break;
+        case ISP:
+          String isp = response.getTraits().getIsp();
+          if (isp != null) {
+            geoData.put(desiredField, isp);
+          }
+          break;
+        case ORGANIZATION:
+          String org = response.getTraits().getOrganization();
+          if (org != null) {
+            geoData.put(desiredField, org);
+          }
+          break;
+        case CONNECTION_TYPE:
+          ConnectionType connectionType = response.getTraits().getConnectionType();
+          if (connectionType != null) {
+            geoData.put(desiredField, connectionType.toString());
+          }
+          break;
         case IP:
           geoData.put(Field.IP, ipAddress.getHostAddress());
           break;
