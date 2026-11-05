@@ -46,6 +46,7 @@ enum Field {
   LATITUDE("geo.location.lat", "latitude"),
   LONGITUDE("geo.location.lon", "longitude"),
   ORGANIZATION("mmdb.organization", "organization"),
+  CONNECTION_TYPE("mmdb.connection_type", "connection_type"),
   NETWORK("ip_traits.network", "network"),
   HOSTING_PROVIDER("ip_traits.hosting_provider", "hosting_provider"),
   TOR_EXIT_NODE("ip_traits.tor_exit_node", "tor_exit_node"),

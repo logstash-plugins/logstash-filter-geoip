@@ -82,6 +82,25 @@ enum Database {
                     Field.LOCATION
             )
     ),
+    // DB-IP "Location+ISP" database, which is MaxMind Enterprise compatible
+    DBIP_LOCATION_ISP(
+            "DBIP-Location-ISP (compat=Enterprise)",
+            EnumSet.of(
+                    Field.IP,
+                    Field.COUNTRY_CODE2,
+                    Field.COUNTRY_NAME,
+                    Field.CONTINENT_NAME,
+                    Field.REGION_ISO_CODE,
+                    Field.REGION_NAME,
+                    Field.CITY_NAME,
+                    Field.LOCATION,
+                    Field.AUTONOMOUS_SYSTEM_NUMBER,
+                    Field.AUTONOMOUS_SYSTEM_ORGANIZATION,
+                    Field.ISP,
+                    Field.ORGANIZATION,
+                    Field.CONNECTION_TYPE
+            )
+    ),
     UNKNOWN(
             "Unknown",
             EnumSet.noneOf(Field.class)
@@ -101,7 +120,9 @@ enum Database {
 
     public static Database fromDatabaseType(final String type) {
         // It follows the same com.maxmind.geoip2.DatabaseReader#getDatabaseType logic
-        if (type.contains(CITY.databaseType)) {
+        if (type.contains(DBIP_LOCATION_ISP.databaseType)) {
+            return Database.DBIP_LOCATION_ISP;
+        } else if (type.contains(CITY.databaseType)) {
             return Database.CITY;
         } else if (type.contains(COUNTRY.databaseType)) {
             return Database.COUNTRY;
