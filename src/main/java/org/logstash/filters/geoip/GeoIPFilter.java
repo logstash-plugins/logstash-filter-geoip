@@ -247,6 +247,7 @@ public class GeoIPFilter implements Closeable {
     Postal postal = response.getPostal();
     Subdivision subdivision = response.getMostSpecificSubdivision();
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
+    Network network = response.getTraits().getNetwork();
 
     // if location is empty, there is no point populating geo data
     // and most likely all other fields are empty as well
@@ -345,6 +346,11 @@ public class GeoIPFilter implements Closeable {
             geoData.put(Field.LONGITUDE, lon);
           }
           break;
+        case NETWORK:
+          if (network != null) {
+            geoData.put(Field.NETWORK, network.toString());
+          }
+          break;
       }
     }
 
@@ -398,6 +404,7 @@ public class GeoIPFilter implements Closeable {
     } catch (NullPointerException | DeserializationException e) {
       throw new GeoIp2InvalidCustomFieldException(e);
     }
+    Network network = response.getNetwork();
 
     Map<Field, Object> geoData = new EnumMap<>(Field.class);
     for (Field desiredField : this.desiredFields) {
@@ -427,6 +434,11 @@ public class GeoIPFilter implements Closeable {
           String org = response.getOrganization();
           if (org != null) {
             geoData.put(Field.ORGANIZATION, org);
+          }
+          break;
+        case NETWORK:
+          if (network != null) {
+            geoData.put(Field.NETWORK, network.toString());
           }
           break;
       }
@@ -621,6 +633,7 @@ public class GeoIPFilter implements Closeable {
     boolean isAnonymous = response.isAnonymous();
     boolean isPublicProxy = response.isPublicProxy();
     boolean isResidentialProxy = response.isResidentialProxy();
+    Network network = response.getNetwork();
 
     for (Field desiredField : this.desiredFields) {
       switch (desiredField) {
@@ -644,6 +657,11 @@ public class GeoIPFilter implements Closeable {
           break;
         case RESIDENTIAL_PROXY:
           geoData.put(desiredField, isResidentialProxy);
+          break;
+        case NETWORK:
+          if (network != null) {
+            geoData.put(Field.NETWORK, network.toString());
+          }
           break;
       }
     }
