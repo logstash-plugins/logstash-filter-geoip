@@ -1,3 +1,17 @@
+## 8.0.0
+  - Upgrade maxmind `geoip2` to 4.4.0 version [#238](https://github.com/logstash-plugins/logstash-filter-geoip/pull/238)
+  - Dropped support for Logstash 7.x. Minimum supported version is now Logstash 8.0.0
+  - Dropped support for Java 8. Minimum required version is now Java 11
+
+## 7.3.4
+  - Fix: replace deprecated `File.exists?` with `File.exist?` for Ruby 3.4 (JRuby 10) compatibility [#239](https://github.com/logstash-plugins/logstash-filter-geoip/pull/239)
+
+## 7.3.3
+  - Re-packaging the plugin [#236](https://github.com/logstash-plugins/logstash-filter-geoip/pull/236)
+
+## 7.3.2
+  - Add logs when MaxMind databases fail to deserialize custom field [#235](https://github.com/logstash-plugins/logstash-filter-geoip/pull/235)
+
 ## 7.3.1
   - Avoid to crash pipelines when lookup a database with customised fields. [#225](https://github.com/logstash-plugins/logstash-filter-geoip/pull/225)
 

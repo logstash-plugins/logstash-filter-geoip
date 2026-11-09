@@ -12,3 +12,4 @@ build
 *.iml
 
 gradle.properties
+lib/logstash-filter-geoip_jars.rb

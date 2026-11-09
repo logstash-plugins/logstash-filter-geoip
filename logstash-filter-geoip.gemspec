@@ -9,12 +9,12 @@ Gem::Specification.new do |s|
   s.description     = "This gem is a Logstash plugin required to be installed on top of the Logstash core pipeline using $LS_HOME/bin/logstash-plugin install gemname. This gem is not a stand-alone program"
   s.authors         = ["Elastic"]
   s.email           = 'info@elastic.co'
-  s.homepage        = "http://www.elastic.co/guide/en/logstash/current/index.html"
+  s.homepage        = "https://elastic.co/logstash"
   s.platform      = "java"
   s.require_paths = ["lib", "vendor/jar-dependencies"]
 
   # Files
-  s.files = Dir['lib/**/*','spec/**/*','vendor/**/*', 'vendor/jar-dependencies/**/*.jar', '*.gemspec','*.md','CONTRIBUTORS','Gemfile','LICENSE','NOTICE.TXT', 'maxmind-db-NOTICE.txt', 'docs/**/*', 'VERSION']
+  s.files = Dir['lib/**/*','spec/**/*','vendor/**/*', 'vendor/jar-dependencies/**/*.jar', '*.gemspec','*.md','CONTRIBUTORS','Gemfile','LICENSE', 'VERSION', 'NOTICE.TXT', 'maxmind-db-NOTICE.txt', 'docs/**/*']
 
   # Tests
   s.test_files = s.files.grep(%r{^(test|spec|features)/})
@@ -28,6 +28,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'logstash-devutils'
   s.add_development_dependency 'insist'
   s.add_development_dependency 'benchmark-ips'
-  # only compatible with 7.14+ because of the dependency of DatabaseManager
-  s.add_runtime_dependency "logstash-core", ">= 7.14.0"
+  # only compatible with 8.0+ because GeoIP2 4.x requires Java 11
+  s.add_runtime_dependency "logstash-core", ">= 8.0.0"
 end

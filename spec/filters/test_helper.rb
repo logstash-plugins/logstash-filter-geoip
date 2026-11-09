@@ -7,7 +7,7 @@ require "csv"
 require 'pathname'
 logstash_core_path = Gem.loaded_specs['logstash-core']&.full_gem_path or fail("logstash-core lib not found")
 logstash_xpack_load_path = Pathname.new(logstash_core_path).join("../x-pack/lib").cleanpath.to_s
-if ENV['OSS'] == "true" || !File.exists?(logstash_xpack_load_path)
+if ENV['OSS'] == "true" || !File.exist?(logstash_xpack_load_path)
   $stderr.puts("X-PACK is not available")
   LogStash::OSS = true
 else
@@ -44,7 +44,3 @@ end
 
 DEFAULT_CITY_DB_PATH = get_vendor_path("GeoLite2-City.mmdb")
 DEFAULT_ASN_DB_PATH = get_vendor_path("GeoLite2-ASN.mmdb")
-
-major, minor = LOGSTASH_VERSION.split(".")
-MAJOR = major.to_i
-MINOR = minor.to_i

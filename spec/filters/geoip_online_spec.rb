@@ -31,8 +31,7 @@ describe LogStash::Filters::GeoIP do
       end
     end
 
-    database_management_available = (MAJOR >= 8 || (MAJOR == 7 && MINOR >= 14)) && !LogStash::OSS
-    if database_management_available
+    if !LogStash::OSS
       context "when geoip database management is available" do
 
         let(:mock_manager) do
